@@ -81,7 +81,7 @@ function RootLayoutNav() {
       // If user is logged in but trying to view auth screens, send to main feed
       router.replace('/(tabs)');
     }
-  }, [session, segments]);
+  }, [session, segments, rootNavigationState?.key]);
 
   return (
     /* ALWAYS use SafeAreaProvider at the root per strict project guidelines */
@@ -92,7 +92,12 @@ function RootLayoutNav() {
         for every component inside the app, creating an instant High-Contrast mode.
       */}
       <View className={`flex-1 bg-background ${isSeniorMode ? 'theme-senior' : ''}`}>
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          {/* Explicitly define our route groups so Expo knows they exist */}
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
       </View>
     </SafeAreaProvider>
   );

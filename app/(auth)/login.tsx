@@ -1,9 +1,134 @@
-import { View, Text } from 'react-native';
+import React, { useState } from 'react';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  Alert, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView,
+  ActivityIndicator
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { Mail, Lock } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase';
+import { TouchableWithoutFeedback, Keyboard } from 'react-native';
 
-export default function PlaceholderScreen() {
+/**
+ * @description Authentication Login Screen
+ * Human-Centric Goal: Provides a high-contrast, accessible entry point. 
+ * Form elements are large and clearly labeled, and the UI relies entirely on 
+ * semantic NativeWind variables so it instantly adapts if Senior Mode is triggered.
+ */
+export default function LoginScreen() {
+  const router = useRouter();
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+
+  async function handleLogin() {
+    if (!email || !password) {
+      Alert.alert('Missing Fields', 'Please enter both email and password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
+      // Note: We don't need to manually route to /(tabs) here because 
+      // our RootLayout listener will automatically detect the session and redirect!
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.message || 'An unexpected error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <View className="flex-1 items-center justify-center bg-background">
-      <Text className="text-text">Screen Placeholder</Text>
-    </View>
+    <SafeAreaView className="flex-1 bg-background">
+      <KeyboardAvoidingView 
+        // FIX: Android works best natively without behavior forced, iOS needs padding
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        className="flex-1"
+      >
+        <ScrollView 
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+          // FIX: This ensures iOS smoothly pushes content up when focused
+          automaticallyAdjustKeyboardInsets={true} 
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="mb-10 items-center">
+            <Text className="text-4xl font-sans font-bold text-primary mb-2">LocalConnect</Text>
+            <Text className="text-text-muted font-sans text-base text-center">
+              Your neighborhood mutual aid network.
+            </Text>
+          </View>
+
+          {/* Email Input */}
+          <View className="mb-4">
+            <Text className="text-text font-sans text-sm mb-1 font-semibold">Email</Text>
+            <View className="flex-row items-center bg-surface border border-surface-highlight rounded-xl px-4 py-3">
+              <Mail color="#5F4B8B" size={20} className="mr-3" />
+              <TextInput
+                className="flex-1 ml-2 text-text font-sans text-base"
+                placeholder="Enter your email"
+                placeholderTextColor="#64748B"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+          </View>
+
+          {/* Password Input */}
+          <View className="mb-8">
+            <Text className="text-text font-sans text-sm mb-1 font-semibold">Password</Text>
+            <View className="flex-row items-center bg-surface border border-surface-highlight rounded-xl px-4 py-3">
+              <Lock color="#5F4B8B" size={20} className="mr-3" />
+              <TextInput
+                className="flex-1 ml-2 text-text font-sans text-base"
+                placeholder="Enter your password"
+                placeholderTextColor="#64748B"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
+          </View>
+
+          {/* Login Button */}
+          <TouchableOpacity 
+            className="bg-primary py-4 rounded-xl items-center flex-row justify-center mb-4"
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white font-sans text-lg font-bold">Log In</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Navigation to Signup */}
+          <View className="flex-row justify-center">
+            <Text className="text-text-muted font-sans text-base">Don't have an account? </Text>
+            <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
+              <Text className="text-secondary font-sans text-base font-bold">Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

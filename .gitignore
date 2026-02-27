@@ -4,6 +4,7 @@
 node_modules/
 
 instructions.txt
+todo.txt
 
 # Expo
 .expo/
