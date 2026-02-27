@@ -1,59 +1,50 @@
-import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
-import '../globals.css';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
+import { Tabs } from 'expo-router';
+import { Home, Map as MapIcon, PlusCircle, User } from 'lucide-react-native';
+import { useAppStore } from '@/store/useAppStore';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { isSeniorMode } = useAppStore();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
+        headerShown: false,
+        // We use the CSS variable here so the tab bar adapts to Senior Mode automatically!
+        tabBarActiveTintColor: isSeniorMode ? '#FFB300' : '#5F4B8B', // Fallback colors representing primary/secondary
+        tabBarStyle: {
+          backgroundColor: isSeniorMode ? '#FFFFFF' : '#FAFAFA',
+          borderTopColor: isSeniorMode ? '#E9ECEF' : '#F3F0FF',
+        },
+        tabBarShowLabel: isSeniorMode, // Adaptivity: Show labels in Senior Mode for better accessibility
+      }}
+    >
+      <Tabs.Screen 
+        name="index" 
+        options={{ 
+          title: 'Feed', 
+          tabBarIcon: ({ color }) => <Home color={color} size={isSeniorMode ? 28 : 24} /> 
+        }} 
       />
-      <Tabs.Screen
-        name="two"
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-        }}
+      <Tabs.Screen 
+        name="map" 
+        options={{ 
+          title: 'Map', 
+          tabBarIcon: ({ color }) => <MapIcon color={color} size={isSeniorMode ? 28 : 24} /> 
+        }} 
+      />
+      <Tabs.Screen 
+        name="add" 
+        options={{ 
+          title: 'Add Task', 
+          tabBarIcon: ({ color }) => <PlusCircle color={color} size={isSeniorMode ? 28 : 24} /> 
+        }} 
+      />
+      <Tabs.Screen 
+        name="profile" 
+        options={{ 
+          title: 'Profile', 
+          tabBarIcon: ({ color }) => <User color={color} size={isSeniorMode ? 28 : 24} /> 
+        }} 
       />
     </Tabs>
   );
