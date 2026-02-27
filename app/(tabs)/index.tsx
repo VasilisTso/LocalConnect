@@ -5,10 +5,8 @@ import { Text, View } from '@/components/Themed';
 
 export default function TabOneScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>LocalConnect</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+    <View className='flex-1 justify-center items-center'>
+      <Text className='text-5xl '>LocalConnect</Text>
     </View>
   );
 }
