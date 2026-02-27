@@ -12,9 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Mail, Lock } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
-import { TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase'; 
+
 
 /**
  * @description Authentication Login Screen
@@ -27,6 +27,9 @@ export default function LoginScreen() {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+
+  // local state to track visibility
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   async function handleLogin() {
     if (!email || !password) {
@@ -98,8 +101,21 @@ export default function LoginScreen() {
                 placeholderTextColor="#64748B"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
+                // Bind the secure entry to the inverse of our state
+                secureTextEntry={!showPassword}
               />
+              {/*Add the toggle button */}
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)} 
+                className="p-1 ml-2"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // Makes it easier to tap
+              >
+                {showPassword ? (
+                  <EyeOff color="#64748B" size={20} />
+                ) : (
+                  <Eye color="#64748B" size={20} />
+                )}
+              </TouchableOpacity>
             </View>
           </View>
 

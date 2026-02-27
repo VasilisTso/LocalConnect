@@ -162,8 +162,8 @@ export default function ProfileScreen() {
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <>
-              <LogOut color="#FFFFFF" size={20} className="mr-2" />
-              <Text className="text-white font-sans text-lg font-bold">Sign Out</Text>
+              <LogOut color="#FFFFFF" size={20} className="mr-3" />
+              <Text className="text-white ml-2 font-sans text-lg font-bold">Sign Out</Text>
             </>
           )}
         </TouchableOpacity>
