@@ -36,15 +36,15 @@ export default function SignupScreen() {
 
     setLoading(true);
     try {
-      // 1. Create the user in Supabase Auth
+      // user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
+        email: email.trim(), // to remove invisible space at the end of string, "sanitize"
         password,
       });
 
       if (authError) throw authError;
 
-      // 2. Initialize their Adaptivity Profile immediately
+      // Initialize their Adaptivity Profile immediately
       if (authData.user) {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -77,16 +77,13 @@ export default function SignupScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView 
-        // FIX: Remove behavior='height' on Android to stop UI conflict
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
         <ScrollView 
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 80, paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
           bounces={false}
-          // FIX: Let iOS manage scroll insets smoothly
-          automaticallyAdjustKeyboardInsets={true}
           showsVerticalScrollIndicator={false}
         >
           <View className="mb-10 items-center">

@@ -84,7 +84,7 @@ function RootLayoutNav() {
   }, [session, segments, rootNavigationState?.key]);
 
   return (
-    /* ALWAYS use SafeAreaProvider at the root per strict project guidelines */
+    /* ALWAYS use SafeAreaProvider at the root */
     <SafeAreaProvider>
       {/* THE ADAPTIVITY ENGINE (UI LEVEL):
         This single View wraps the entire application. By toggling the 'theme-senior'

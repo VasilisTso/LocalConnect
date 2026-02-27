@@ -37,14 +37,13 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(), // to remove invisible space at the end of string, "sanitize"
         password,
       });
 
       if (error) throw error;
       
-      // Note: We don't need to manually route to /(tabs) here because 
-      // our RootLayout listener will automatically detect the session and redirect!
+      // no need to manually route to /(tabs) here because our RootLayout listener will automatically detect the session and redirect!
     } catch (error: any) {
       Alert.alert('Login Failed', error.message || 'An unexpected error occurred.');
     } finally {
@@ -55,16 +54,13 @@ export default function LoginScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView 
-        // FIX: Android works best natively without behavior forced, iOS needs padding
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
         <ScrollView 
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 80, paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
           bounces={false}
-          // FIX: This ensures iOS smoothly pushes content up when focused
-          automaticallyAdjustKeyboardInsets={true} 
           showsVerticalScrollIndicator={false}
         >
           <View className="mb-10 items-center">
