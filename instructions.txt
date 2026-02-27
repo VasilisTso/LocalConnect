@@ -11,3 +11,6 @@ npm install @supabase/supabase-js
 Install NativeWind and Tailwind CSS
 npm install nativewind tailwindcss
 
+
+
+2. Configure the Supabase Client
