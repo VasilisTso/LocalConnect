@@ -12,5 +12,22 @@ Install NativeWind and Tailwind CSS
 npm install nativewind tailwindcss
 
 
+2. Configure the Supabase Client(lib/supabase.ts)
+This file implements a custom storage adapter using expo-secure-store so authentication tokens persist safely across app launches.
 
-2. Configure the Supabase Client
+
+3. Database Schema & The Adaptivity Engine (SQL)
+You must execute the following SQL script in your Supabase SQL 
+Editor. It establishes your tables, enforces Row Level 
+Security (RLS), and sets up the spatial querying capabilities 
+required for your context-aware app.
+
+
+4. The Adaptivity Engine: fetch_adaptive_feed (RPC)
+This Remote Procedure Call (RPC) is the backbone of your thesis feature. It takes the user's context (location, radius, tags) and generates a relevance score to sort the feed.
+
+Check supabase SQL editor for the 2 files above
+
+
+set up the Zustand store (store/useAppStore.ts)? This is where we'll build the brain for the "Senior Mode" toggle and keep track of who is logged in, which is essential for your adaptivity engine
+
