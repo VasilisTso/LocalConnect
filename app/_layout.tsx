@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { StatusBar } from 'expo-status-bar';
 
 // Our custom state and backend
 import { useAppStore } from '@/store/useAppStore';
@@ -71,6 +72,7 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
   
   return (
     <View className={`flex-1 bg-background ${isSeniorMode ? 'theme-senior' : ''}`}>
+      <StatusBar style="dark"/>
       {children}
     </View>
   );
