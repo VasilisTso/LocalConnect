@@ -1,0 +1,13 @@
+1. Initialize Expo & Install Dependencies
+Expo app with the TypeScript Router template:
+npx create-expo-app@latest LocalConnect --template tabs
+
+Install core state management, auth storage, and mapping tools:
+npx expo install zustand expo-secure-store react-native-maps lucide-react-native
+
+Install Supabase client:
+npm install @supabase/supabase-js
+
+Install NativeWind and Tailwind CSS
+npm install nativewind tailwindcss
+
