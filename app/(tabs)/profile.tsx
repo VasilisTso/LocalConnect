@@ -102,7 +102,7 @@ export default function ProfileScreen() {
           <View className="flex-row items-center justify-between mb-2">
             <View className="flex-row items-center flex-1 pr-4">
               <ShieldAlert color="#5F4B8B" size={24} className="mr-3" />
-              <View>
+              <View className='ml-2'>
                 <Text className="text-text font-sans font-bold text-lg">Senior Mode</Text>
                 <Text className="text-text-muted font-sans text-sm mt-1">
                   Enables high contrast and larger navigation elements.
@@ -120,11 +120,11 @@ export default function ProfileScreen() {
 
         {/* Interests / Tags Section (Crucial for Thesis Feed) */}
         <View className="bg-surface rounded-2xl p-4 mb-8 border border-surface-highlight">
-          <View className="flex-row items-center mb-4">
+          <View className="flex-row items-center mb-5">
             <Tag color="#5F4B8B" size={24} className="mr-3" />
-            <Text className="text-text font-sans font-bold text-lg">My Interests</Text>
+            <Text className="text-text ml-2 font-sans font-bold text-lg">My Interests</Text>
           </View>
-          <Text className="text-text-muted font-sans text-sm mb-4">
+          <Text className="text-text-muted font-sans text-sm mb-4 border-b border-primary pb-2">
             Select what you care about. Your feed will automatically adapt to prioritize these tasks.
           </Text>
           
