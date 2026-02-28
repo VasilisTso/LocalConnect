@@ -87,10 +87,10 @@ export default function MapScreen() {
             {/* The popup bubble when you tap the marker */}
             <Callout tooltip>
               <View className="bg-surface p-3 rounded-xl border border-surface-highlight shadow-lg min-w-[150px]">
-                <Text className="text-text font-sans font-bold text-base mb-1">
+                <Text className={`text-text font-sans font-bold mb-1 ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
                   {task.title}
                 </Text>
-                <Text className="text-primary font-sans text-xs font-semibold uppercase">
+                <Text className={`text-primary font-sans font-semibold uppercase ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
                   {task.category}
                 </Text>
               </View>

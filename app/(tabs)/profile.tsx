@@ -9,7 +9,7 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LogOut, User as UserIcon, Tag, ShieldAlert } from 'lucide-react-native';
+import { LogOut, User as UserIcon, Tag, ShieldAlert, Award, Phone } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter } from 'expo-router';
@@ -28,6 +28,7 @@ export default function ProfileScreen() {
   
   const [loading, setLoading] = useState(false);
   const [userTags, setUserTags] = useState<string[]>([]);
+  const [karma, setKarma] = useState(0);
 
   // A preset list of tags for our neighborhood app
   const AVAILABLE_TAGS = ['Pets', 'Education', 'Tools', 'Errands', 'Tech Support'];
@@ -39,12 +40,13 @@ export default function ProfileScreen() {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('tags')
+        .select('tags, karma_points')
         .eq('id', session.user.id)
         .single();
 
-      if (data && data.tags) {
-        setUserTags(data.tags);
+      if (data) {
+        if (data.tags) setUserTags(data.tags);
+        if (data.karma_points) setKarma(data.karma_points);
       }
     }
     fetchProfile();
@@ -85,27 +87,40 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ padding: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
         
         {/* Header Section */}
         <View className="items-center mb-8">
           <View className="bg-surface-highlight p-6 rounded-full mb-4">
             <UserIcon color="#5F4B8B" size={isSeniorMode ? 64 : 48} />
           </View>
-          <Text className="text-text font-sans font-bold text-2xl">
+          <Text className={`text-text font-sans font-bold mb-2 ${isSeniorMode ? 'text-3xl' : 'text-2xl'}`}>
             {session?.user?.email || 'User'}
           </Text>
+
+          {/*HIDE GAMIFICATION IN SENIOR MODE */}
+          {!isSeniorMode && (
+            <View className="flex-row items-center bg-secondary/20 px-4 py-2 rounded-full border border-secondary">
+              <Award color="#D97706" size={20} className="mr-2" />
+              <Text className="text-text font-sans font-bold text-base">
+                {karma} Karma Points
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Accessibility & Adaptivity Section */}
         <View className="bg-surface rounded-2xl p-4 mb-6 border border-surface-highlight">
           <View className="flex-row items-center justify-between mb-2">
             <View className="flex-row items-center flex-1 pr-4">
-              <ShieldAlert color="#5F4B8B" size={24} className="mr-3" />
+              <ShieldAlert color="#5F4B8B" size={28} className="mr-3" />
               <View className='ml-2'>
-                <Text className="text-text font-sans font-bold text-lg">Senior Mode</Text>
-                <Text className="text-text-muted font-sans text-sm mt-1">
-                  Enables high contrast and larger navigation elements.
+                {/* REQUIREMENT 3: DYNAMIC TYPOGRAPHY */}
+                <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+                  Senior Mode
+                </Text>
+                <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
+                  Enables high contrast, large text, and emergency tools.
                 </Text>
               </View>
             </View>
@@ -118,32 +133,57 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* EMERGENCY CONTACTS (ONLY VISIBLE IN SENIOR MODE) */}
+        {isSeniorMode && (
+          <View className="bg-error/10 border-2 border-error rounded-2xl p-4 mb-6">
+            <View className="flex-row justify-between items-center mb-5">
+              <Text className="text-text font-sans font-bold text-2xl">Emergency Contacts</Text>
+              <Phone color="#D32F2F" size={28} className="mr-3" />
+            </View>
+            
+            <TouchableOpacity className="bg-surface py-4 px-4 rounded-xl flex-row justify-between items-center mb-3 border border-surface-highlight">
+              <Text className="text-text font-sans font-bold text-xl">General Emergency</Text>
+              <Text className="text-error font-sans font-bold text-2xl">112</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity className="bg-surface py-4 px-4 rounded-xl flex-row justify-between items-center mb-3 border border-surface-highlight">
+              <Text className="text-text font-sans font-bold text-xl">Ambulance (EKAB)</Text>
+              <Text className="text-error font-sans font-bold text-2xl">166</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity className="bg-surface py-4 px-4 rounded-xl flex-row justify-between items-center border border-surface-highlight">
+              <Text className="text-text font-sans font-bold text-xl">Police</Text>
+              <Text className="text-error font-sans font-bold text-2xl">100</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Interests / Tags Section (Crucial for Thesis Feed) */}
         <View className="bg-surface rounded-2xl p-4 mb-8 border border-surface-highlight">
-          <View className="flex-row items-center mb-5">
+          <View className="flex-row items-center mb-4">
             <Tag color="#5F4B8B" size={24} className="mr-3" />
-            <Text className="text-text ml-2 font-sans font-bold text-lg">My Interests</Text>
+            <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+              My Interests
+            </Text>
           </View>
-          <Text className="text-text-muted font-sans text-sm mb-4 border-b border-primary pb-2">
-            Select what you care about. Your feed will automatically adapt to prioritize these tasks.
+          <Text className={`text-text-muted font-sans mb-4 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
+            Select what you care about. Your feed will automatically adapt.
           </Text>
           
-          <View className="flex-row flex-wrap gap-2">
+          <View className="flex-row flex-wrap gap-3 mt-4">
             {AVAILABLE_TAGS.map((tag) => {
               const isActive = userTags.includes(tag);
               return (
                 <TouchableOpacity
                   key={tag}
                   onPress={() => handleToggleTag(tag)}
-                  className={`px-4 py-2 rounded-full border ${
-                    isActive 
-                      ? 'bg-primary border-primary' 
-                      : 'bg-transparent border-text-muted'
+                  className={`px-4 py-3 rounded-full border ${
+                    isActive ? 'bg-primary border-primary' : 'bg-transparent border-text-muted'
                   }`}
                 >
                   <Text className={`font-sans font-semibold ${
                     isActive ? 'text-white' : 'text-text-muted'
-                  }`}>
+                  } ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
                     {tag}
                   </Text>
                 </TouchableOpacity>
@@ -162,8 +202,10 @@ export default function ProfileScreen() {
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <>
-              <LogOut color="#FFFFFF" size={20} className="mr-3" />
-              <Text className="text-white ml-2 font-sans text-lg font-bold">Sign Out</Text>
+              <LogOut color="#FFFFFF" size={24} className="mr-2" />
+              <Text className={`text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
+                Sign Out
+              </Text>
             </>
           )}
         </TouchableOpacity>

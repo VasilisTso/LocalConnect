@@ -122,78 +122,49 @@ export default function EditTaskModal() {
             <>
               <View className="flex-row justify-between items-start mb-6 mt-10">
                 <View className="flex-1 pr-4">
-                  <Text className="text-3xl font-sans font-bold text-text mb-2">Edit Task</Text>
-                  <Text className="text-text-muted font-sans text-base">
-                    Update your neighborhood request.
-                  </Text>
+                  <Text className={`font-sans font-bold text-text mb-2 ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>Edit Task</Text>
+                  <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}>Update your neighborhood request.</Text>
                 </View>
-                
-                {/* The Close Button */}
-                <TouchableOpacity 
-                  onPress={() => router.back()}
-                  className="bg-surface border border-surface-highlight p-2 rounded-full"
-                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-                >
-                  <X color="#64748B" size={24} />
+                <TouchableOpacity onPress={() => router.back()} className="bg-surface border border-surface-highlight p-2 rounded-full">
+                  <X color="#64748B" size={isSeniorMode ? 32 : 24} />
                 </TouchableOpacity>
               </View>
 
               <View className="mb-4">
-                <Text className="text-text font-sans text-sm mb-1 font-semibold">Title</Text>
+                <Text className={`text-text font-sans font-semibold mb-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Title</Text>
                 <TextInput
-                  className="bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans text-base"
+                  className={`bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}
                   value={title}
                   onChangeText={setTitle}
                 />
               </View>
 
               <View className="mb-6">
-                <Text className="text-text font-sans text-sm mb-1 font-semibold">Description</Text>
+                <Text className={`text-text font-sans font-semibold mb-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Description</Text>
                 <TextInput
-                  className="bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans text-base min-h-[100px]"
+                  className={`bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans min-h-[100px] ${isSeniorMode ? 'text-lg' : 'text-base'}`}
                   value={description}
                   onChangeText={setDescription}
-                  multiline
-                  textAlignVertical="top"
+                  multiline textAlignVertical="top"
                 />
               </View>
 
               <View className="mb-10">
-                <Text className="text-text font-sans text-sm mb-2 font-semibold">Category</Text>
+                <Text className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Category</Text>
                 <View className="flex-row flex-wrap gap-2">
                   {CATEGORIES.map((cat) => {
                     const isActive = category === cat;
                     return (
-                      <TouchableOpacity
-                        key={cat}
-                        onPress={() => setCategory(cat)}
-                        className={`px-4 py-2 rounded-full border ${
-                          isActive 
-                            ? 'bg-primary border-primary' 
-                            : 'bg-surface border-surface-highlight'
-                        }`}
-                      >
-                        <Text className={`font-sans font-semibold ${
-                          isActive ? 'text-white' : 'text-text-muted'
-                        }`}>
-                          {cat}
-                        </Text>
+                      <TouchableOpacity key={cat} onPress={() => setCategory(cat)} className={`px-4 py-2 rounded-full border ${isActive ? 'bg-primary border-primary' : 'bg-surface border-surface-highlight'}`}>
+                        <Text className={`font-sans font-semibold ${isActive ? 'text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>{cat}</Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
               </View>
 
-              <TouchableOpacity 
-                className="bg-primary py-4 rounded-xl items-center flex-row justify-center"
-                onPress={handleUpdateTask}
-                disabled={saving}
-              >
-                {saving ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text className="text-white font-sans text-lg font-bold">Save Changes</Text>
-                )}
+              <TouchableOpacity className="bg-primary py-4 rounded-xl items-center flex-row justify-center" onPress={handleUpdateTask} disabled={saving}>
+                {saving ? <ActivityIndicator color="#FFFFFF" /> : <Text className={`text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>Save Changes</Text>}
               </TouchableOpacity>
             </>
           )}

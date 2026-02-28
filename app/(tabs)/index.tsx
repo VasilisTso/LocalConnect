@@ -9,7 +9,7 @@ import {
   Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Tag, Trash2, ChevronRight, Edit2 } from 'lucide-react-native';
+import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter } from 'expo-router';
@@ -44,16 +44,14 @@ export default function FeedScreen() {
   // Fetch the tasks
   const fetchTasks = useCallback(async () => {
     try {
-      // standard fetch sorted by newest.
+      // `fetch_adaptive_feed` RPC!
+      // NEW ADAPTIVITY ENGINE FETCH
+      if (!session?.user?.id) return; // Failsafe
 
-      // TODO 
-
-      // Once you have more data, swap this to use `fetch_adaptive_feed` RPC!
       const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
+        .rpc('fetch_adaptive_feed', {
+          calling_user_id: session.user.id
+        });
 
       if (error) throw error;
       setTasks(data || []);
@@ -125,6 +123,38 @@ export default function FeedScreen() {
     ]);
   }
 
+  // --- THE KARMA RESOLUTION LOGIC ---
+  async function handleHelpOut(task: Task) {
+    Alert.alert(
+      'Offer Help', 
+      'Are you sure you want to complete this task? You will earn 10 Karma Points!', 
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'I Helped!', 
+          style: 'default',
+          onPress: async () => {
+            try {
+              // This calls the secure RPC function we created earlier
+              const { error } = await supabase.rpc('resolve_task', {
+                target_task_id: task.id,
+                helper_id: session?.user?.id
+              });
+
+              if (error) throw error;
+
+              Alert.alert('Thank you!', 'You earned 10 Karma Points for helping your neighborhood.');
+              // Instantly remove it from the UI feed
+              setTasks(prev => prev.filter(t => t.id !== task.id));
+            } catch (error: any) {
+              Alert.alert('Error', error.message);
+            }
+          }
+        }
+      ]
+    );
+  }
+
   // UI Component for individual task cards
   const renderTask = ({ item }: { item: Task }) => {
     const isMyTask = session?.user?.id === item.user_id;
@@ -135,10 +165,12 @@ export default function FeedScreen() {
         onPress={() => handleViewTask(item)}
         activeOpacity={0.7}
       >
-        <View className="flex-row justify-between items-start mb-5">
-          <Text className="text-text font-sans font-bold text-lg flex-1 mr-2" numberOfLines={2}>
+        <View className="flex-row justify-between items-start mb-4">
+          {/* SCALED TITLES */}
+          <Text className={`text-text font-sans font-bold flex-1 mr-2 ${isSeniorMode ? 'text-2xl leading-8' : 'text-lg'}`} numberOfLines={2}>
             {item.title}
           </Text>
+
           {/* Only show delete button if the logged-in user owns this task */}
           {isMyTask && (
             <View className="flex-row items-center -mr-2 -mt-2">
@@ -154,21 +186,28 @@ export default function FeedScreen() {
               </TouchableOpacity>
             </View>
           )}
+
+          {!isMyTask && (
+            <TouchableOpacity 
+              className="bg-secondary px-3 py-2 rounded-lg flex-row items-center -mt-1 -mr-1"
+              onPress={() => handleHelpOut(item)}
+            >
+              <HeartHandshake color="#1F1C2C" size={18} className="mr-1.5" />
+              <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Help</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        <Text className="text-text-muted font-sans text-sm mb-5" numberOfLines={4}>
+        <Text className={`text-text-muted font-sans mb-5 ${isSeniorMode ? 'text-lg leading-7' : 'text-sm'}`} numberOfLines={4}>
           {item.description}
         </Text>
 
         <View className="flex-row items-center justify-between mt-auto">
           <View className="flex-row items-center bg-background px-3 py-1.5 rounded-full border border-surface-highlight">
-            <Tag color="#5F4B8B" size={14} className="mr-3" />
-            <Text className="text-text-muted ml-2 font-sans text-xs font-semibold">{item.category}</Text>
-          </View>
-          
-          <View className="flex-row items-center">
-            <Text className="text-primary font-sans text-sm font-bold mr-1">View</Text>
-            <ChevronRight color="#5F4B8B" size={16} />
+            <Tag color="#5F4B8B" size={16} className="mr-3" />
+            <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
+              {item.category}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>

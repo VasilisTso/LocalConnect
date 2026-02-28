@@ -94,27 +94,21 @@ export default function AddTaskScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
-        <ScrollView 
-          contentContainerStyle={{ padding: 24, paddingBottom: 60 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+        <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 60 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          
           <View className="mb-6">
-            <Text className="text-3xl font-sans font-bold text-text mb-2">Create a Task</Text>
-            <Text className="text-text-muted font-sans text-base">
+            <Text className={`font-sans font-bold text-text mb-2 ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>Create a Task</Text>
+            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
               Ask for help or offer your services to the neighborhood.
             </Text>
           </View>
 
           {/* Title Input */}
           <View className="mb-4">
-            <Text className="text-text font-sans text-sm mb-1 font-semibold">Title</Text>
+            <Text className={`text-text font-sans font-semibold mb-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Title</Text>
             <TextInput
-              className="bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans text-base"
+              className={`bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}
               placeholder="E.g., Need help moving a couch"
               placeholderTextColor="#64748B"
               value={title}
@@ -124,9 +118,9 @@ export default function AddTaskScreen() {
 
           {/* Description Input */}
           <View className="mb-6">
-            <Text className="text-text font-sans text-sm mb-1 font-semibold">Description</Text>
+            <Text className={`text-text font-sans font-semibold mb-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Description</Text>
             <TextInput
-              className="bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans text-base min-h-[100px]"
+              className={`bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans min-h-[100px] ${isSeniorMode ? 'text-lg' : 'text-base'}`}
               placeholder="Provide some details..."
               placeholderTextColor="#64748B"
               value={description}
@@ -138,7 +132,7 @@ export default function AddTaskScreen() {
 
           {/* Category Selector */}
           <View className="mb-6">
-            <Text className="text-text font-sans text-sm mb-2 font-semibold">Category</Text>
+            <Text className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Category</Text>
             <View className="flex-row flex-wrap gap-2">
               {CATEGORIES.map((cat) => {
                 const isActive = category === cat;
@@ -146,15 +140,9 @@ export default function AddTaskScreen() {
                   <TouchableOpacity
                     key={cat}
                     onPress={() => setCategory(cat)}
-                    className={`px-4 py-2 rounded-full border ${
-                      isActive 
-                        ? 'bg-primary border-primary' 
-                        : 'bg-surface border-surface-highlight'
-                    }`}
+                    className={`px-4 py-2 rounded-full border ${isActive ? 'bg-primary border-primary' : 'bg-surface border-surface-highlight'}`}
                   >
-                    <Text className={`font-sans font-semibold ${
-                      isActive ? 'text-white' : 'text-text-muted'
-                    }`}>
+                    <Text className={`font-sans font-semibold ${isActive ? 'text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
                       {cat}
                     </Text>
                   </TouchableOpacity>
@@ -163,11 +151,9 @@ export default function AddTaskScreen() {
             </View>
           </View>
 
-          {/* Neighborhood Selector (Privacy by Design) */}
+          {/* Neighborhood Selector */}
           <View className="mb-8">
-            <Text className="text-text font-sans text-sm mb-2 font-semibold">
-              General Location (Kept private)
-            </Text>
+            <Text className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>General Location (Kept private)</Text>
             <View className="flex-row flex-wrap gap-2">
               {NEIGHBORHOODS.map((hood) => {
                 const isActive = neighborhood.name === hood.name;
@@ -175,15 +161,9 @@ export default function AddTaskScreen() {
                   <TouchableOpacity
                     key={hood.name}
                     onPress={() => setNeighborhood(hood)}
-                    className={`px-4 py-2 rounded-lg border ${
-                      isActive 
-                        ? 'bg-secondary border-secondary' 
-                        : 'bg-surface border-surface-highlight'
-                    }`}
+                    className={`px-4 py-2 rounded-lg border ${isActive ? 'bg-secondary border-secondary' : 'bg-surface border-surface-highlight'}`}
                   >
-                    <Text className={`font-sans font-semibold ${
-                      isActive ? 'text-text' : 'text-text-muted'
-                    }`}>
+                    <Text className={`font-sans font-semibold ${isActive ? 'text-text' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
                       {hood.name}
                     </Text>
                   </TouchableOpacity>
@@ -193,16 +173,8 @@ export default function AddTaskScreen() {
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity 
-            className="bg-primary py-4 rounded-xl items-center flex-row justify-center"
-            onPress={handleCreateTask}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-white font-sans text-lg font-bold">Post Task</Text>
-            )}
+          <TouchableOpacity className="bg-primary py-4 rounded-xl items-center flex-row justify-center" onPress={handleCreateTask} disabled={loading}>
+            {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text className={`text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>Post Task</Text>}
           </TouchableOpacity>
 
         </ScrollView>
