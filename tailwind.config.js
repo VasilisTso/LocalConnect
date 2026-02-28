@@ -5,6 +5,7 @@ module.exports = {
     "./components/**/*.{js,jsx,ts,tsx}"
   ],
   presets: [require("nativewind/preset")],
+  darkMode: 'class', // for seniormode
   theme: {
     extend: {
       // 1. Map your semantic colors to the CSS variables

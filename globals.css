@@ -18,7 +18,7 @@
   /* * Senior Mode Theme (Adaptivity Target) 
    * High-contrast overrides triggered via global state 
    */
-  .theme-senior {
+  .dark {
     --color-primary: #3b2f56; /* Darker Violet for better contrast */
     --color-secondary: #ffb300; /* Deeper Yellow/Amber */
     --color-background: #ffffff; /* Pure white background */

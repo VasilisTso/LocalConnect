@@ -8,10 +8,9 @@ import {
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { vars } from "nativewind";
 import { useEffect } from "react";
-import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useColorScheme } from "nativewind";
 
 // Our custom state and backend
 import { supabase } from "@/lib/supabase";
@@ -66,44 +65,6 @@ function useAuthManager() {
   }, [session, segments, rootNavigationState?.key]);
 }
 
-/**
- * THE THEME VARIABLES
- * We map out the Senior Mode CSS variables here.
- */
-const seniorTheme = vars({
-  "--color-primary": "#3B2F56",
-  "--color-secondary": "#FFB300",
-  "--color-background": "#FFFFFF",
-  "--color-surface": "#F8F9FA",
-  "--color-surface-highlight": "#E9ECEF",
-  "--color-text": "#000000",
-  "--color-text-muted": "#495057",
-  "--color-error": "#D32F2F",
-});
-
-/**
- * @description THE ADAPTIVITY ENGINE (UI LEVEL)
- * We isolate the theme wrapper into its own component.
- * By using a Zustand selector (state => state.isSeniorMode), this specific View
- * is the ONLY thing at the root level that re-renders when the toggle is clicked.
- */
-
-function ThemeWrapper({ children }: { children: React.ReactNode }) {
-  const isSeniorMode = useAppStore((state) => state.isSeniorMode);
-
-  return (
-    <View 
-      className="flex-1" 
-      style={isSeniorMode ? seniorTheme : undefined}
-    >
-      <View className="flex-1 bg-background">
-        <StatusBar style="dark" />
-        {children}
-      </View>
-    </View>
-  );
-}
-
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -128,25 +89,32 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  // Call the custom hook directly inside the component
   useAuthManager();
+  
+  // THE ADAPTIVITY ENGINE (UI LEVEL)
+  // We sync Zustand state with NativeWind's built-in theme engine
+  const isSeniorMode = useAppStore((state) => state.isSeniorMode);
+  const { setColorScheme } = useColorScheme();
+
+  useEffect(() => {
+    // If Senior Mode is active, we trigger NativeWinds dark mode, 
+    // which automatically cascades our high-contrast CSS variables
+    setColorScheme(isSeniorMode ? "dark" : "light");
+  }, [isSeniorMode, setColorScheme]);
 
   return (
-    /* SafeAreaProvider at the root */
     <SafeAreaProvider>
-      <ThemeWrapper>
-        {/* THE ADAPTIVITY ENGINE (UI LEVEL):
-          This single View wraps the entire application. By toggling the 'theme-senior'
-          class based on Zustand state, we instantly change the CSS variables (--color-primary, etc.)
-          for every component inside the app, creating an instant High-Contrast mode.
-        */}
-        <Stack screenOptions={{ headerShown: false }}>
-          {/* Explicitly define our route groups so Expo knows they exist */}
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-        </Stack>
-      </ThemeWrapper>
+      {/* FORCE STATUS BAR TO DARK TEXT:
+        Since both your standard background (#FAFAFA) and senior background (#FFFFFF)
+        are light colors, the status bar text/icons must ALWAYS be forced to dark (black).
+      */}
+      <StatusBar style="dark" backgroundColor="transparent" />
+      
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'var(--color-background)' } }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+      </Stack>
     </SafeAreaProvider>
   );
 }
