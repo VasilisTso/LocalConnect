@@ -1,7 +1,6 @@
 // custom storage adapter using expo-secure-store so
 // authentication tokens persist safely across app launches
 
-// lib/supabase.ts
 import { createClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
 import "react-native-url-polyfill/auto";
@@ -67,7 +66,7 @@ const ExpoSecureStoreAdapter = {
   },
 };
 
-// no hardcode keys in production, environment variables.
+// environment variables.
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 

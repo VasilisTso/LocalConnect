@@ -25,7 +25,7 @@ export { ErrorBoundary } from "expo-router";
 SplashScreen.preventAutoHideAsync();
 
 /**
- * 1. ROUTING & AUTH HOOK (Refactored from AuthManager component)
+ * ROUTING & AUTH HOOK (Refactored from AuthManager component)
  * By using a hook instead of an invisible component, we ensure this runs
  * safely inside the RootLayout without adding empty nodes to the React tree.
  */
@@ -67,7 +67,7 @@ function useAuthManager() {
 }
 
 /**
- * 2. THE THEME VARIABLES
+ * THE THEME VARIABLES
  * We map out the Senior Mode CSS variables here.
  */
 const seniorTheme = vars({
@@ -92,14 +92,14 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
   const isSeniorMode = useAppStore((state) => state.isSeniorMode);
 
   return (
-    <View
-      // The className remains STATIC. The component tree never unmounts!
-      className="flex-1 bg-background"
-      // We inject the variables dynamically via the style prop
+    <View 
+      className="flex-1" 
       style={isSeniorMode ? seniorTheme : undefined}
     >
-      <StatusBar style="dark" />
-      {children}
+      <View className="flex-1 bg-background">
+        <StatusBar style="dark" />
+        {children}
+      </View>
     </View>
   );
 }
@@ -132,7 +132,7 @@ function RootLayoutNav() {
   useAuthManager();
 
   return (
-    /* ALWAYS use SafeAreaProvider at the root */
+    /* SafeAreaProvider at the root */
     <SafeAreaProvider>
       <ThemeWrapper>
         {/* THE ADAPTIVITY ENGINE (UI LEVEL):
