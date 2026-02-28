@@ -16,16 +16,21 @@
   }
 
   /* * Senior Mode Theme (Adaptivity Target) 
-   * High-contrast overrides triggered via global state 
+   * NativeWind automatically triggers this media query when 
+   * useColorScheme().setColorScheme('dark') is called!
    */
-  .dark {
-    --color-primary: #3b2f56; /* Darker Violet for better contrast */
-    --color-secondary: #ffb300; /* Deeper Yellow/Amber */
-    --color-background: #ffffff; /* Pure white background */
-    --color-surface: #f8f9fa; /* Slightly off-white surface to distinguish from bg */
-    --color-surface-highlight: #e9ecef; /* Gray highlight instead of lavender */
-    --color-text: #000000; /* Pure Black text for maximum readability */
-    --color-text-muted: #495057; /* Darker gray for muted text */
-    --color-error: #d32f2f; /* Darker Red */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* I have temporarily made these colors DRASTICALLY different 
+         so you can physically see the change happen. */
+      --color-primary: #000000; /* Pitch black buttons */
+      --color-secondary: #FFB300; 
+      --color-background: #FFF9E6; /* Pale yellow accessibility background */
+      --color-surface: #FFFFFF; 
+      --color-surface-highlight: #000000; /* Harsh black borders for cards */
+      --color-text: #000000; 
+      --color-text-muted: #111111; 
+      --color-error: #D32F2F; 
+    }
   }
 }
