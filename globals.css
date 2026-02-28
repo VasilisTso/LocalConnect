@@ -5,27 +5,27 @@
 @layer base {
   /* Default Theme (Standard User) */
   :root {
-    --color-primary: #5F4B8B; /* Ultra Violet */
-    --color-secondary: #FFD167; /* Soft Sunshine Yellow */
-    --color-background: #FAFAFA; /* Neutral Gray-50 */
-    --color-surface: #FFFFFF; /* Pure white */
-    --color-surface-highlight: #F3F0FF; /* Light Lavender */
-    --color-text: #1F1C2C; /* Dark Violet-Black */
-    --color-text-muted: #64748B; /* Slate-500 */
-    --color-error: #EF4444; /* Red-500 */
+    --color-primary: #5f4b8b; /* Ultra Violet */
+    --color-secondary: #ffd167; /* Soft Sunshine Yellow */
+    --color-background: #fafafa; /* Neutral Gray-50 */
+    --color-surface: #ffffff; /* Pure white */
+    --color-surface-highlight: #f3f0ff; /* Light Lavender */
+    --color-text: #1f1c2c; /* Dark Violet-Black */
+    --color-text-muted: #64748b; /* Slate-500 */
+    --color-error: #ef4444; /* Red-500 */
   }
 
   /* * Senior Mode Theme (Adaptivity Target) 
    * High-contrast overrides triggered via global state 
    */
   .theme-senior {
-    --color-primary: #3B2F56; /* Darker Violet for better contrast */
-    --color-secondary: #FFB300; /* Deeper Yellow/Amber */
-    --color-background: #FFFFFF; /* Pure white background */
-    --color-surface: #F8F9FA; /* Slightly off-white surface to distinguish from bg */
-    --color-surface-highlight: #E9ECEF; /* Gray highlight instead of lavender */
+    --color-primary: #3b2f56; /* Darker Violet for better contrast */
+    --color-secondary: #ffb300; /* Deeper Yellow/Amber */
+    --color-background: #ffffff; /* Pure white background */
+    --color-surface: #f8f9fa; /* Slightly off-white surface to distinguish from bg */
+    --color-surface-highlight: #e9ecef; /* Gray highlight instead of lavender */
     --color-text: #000000; /* Pure Black text for maximum readability */
     --color-text-muted: #495057; /* Darker gray for muted text */
-    --color-error: #D32F2F; /* Darker Red */
+    --color-error: #d32f2f; /* Darker Red */
   }
 }
