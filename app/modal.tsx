@@ -104,7 +104,7 @@ export default function EditTaskModal() {
 
   // We don't use SafeAreaView here because it's a modal and we want it to map to the edges smoothly
   return (
-    <View className={`flex-1 bg-background ${isSeniorMode ? 'theme-senior' : ''}`}>
+    <View className="flex-1 bg-background">
       <StatusBar style={Platform.OS === 'ios' ? 'light' : 'dark'} />
       
       <KeyboardAvoidingView 
