@@ -171,7 +171,7 @@ export default function FeedScreen() {
             {item.title}
           </Text>
 
-          {/* Only show delete button if the logged-in user owns this task */}
+          {/* Owner controls: Edit/Delete */}
           {isMyTask && (
             <View className="flex-row items-center -mr-2 -mt-2">
               <TouchableOpacity 
@@ -186,16 +186,6 @@ export default function FeedScreen() {
               </TouchableOpacity>
             </View>
           )}
-
-          {!isMyTask && (
-            <TouchableOpacity 
-              className="bg-secondary px-3 py-2 rounded-lg flex-row items-center -mt-1 -mr-1"
-              onPress={() => handleHelpOut(item)}
-            >
-              <HeartHandshake color="#1F1C2C" size={18} className="mr-1.5" />
-              <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Help</Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         <Text className={`text-text-muted font-sans mb-5 ${isSeniorMode ? 'text-lg leading-7' : 'text-sm'}`} numberOfLines={4}>
@@ -209,6 +199,17 @@ export default function FeedScreen() {
               {item.category}
             </Text>
           </View>
+
+          {/* Helper controls - Show 'Help Out' button if it's NOT their task */}
+          {!isMyTask && (
+            <TouchableOpacity 
+              className="bg-secondary px-4 py-3 rounded-lg flex-row items-center "
+              onPress={() => handleHelpOut(item)}
+            >
+              <HeartHandshake color="#1F1C2C" size={18} className="mr-3" />
+              <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`}>Help</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </TouchableOpacity>
     );

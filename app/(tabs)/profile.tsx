@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -98,11 +98,11 @@ export default function ProfileScreen() {
             {session?.user?.email || 'User'}
           </Text>
 
-          {/*HIDE GAMIFICATION IN SENIOR MODE */}
+          {/*KARMA BADGE - HIDE GAMIFICATION IN SENIOR MODE */}
           {!isSeniorMode && (
             <View className="flex-row items-center bg-secondary/20 px-4 py-2 rounded-full border border-secondary">
               <Award color="#D97706" size={20} className="mr-2" />
-              <Text className="text-text font-sans font-bold text-base">
+              <Text className="text-text ml-2 font-sans font-bold text-base">
                 {karma} Karma Points
               </Text>
             </View>
@@ -115,7 +115,7 @@ export default function ProfileScreen() {
             <View className="flex-row items-center flex-1 pr-4">
               <ShieldAlert color="#5F4B8B" size={28} className="mr-3" />
               <View className='ml-2'>
-                {/* REQUIREMENT 3: DYNAMIC TYPOGRAPHY */}
+                {/* DYNAMIC TYPOGRAPHY */}
                 <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
                   Senior Mode
                 </Text>
