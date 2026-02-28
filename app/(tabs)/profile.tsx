@@ -9,10 +9,18 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LogOut, User as UserIcon, Tag, ShieldAlert, Award, Phone } from 'lucide-react-native';
+import { LogOut, User as UserIcon, Tag, ShieldAlert, Award, Phone, Shield } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
+
+// Helper function to determine badge status based on Karma points
+function getBadge(karma: number) {
+  if (karma < 0) return { title: 'Flagged Account', color: '#EF4444', icon: ShieldAlert };
+  if (karma < 50) return { title: 'New Neighbor', color: '#64748B', icon: UserIcon };
+  if (karma < 150) return { title: 'Active Helper', color: '#5F4B8B', icon: Shield };
+  return { title: 'Local Hero', color: '#D97706', icon: Award }; // 150+ points
+}
 
 /**
  * @description User Profile & Settings Screen
@@ -103,11 +111,24 @@ export default function ProfileScreen() {
 
           {/*KARMA BADGE - HIDE GAMIFICATION IN SENIOR MODE */}
           {!isSeniorMode && (
-            <View className="flex-row items-center bg-secondary/20 px-4 py-2 rounded-full border border-secondary">
-              <Award color="#D97706" size={20} className="mr-2" />
-              <Text className="text-text ml-2 font-sans font-bold text-base">
-                {karma} Karma Points
-              </Text>
+            <View className="flex-row items-center mt-1">
+              {/* Score Bubble */}
+              <View className="flex-row items-center bg-secondary/20 px-4 py-2 rounded-l-full border border-secondary border-r-0">
+                <Award color="#D97706" size={18} className="mr-2" />
+                <Text className="text-text ml-1 font-sans font-bold text-base">
+                  {karma} pts
+                </Text>
+              </View>
+              
+              {/* Dynamic Title Bubble */}
+              <View 
+                className="flex-row items-center px-4 py-2 rounded-r-full border"
+                style={{ backgroundColor: `${getBadge(karma).color}20`, borderColor: getBadge(karma).color }}
+              >
+                <Text className="font-sans font-bold text-sm" style={{ color: getBadge(karma).color }}>
+                  {getBadge(karma).title}
+                </Text>
+              </View>
             </View>
           )}
         </View>

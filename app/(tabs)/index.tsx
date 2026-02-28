@@ -9,10 +9,10 @@ import {
   Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle } from 'lucide-react-native';
+import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 // Define the shape of Task data
 interface Task {
@@ -27,6 +27,11 @@ interface Task {
   // but for the UI list, we primarily rely on the category and title.
 }
 
+// Interface to hold tasks waiting for a review
+interface PendingReviewTask extends Task {
+  helper_id: string;
+}
+
 /**
  * @description The Smart Feed (Main Screen)
  * Human-Centric Goal: Presents tasks clearly. In Senior Mode (Dark Mode), the CSS variables 
@@ -37,36 +42,60 @@ interface Task {
 export default function FeedScreen() {
   const router = useRouter();
   const { session, isSeniorMode } = useAppStore();
+
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [pendingReviews, setPendingReviews] = useState<PendingReviewTask[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch the tasks
+  // Fetch both the Smart Feed AND any tasks waiting for a review
   const fetchTasks = useCallback(async () => {
+    // `fetch_adaptive_feed` RPC!
+    // NEW ADAPTIVITY ENGINE FETCH
+    if (!session?.user?.id) return; // Failsafe
+
     try {
-      // `fetch_adaptive_feed` RPC!
-      // NEW ADAPTIVITY ENGINE FETCH
-      if (!session?.user?.id) return; // Failsafe
+      // Fetch Open Tasks (Smart Engine)
+      const { data: openTasks, error: feedError } = await supabase
+        .rpc('fetch_adaptive_feed', { calling_user_id: session.user.id });
+      if (feedError) throw feedError;
+      setTasks(openTasks || []);
 
-      const { data, error } = await supabase
-        .rpc('fetch_adaptive_feed', {
-          calling_user_id: session.user.id
-        });
+      // Fetch Completed Tasks (to see if they need a review)
+      const { data: myCompletedTasks } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('status', 'completed')
+        .eq('user_id', session.user.id)
+        .not('helper_id', 'is', null); // Must have a helper to review!
 
-      if (error) throw error;
-      setTasks(data || []);
+      // Fetch Reviews I have already written
+      const { data: myReviews } = await supabase
+        .from('reviews')
+        .select('task_id')
+        .eq('reviewer_id', session.user.id);
+
+      // Filter out tasks that I've already reviewed
+      const reviewedTaskIds = myReviews?.map(r => r.task_id) || [];
+      const needsReview = myCompletedTasks?.filter(t => !reviewedTaskIds.includes(t.id)) || [];
+      
+      setPendingReviews(needsReview as PendingReviewTask[]);
+
     } catch (error: any) {
-      Alert.alert('Error fetching tasks', error.message);
+      Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [session]);
 
-  // Fetch on mount
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+  // Use focus effect so the pending review disappears instantly after submitting it!
+  useFocusEffect(
+    useCallback(() => {
+      fetchTasks();
+    }, [fetchTasks])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -215,6 +244,43 @@ export default function FeedScreen() {
     );
   };
 
+  // UI component specifically for tasks needing a review
+  const renderPendingReviews = () => {
+    if (pendingReviews.length === 0) return null;
+
+    return (
+      <View className="mb-6">
+        <Text className={`text-text font-sans font-bold mb-3 ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+          Tasks Pending Review ({pendingReviews.length})
+        </Text>
+        {pendingReviews.map(task => (
+          <TouchableOpacity 
+            key={task.id}
+            activeOpacity={0.8}
+            onPress={() => router.push({ 
+              pathname: '/review', 
+              params: { taskId: task.id, helperId: task.helper_id, taskTitle: task.title } 
+            })}
+            className="bg-secondary/20 border-2 border-secondary rounded-xl p-4 flex-row items-center justify-between mb-3 shadow-sm"
+          >
+            <View className="flex-1 pr-4">
+              <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-base'}`} numberOfLines={1}>
+                {task.title}
+              </Text>
+              <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-xs'}`}>
+                A neighbor helped you with this!
+              </Text>
+            </View>
+            <View className="bg-surface px-4 py-2 rounded-full flex-row items-center border border-secondary">
+              <Star color="#D97706" fill="#D97706" size={16} className="mr-2" />
+              <Text className="text-text font-sans font-bold text-sm">Rate</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="px-6 pt-6 pb-2">
@@ -233,6 +299,8 @@ export default function FeedScreen() {
           data={tasks}
           keyExtractor={(item) => item.id}
           renderItem={renderTask}
+          // INJECT PENDING REVIEWS AT THE TOP OF THE LIST
+          ListHeaderComponent={renderPendingReviews}
           contentContainerStyle={{ padding: 24, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
