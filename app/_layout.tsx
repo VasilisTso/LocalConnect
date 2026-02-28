@@ -8,6 +8,7 @@ import {
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { vars } from "nativewind";
 import { useEffect } from "react";
 import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -24,29 +25,23 @@ export { ErrorBoundary } from "expo-router";
 SplashScreen.preventAutoHideAsync();
 
 /**
-  AUTH MANAGER (Invisible Component)
-  Handles all routing and session logic. By isolating this, any re-renders 
-  caused by session changes do not tear down the Expo Router NavigationContainer.
-*/
-function AuthManager() {
-  // Use selectors for auth! This prevents the router from crashing
-  // because it no longer re-renders when UI preferences (like isSeniorMode) change.
+ * 1. ROUTING & AUTH HOOK (Refactored from AuthManager component)
+ * By using a hook instead of an invisible component, we ensure this runs
+ * safely inside the RootLayout without adding empty nodes to the React tree.
+ */
+function useAuthManager() {
   const session = useAppStore((state) => state.session);
   const setSession = useAppStore((state) => state.setSession);
 
   const segments = useSegments();
   const router = useRouter();
-  // This hook lets us know when Expo Router is ready
   const rootNavigationState = useRootNavigationState();
 
-  // Supabase Auth Listener (Session Management)
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
-    // Listen for auth changes (login/logout)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -56,27 +51,35 @@ function AuthManager() {
     return () => subscription.unsubscribe();
   }, [setSession]);
 
-  // Route Protection Logic
   useEffect(() => {
-    // Do nothing until the navigation tree is fully mounted
     if (!rootNavigationState?.key) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    // Wait for navigation to be ready
     if (session === undefined) return;
 
     if (!session && !inAuthGroup) {
-      // If user is not logged in, force them to the login screen
       router.replace("/(auth)/login");
     } else if (session && inAuthGroup) {
-      // If user is logged in but trying to view auth screens, send
       router.replace("/(tabs)");
     }
   }, [session, segments, rootNavigationState?.key]);
-
-  return null; // This component renders absolutely nothing!
 }
+
+/**
+ * 2. THE THEME VARIABLES
+ * We map out the Senior Mode CSS variables here.
+ */
+const seniorTheme = vars({
+  "--color-primary": "#3B2F56",
+  "--color-secondary": "#FFB300",
+  "--color-background": "#FFFFFF",
+  "--color-surface": "#F8F9FA",
+  "--color-surface-highlight": "#E9ECEF",
+  "--color-text": "#000000",
+  "--color-text-muted": "#495057",
+  "--color-error": "#D32F2F",
+});
 
 /**
  * @description THE ADAPTIVITY ENGINE (UI LEVEL)
@@ -90,11 +93,10 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <View
-      className={
-        isSeniorMode
-          ? "flex-1 bg-background theme-senior"
-          : "flex-1 bg-background"
-      }
+      // The className remains STATIC. The component tree never unmounts!
+      className="flex-1 bg-background"
+      // We inject the variables dynamically via the style prop
+      style={isSeniorMode ? seniorTheme : undefined}
     >
       <StatusBar style="dark" />
       {children}
@@ -126,6 +128,9 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  // Call the custom hook directly inside the component
+  useAuthManager();
+
   return (
     /* ALWAYS use SafeAreaProvider at the root */
     <SafeAreaProvider>
@@ -141,9 +146,6 @@ function RootLayoutNav() {
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: "modal" }} />
         </Stack>
-
-        {/* Render AuthManager INSIDE the tree so it has access to Navigation Context */}
-        <AuthManager />
       </ThemeWrapper>
     </SafeAreaProvider>
   );
