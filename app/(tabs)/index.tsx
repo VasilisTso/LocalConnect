@@ -9,7 +9,7 @@ import {
   Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake } from 'lucide-react-native';
+import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter } from 'expo-router';
@@ -253,6 +253,15 @@ export default function FeedScreen() {
           }
         />
       )}
+
+      {/* THE FLOATING CHAT BUTTON */}
+      <TouchableOpacity 
+        className="absolute bottom-6 right-6 bg-primary w-16 h-16 rounded-full items-center justify-center shadow-lg border-2 border-surface"
+        onPress={() => router.push('/chat')}
+        activeOpacity={0.8}
+      >
+        <MessageCircle color="#FFFFFF" size={26} />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
