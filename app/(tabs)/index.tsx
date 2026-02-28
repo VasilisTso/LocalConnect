@@ -9,7 +9,7 @@ import {
   Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star } from 'lucide-react-native';
+import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -23,8 +23,17 @@ interface Task {
   category: string;
   status: string;
   created_at: string;
+  creator_karma?: number;
   // Note: PostGIS location comes back as a WKB/GeoJSON or string depending on the query, 
   // but for the UI list, we primarily rely on the category and title.
+}
+
+// Helper function to calculate badges
+function getBadge(karma: number) {
+  if (karma < 0) return { title: 'Flagged', color: '#EF4444', icon: ShieldAlert };
+  if (karma < 50) return { title: 'New Neighbor', color: '#64748B', icon: UserIcon };
+  if (karma < 150) return { title: 'Active Helper', color: '#5F4B8B', icon: Shield };
+  return { title: 'Local Hero', color: '#D97706', icon: Award }; 
 }
 
 // Interface to hold tasks waiting for a review
@@ -217,16 +226,37 @@ export default function FeedScreen() {
           )}
         </View>
 
-        <Text className={`text-text-muted font-sans mb-5 ${isSeniorMode ? 'text-lg leading-7' : 'text-sm'}`} numberOfLines={4}>
+        <Text className={`text-text-muted font-sans mb-10 ${isSeniorMode ? 'text-lg leading-7' : 'text-sm'}`} numberOfLines={4}>
           {item.description}
         </Text>
 
         <View className="flex-row items-center justify-between mt-auto">
-          <View className="flex-row items-center bg-background px-3 py-1.5 rounded-full border border-surface-highlight">
-            <Tag color="#5F4B8B" size={16} className="mr-3" />
-            <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
-              {item.category}
-            </Text>
+          <View className="flex-column items-start gap-2">
+            {/* Category Tag */}
+            <View className="flex-row items-center bg-background px-3 py-1.5 rounded-full border border-surface-highlight">
+              <Tag color="#5F4B8B" size={16} className="mr-2" />
+              <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
+                {item.category}
+              </Text>
+            </View>
+
+            {/* UPDATED: Creator's Trust Badge (Visible in ALL modes for safety!) */}
+            <View 
+              className="flex-row items-center px-3 py-1.5 rounded-full border"
+              style={{ backgroundColor: `${getBadge(item.creator_karma || 0).color}15`, borderColor: getBadge(item.creator_karma || 0).color }}
+            >
+              {React.createElement(getBadge(item.creator_karma || 0).icon, { 
+                color: getBadge(item.creator_karma || 0).color, 
+                size: isSeniorMode ? 18 : 14, // Scales up in Senior Mode
+                className: "mr-1.5" 
+              })}
+              <Text 
+                className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-sm' : 'text-xs'}`} // Scales up in Senior Mode
+                style={{ color: getBadge(item.creator_karma || 0).color }}
+              >
+                {getBadge(item.creator_karma || 0).title}
+              </Text>
+            </View>
           </View>
 
           {/* Helper controls - Show 'Help Out' button if it's NOT their task */}
