@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LogOut, User as UserIcon, Tag, ShieldAlert, Award, Phone } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 /**
  * @description User Profile & Settings Screen
@@ -33,24 +33,27 @@ export default function ProfileScreen() {
   // A preset list of tags for our neighborhood app
   const AVAILABLE_TAGS = ['Pets', 'Education', 'Tools', 'Errands', 'Tech Support'];
 
-  // Fetch the user's current tags from the database on load
-  useEffect(() => {
-    async function fetchProfile() {
-      if (!session?.user?.id) return;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('tags, karma_points')
-        .eq('id', session.user.id)
-        .single();
+  // FETCH ON TAB FOCUS: This ensures your Karma updates instantly when you switch tabs!
+  useFocusEffect(
+    useCallback(() => {
+      async function fetchProfile() {
+        if (!session?.user?.id) return;
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('tags, karma_points')
+          .eq('id', session.user.id)
+          .single();
 
-      if (data) {
-        if (data.tags) setUserTags(data.tags);
-        if (data.karma_points) setKarma(data.karma_points);
+        if (data) {
+          if (data.tags) setUserTags(data.tags);
+          // Safely set karma, defaulting to 0 if it's null
+          setKarma(data.karma_points || 0);
+        }
       }
-    }
-    fetchProfile();
-  }, [session]);
+      fetchProfile();
+    }, [session])
+  );
 
   // Toggle a tag on/off and save to Supabase
   async function handleToggleTag(tag: string) {
