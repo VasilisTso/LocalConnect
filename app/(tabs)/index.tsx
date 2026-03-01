@@ -111,7 +111,7 @@ export default function FeedScreen() {
     fetchTasks();
   };
 
-  // IMPLICIT FEEDBACK: Learning mechanism
+  // IMPLICIT FEEDBACK: Learning mechanism, now leads to details screen
   async function handleViewTask(task: Task) {
     if (!session?.user?.id) return;
 
@@ -122,16 +122,22 @@ export default function FeedScreen() {
         task_id: task.id,
         interaction_type: 'viewed_category_' + task.category // e.g., viewed_category_Pets
       }]);
-      
-      // In full app, route to a Details screen. 
-      // For now, show an alert to prove the interaction was logged
-      Alert.alert(
-        task.title, 
-        `${task.description}\n\n(Implicit Feedback: 'Viewed ${task.category}' logged for Adaptivity Engine)`
-      );
     } catch (error) {
       console.error("Failed to log interaction silently", error);
     }
+
+    // Route to Details screen and pass the task data
+    router.push({
+      pathname: '/task-details',
+      params: {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        category: task.category,
+        creator_karma: task.creator_karma || 0,
+        user_id: task.user_id
+      }
+    });
   }
 
   // Remove a task
@@ -231,44 +237,31 @@ export default function FeedScreen() {
         </Text>
 
         <View className="flex-row items-center justify-between mt-auto">
-          <View className="flex-column items-start gap-2">
-            {/* Category Tag */}
-            <View className="flex-row items-center bg-background px-3 py-1.5 rounded-full border border-surface-highlight">
-              <Tag color="#5F4B8B" size={16} className="mr-2" />
-              <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
-                {item.category}
-              </Text>
-            </View>
-
-            {/* UPDATED: Creator's Trust Badge (Visible in ALL modes for safety!) */}
-            <View 
-              className="flex-row items-center px-3 py-1.5 rounded-full border"
-              style={{ backgroundColor: `${getBadge(item.creator_karma || 0).color}15`, borderColor: getBadge(item.creator_karma || 0).color }}
-            >
-              {React.createElement(getBadge(item.creator_karma || 0).icon, { 
-                color: getBadge(item.creator_karma || 0).color, 
-                size: isSeniorMode ? 18 : 14, // Scales up in Senior Mode
-                className: "mr-1.5" 
-              })}
-              <Text 
-                className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-sm' : 'text-xs'}`} // Scales up in Senior Mode
-                style={{ color: getBadge(item.creator_karma || 0).color }}
-              >
-                {getBadge(item.creator_karma || 0).title}
-              </Text>
-            </View>
+          {/* Category Tag */}
+          <View className="flex-row items-center bg-background px-3 py-1.5 rounded-full border border-surface-highlight">
+            <Tag color="#5F4B8B" size={16} className="mr-2" />
+            <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
+              {item.category}
+            </Text>
           </View>
 
-          {/* Helper controls - Show 'Help Out' button if it's NOT their task */}
-          {!isMyTask && (
-            <TouchableOpacity 
-              className="bg-secondary px-4 py-3 rounded-lg flex-row items-center "
-              onPress={() => handleHelpOut(item)}
+          {/* Creator's Trust Badge (Visible in ALL modes for safety!) */}
+          <View 
+            className="flex-row items-center px-3 py-1.5 rounded-full border"
+            style={{ backgroundColor: `${getBadge(item.creator_karma || 0).color}15`, borderColor: getBadge(item.creator_karma || 0).color }}
+          >
+            {React.createElement(getBadge(item.creator_karma || 0).icon, { 
+              color: getBadge(item.creator_karma || 0).color, 
+              size: isSeniorMode ? 18 : 14, // Scales up in Senior Mode
+              className: "mr-1.5" 
+            })}
+            <Text 
+              className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-sm' : 'text-xs'}`} // Scales up in Senior Mode
+              style={{ color: getBadge(item.creator_karma || 0).color }}
             >
-              <HeartHandshake color="#1F1C2C" size={18} className="mr-3" />
-              <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`}>Help</Text>
-            </TouchableOpacity>
-          )}
+              {getBadge(item.creator_karma || 0).title}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );

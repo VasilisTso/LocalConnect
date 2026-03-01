@@ -2,17 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
+@layer base {  
   /* Default Theme (Standard User) */
   :root {
-    --color-primary: #5f4b8b; /* Ultra Violet */
-    --color-secondary: #ffd167; /* Soft Sunshine Yellow */
-    --color-background: #fafafa; /* Neutral Gray-50 */
-    --color-surface: #ffffff; /* Pure white */
-    --color-surface-highlight: #f3f0ff; /* Light Lavender */
-    --color-text: #1f1c2c; /* Dark Violet-Black */
-    --color-text-muted: #64748b; /* Slate-500 */
-    --color-error: #ef4444; /* Red-500 */
+    --color-primary: #5f4b8b; 
+    --color-secondary: #ffd167; 
+    --color-background: #fafafa; 
+    --color-surface: #ffffff; 
+    --color-surface-highlight: #f3f0ff;
+    --color-text: #1f1c2c; 
+    --color-text-muted: #64748b; 
+    --color-error: #ef4444;
   }
 
   /* * Senior Mode Theme (Adaptivity Target) 
