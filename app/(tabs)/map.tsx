@@ -1,18 +1,62 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
-import { MapPin } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
-interface TaskLocation {
+// We update our interface to handle groups of tasks
+interface Task {
   id: string;
   title: string;
   category: string;
   latitude: number;
   longitude: number;
 }
+
+interface LocationCluster {
+  id: string;
+  latitude: number;
+  longitude: number;
+  tasks: Task[];
+}
+
+// map pin
+const MapPinMarker = memo(({ cluster, isSeniorMode, onPress }: { cluster: LocationCluster, isSeniorMode: boolean, onPress: () => void }) => {
+  const taskCount = cluster.tasks.length;
+  // Let the marker track changes initially, then freeze it after 1 second
+  const [trackChanges, setTrackChanges] = useState(true);
+
+  return (
+    <Marker 
+      coordinate={{ latitude: cluster.latitude, longitude: cluster.longitude }}
+      onPress={onPress} // 2. Trigger the alert directly from the marker tap
+      tracksViewChanges={trackChanges} // Start true, turn false after render
+    >
+      <View 
+        style={{ 
+          backgroundColor: isSeniorMode ? '#000000' : '#5F4B8B',
+          borderColor: '#FFFFFF',
+          borderWidth: 2,
+          borderRadius: 20, 
+          width: 36, 
+          height: 36, 
+          alignItems: 'center',
+          justifyContent: 'center', 
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 2,
+          elevation: 4,
+        }}
+      >
+        <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
+          {taskCount}
+        </Text>
+      </View>
+    </Marker>
+  );
+});
 
 /**
  * @description Neighborhood Map Visualization
@@ -21,11 +65,14 @@ interface TaskLocation {
  * so it automatically turns to a dark map theme when Senior Mode is activated.
  */
 export default function MapScreen() {
-  const { isSeniorMode } = useAppStore();
-  const [tasks, setTasks] = useState<TaskLocation[]>([]);
+  const router = useRouter();
+  // session so we can use the Smart RPC
+  const { isSeniorMode, session } = useAppStore();
+  
+  // State now holds clusters instead of individual tasks
+  const [clusters, setClusters] = useState<LocationCluster[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Focus the map on Melissia area
   const INITIAL_REGION = {
     latitude: 38.0500,
     longitude: 23.8333,
@@ -34,38 +81,46 @@ export default function MapScreen() {
   };
 
   const fetchTaskLocations = useCallback(async () => {
+    if (!session?.user?.id) return;
+
     try {
-      // Thanks to our generated SQL columns, we get clean numbers back!
+      // Use the exact same Smart RPC as the feed to bypass RLS and sync data perfectly!
       const { data, error } = await supabase
-        .from('tasks')
-        .select('id, title, category, latitude, longitude')
-        .eq('status', 'open');
+        .rpc('fetch_adaptive_feed', { calling_user_id: session.user.id });
 
       if (error) throw error;
       
-      // Filter out invalid data and apply "Coordinate Jitter"
-      const validTasks = (data || [])
-        .filter(t => t.latitude && t.longitude)
-        .map(t => {
-          // Add a tiny random offset (~50 meters) so pins don't perfectly stack!
-          const jitterLat = t.latitude + (Math.random() - 0.5) * 0.003;
-          const jitterLon = t.longitude + (Math.random() - 0.5) * 0.003;
-          
-          return {
-            ...t,
-            latitude: jitterLat,
-            longitude: jitterLon
-          };
-        });
+      const validTasks = (data || []).filter((t: Task) => t.latitude && t.longitude);
 
-      setTasks(validTasks);
+      // MARKER GROUPING
+      // This merges all tasks that share the exact same GPS coordinates
+      // We use .toFixed(3) (approx 100 meters) to forcefully group tasks in the same general area!
+      const grouped = validTasks.reduce((acc: Record<string, LocationCluster>, task: any) => {
+        const safeLat = Number(task.latitude).toFixed(3);
+        const safeLon = Number(task.longitude).toFixed(3);
+        const clusterId = `${safeLat},${safeLon}`;
+
+        if (!acc[clusterId]) {
+          acc[clusterId] = { 
+            id: clusterId, 
+            latitude: task.latitude, 
+            longitude: task.longitude, 
+            tasks: [] 
+          };
+        }
+        acc[clusterId].tasks.push(task);
+        return acc;
+      }, {} as Record<string, LocationCluster>);
+
+      setClusters(Object.values(grouped));
+
     } catch (error) {
       const err = error as Error;
       Alert.alert('Map Error', err.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session]);
 
   // Re-fetch pins every time the user taps the Map tab!
   useFocusEffect(
@@ -73,6 +128,15 @@ export default function MapScreen() {
       fetchTaskLocations();
     }, [fetchTaskLocations])
   );
+
+  // When a user taps the callout bubble, we tell them to check the feed
+  const handleMarkerPress = useCallback(() => {
+    Alert.alert(
+      "Neighborhood Tasks", 
+      "Head over to your Smart Feed to view and accept these tasks!",
+      [{ text: "Go to Feed", onPress: () => router.push('/(tabs)') }, { text: "Cancel", style: "cancel" }]
+    );
+  }, [router]);
 
   if (loading) {
     return (
@@ -88,33 +152,15 @@ export default function MapScreen() {
         style={StyleSheet.absoluteFillObject}
         initialRegion={INITIAL_REGION}
         showsUserLocation={true}
-        // This forces the native map to adopt a dark theme when Senior Mode is active!
         userInterfaceStyle={isSeniorMode ? 'dark' : 'light'}
       >
-        {tasks.map((task) => (
-          <Marker 
-            key={task.id}
-            coordinate={{ latitude: task.latitude, longitude: task.longitude }}
-            // Helps the map prioritize taps on overlapping clusters
-            zIndex={1}
-          >
-            {/* Custom Marker Icon */}
-            <View className="bg-primary p-2 rounded-full border-2 border-white shadow-md">
-              <MapPin color="#FFFFFF" size={16} />
-            </View>
-            
-            {/* The popup bubble when you tap the marker */}
-            <Callout tooltip>
-              <View className="bg-surface p-3 rounded-xl border border-surface-highlight shadow-lg min-w-[150px]">
-                <Text className={`text-text font-sans font-bold mb-1 ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-                  {task.title}
-                </Text>
-                <Text className={`text-primary font-sans font-semibold uppercase ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
-                  {task.category}
-                </Text>
-              </View>
-            </Callout>
-          </Marker>
+        {clusters.map((cluster) => (
+          <MapPinMarker 
+            key={cluster.id} 
+            cluster={cluster} 
+            isSeniorMode={isSeniorMode} 
+            onPress={handleMarkerPress} 
+          />
         ))}
       </MapView>
     </View>
