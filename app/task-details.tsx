@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { ArrowLeft, HeartHandshake, MapPin, Shield, ShieldAlert, Tag, User as UserIcon, Award } from 'lucide-react-native';
+import * as Location from 'expo-location';
 
 // badge helper for this screen
 function getBadge(karma: number) {
@@ -19,6 +20,9 @@ export default function TaskDetailsScreen() {
   const { session, isSeniorMode } = useAppStore();
   const [loading, setLoading] = useState(false);
 
+  // State to hold the human-readable location name
+  const [locationName, setLocationName] = useState<string>("Loading area...");
+
   // Grab all the task data passed from the Feed
   const params = useLocalSearchParams();
   const taskId = params.id as string;
@@ -29,8 +33,44 @@ export default function TaskDetailsScreen() {
   // URL params are strings, convert karma back to a number
   const creatorKarma = Number(params.creator_karma) || 0; 
 
+  // Grab the coordinates passed from the feed
+  const latitude = Number(params.latitude);
+  const longitude = Number(params.longitude);
+
   const isMyTask = session?.user?.id === taskUserId;
   const badge = getBadge(creatorKarma);
+
+  // Translate the GPS into a safe, generic neighborhood name
+  useEffect(() => {
+    async function fetchLocationName() {
+      if (!latitude || !longitude) {
+        setLocationName("Local Area");
+        return;
+      }
+
+      try {
+        // This uses Apple/Google's free on-device geocoder
+        const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
+        
+        if (geocode && geocode.length > 0) {
+          const place = geocode[0];
+          // We intentionally grab generic fields like 'district' or 'city' to protect privacy, 
+          // avoiding 'street' or 'name' (which could be a house number).
+          const area = place.district || place.city || place.subregion || "Local Neighborhood";
+          const widerArea = place.region || place.country || "";
+          
+          setLocationName(widerArea ? `${area}, ${widerArea}` : area);
+        } else {
+          setLocationName("Local Area");
+        }
+      } catch (error) {
+        console.warn("Reverse geocode failed:", error);
+        setLocationName("Local Area"); // Fallback if offline
+      }
+    }
+
+    fetchLocationName();
+  }, [latitude, longitude]);
 
   async function handleHelpOut() {
     Alert.alert(
@@ -102,11 +142,11 @@ export default function TaskDetailsScreen() {
             </Text>
           </View>
 
-          {/* Location Pin */}
+          {/* Location Pin, Displays the formatted, privacy-preserving location */}
           <View className="flex-row items-center bg-surface px-3 py-1.5 rounded-full border border-surface-highlight">
             <MapPin color="#D97706" size={16} className="mr-2" />
             <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
-              Anonymized Node
+              {locationName}
             </Text>
           </View>
         </View>

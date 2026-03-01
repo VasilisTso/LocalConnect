@@ -26,6 +26,9 @@ interface Task {
   creator_karma?: number;
   // Note: PostGIS location comes back as a WKB/GeoJSON or string depending on the query, 
   // but for the UI list, we primarily rely on the category and title.
+  // Smart RPC returns these to push to task details for location
+  latitude?: number;
+  longitude?: number;
 }
 
 // Helper function to calculate badges
@@ -138,7 +141,9 @@ export default function FeedScreen() {
         description: task.description,
         category: task.category,
         creator_karma: task.creator_karma || 0,
-        user_id: task.user_id
+        user_id: task.user_id,
+        latitude: task.latitude,
+        longitude: task.longitude,
       }
     });
   }
