@@ -106,7 +106,7 @@ export default function TaskDetailsScreen() {
           <View className="flex-row items-center bg-surface px-3 py-1.5 rounded-full border border-surface-highlight">
             <MapPin color="#D97706" size={16} className="mr-2" />
             <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
-              Melissia Area
+              Anonymized Node
             </Text>
           </View>
         </View>

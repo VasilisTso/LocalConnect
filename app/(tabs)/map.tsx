@@ -1,9 +1,11 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker } from 'react-native-maps';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useFocusEffect, useRouter } from 'expo-router';
+import * as Location from 'expo-location';
 
 // We update our interface to handle groups of tasks
 interface Task {
@@ -34,6 +36,7 @@ const MapPinMarker = memo(({ cluster, isSeniorMode, onPress }: { cluster: Locati
       tracksViewChanges={trackChanges} // Start true, turn false after render
     >
       <View 
+        onLayout={() => { setTimeout(() => setTrackChanges(false), 500); }}
         style={{ 
           backgroundColor: isSeniorMode ? '#000000' : '#5F4B8B',
           borderColor: '#FFFFFF',
@@ -73,12 +76,38 @@ export default function MapScreen() {
   const [clusters, setClusters] = useState<LocationCluster[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Ref to control the MapView camera
+  const mapRef = useRef<MapView>(null);
+
+  // Default fallback region (Wider view of Athens)
   const INITIAL_REGION = {
-    latitude: 38.0500,
-    longitude: 23.8333,
-    latitudeDelta: 0.04,
-    longitudeDelta: 0.04,
+    latitude: 37.9838,
+    longitude: 23.7275,
+    latitudeDelta: 0.2, // Wider zoom level
+    longitudeDelta: 0.2,
   };
+
+  // Fetch user's actual GPS and animate the map to it!
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return; // Fail silently, they just stay at the default region
+        
+        const location = await Location.getCurrentPositionAsync({});
+        
+        // Smoothly animate the map to their current city/neighborhood
+        mapRef.current?.animateToRegion({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          latitudeDelta: 0.05, 
+          longitudeDelta: 0.05,
+        }, 1500); // 1.5 second smooth animation
+      } catch (error) {
+        console.warn("Could not get location for map focus", error);
+      }
+    })();
+  }, []);
 
   const fetchTaskLocations = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -147,12 +176,15 @@ export default function MapScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <MapView 
+        ref={mapRef} 
         style={StyleSheet.absoluteFillObject}
         initialRegion={INITIAL_REGION}
         showsUserLocation={true}
         userInterfaceStyle={isSeniorMode ? 'dark' : 'light'}
+        // Optional: Adds a little padding to the map controls so they don't hug the very top edge
+        mapPadding={{ top: 20, right: 0, bottom: 0, left: 0 }}
       >
         {clusters.map((cluster) => (
           <MapPinMarker 
@@ -163,6 +195,6 @@ export default function MapScreen() {
           />
         ))}
       </MapView>
-    </View>
+    </SafeAreaView>
   );
 }

@@ -15,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
+import * as Location from 'expo-location';
+import { MapPin, Navigation } from 'lucide-react-native';
 
 // We use the same categories as the profile tags to ensure the 
 // Adaptivity Engine can easily match tasks to user interests.
@@ -23,9 +25,9 @@ const CATEGORIES = ['Pets', 'Education', 'Tools', 'Errands', 'Tech Support'];
 // Privacy by Design: We use fuzzed "Neighborhood Centroids" instead of exact GPS.
 // (Example coordinates focused around the general Attica/Melissia area)
 const NEIGHBORHOODS = [
-  { name: 'North Melissia', lon: 23.8350, lat: 38.0550 },
-  { name: 'South Melissia', lon: 23.8300, lat: 38.0450 },
-  { name: 'Central Square', lon: 23.8333, lat: 38.0500 },
+  { name: 'Athens Center', lon: 23.7275, lat: 37.9838 },
+  { name: 'Thessaloniki', lon: 22.9444, lat: 40.6401 },
+  { name: 'Patras', lon: 21.7346, lat: 38.2466 },
 ];
 
 /**
@@ -42,8 +44,38 @@ export default function AddTaskScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
-  const [neighborhood, setNeighborhood] = useState(NEIGHBORHOODS[2]); // Default to Central
+
+  // Location States
+  const [selectedHood, setSelectedHood] = useState<string>(NEIGHBORHOODS[2].name);
+  const [fuzzedGps, setFuzzedGps] = useState<{lat: number, lon: number} | null>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // The Privacy-Preserving GPS Function
+  async function handleUseMyLocation() {
+    setGettingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Please enable location services to use this feature.');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      
+      // PRIVACY FUZZING: Round to nearest 0.005 (~500 meter accuracy)
+      const safeLat = Number((Math.round(location.coords.latitude / 0.005) * 0.005).toFixed(3));
+      const safeLon = Number((Math.round(location.coords.longitude / 0.005) * 0.005).toFixed(3));
+
+      setFuzzedGps({ lat: safeLat, lon: safeLon });
+      setSelectedHood(''); // Deselect the hardcoded neighborhoods
+
+    } catch (error) {
+      Alert.alert('Error', 'Could not determine your location.');
+    } finally {
+      setGettingLocation(false);
+    }
+  }
 
   async function handleCreateTask() {
     Keyboard.dismiss();
@@ -58,10 +90,30 @@ export default function AddTaskScreen() {
       return;
     }
 
+    // Determine final coordinates based on what they selected
+    let finalLat = 0;
+    let finalLon = 0;
+
+    if (fuzzedGps) {
+      finalLat = fuzzedGps.lat;
+      finalLon = fuzzedGps.lon;
+    } else {
+      const hood = NEIGHBORHOODS.find(n => n.name === selectedHood);
+      if (hood) {
+        finalLat = hood.lat;
+        finalLon = hood.lon;
+      }
+    }
+
+    if (!finalLat || !finalLon) {
+      Alert.alert('Location Error', 'Please select a location for this task.');
+      return;
+    }
+
     setLoading(true);
     try {
       // Format the coordinate specifically for PostGIS GEOGRAPHY(POINT) insertion
-      const locationString = `POINT(${neighborhood.lon} ${neighborhood.lat})`;
+      const locationString = `POINT(${finalLon} ${finalLat})`;
 
       const { error } = await supabase.from('tasks').insert([
         {
@@ -154,13 +206,47 @@ export default function AddTaskScreen() {
           {/* Neighborhood Selector */}
           <View className="mb-8">
             <Text className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>General Location (Kept private)</Text>
+            
+            {/* GPS Button */}
+            <TouchableOpacity
+              onPress={handleUseMyLocation}
+              disabled={gettingLocation}
+              className={`flex-row items-center px-4 py-3 rounded-lg border mb-3 ${fuzzedGps ? 'bg-secondary border-secondary' : 'bg-surface border-surface-highlight'}`}
+            >
+              {gettingLocation ? (
+                <ActivityIndicator color={fuzzedGps ? "#1F1C2C" : "#5F4B8B"} size="small" className="mr-3" />
+              ) : (
+                <Navigation color={fuzzedGps ? "#1F1C2C" : "#5F4B8B"} size={20} className="mr-3" />
+              )}
+              <View>
+                <Text className={`font-sans ml-2 font-bold ${fuzzedGps ? 'text-text' : 'text-primary'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
+                  Use My Current Area
+                </Text>
+                {fuzzedGps && (
+                  <Text className={`text-text-muted font-sans mt-0.5 ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
+                    Anonymized to ~500m radius
+                  </Text>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            <View className="flex-row items-center mb-3">
+              <View className="flex-1 h-[1px] bg-surface-highlight" />
+              <Text className="mx-4 text-text-muted font-sans text-sm">OR</Text>
+              <View className="flex-1 h-[1px] bg-surface-highlight" />
+            </View>
+
+            {/* Manual Neighborhoods */}
             <View className="flex-row flex-wrap gap-2">
               {NEIGHBORHOODS.map((hood) => {
-                const isActive = neighborhood.name === hood.name;
+                const isActive = selectedHood === hood.name;
                 return (
                   <TouchableOpacity
                     key={hood.name}
-                    onPress={() => setNeighborhood(hood)}
+                    onPress={() => {
+                      setSelectedHood(hood.name);
+                      setFuzzedGps(null); // Clear GPS if they select a manual node
+                    }}
                     className={`px-4 py-2 rounded-lg border ${isActive ? 'bg-secondary border-secondary' : 'bg-surface border-surface-highlight'}`}
                   >
                     <Text className={`font-sans font-semibold ${isActive ? 'text-text' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
