@@ -58,6 +58,9 @@ export default function FeedScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // State to toggle between Community Feed and My Tasks
+  const [filterMode, setFilterMode] = useState<'community' | 'mine'>('community');
+
   // Fetch both the Smart Feed AND any tasks waiting for a review
   const fetchTasks = useCallback(async () => {
     // `fetch_adaptive_feed` RPC!
@@ -304,14 +307,43 @@ export default function FeedScreen() {
     );
   };
 
+  // Filter the tasks array right before rendering!
+  const displayTasks = tasks.filter(task => {
+    if (filterMode === 'mine') return task.user_id === session?.user?.id;
+    // For 'community', only show tasks belonging to OTHER people
+    return task.user_id !== session?.user?.id; 
+  });
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="px-6 pt-6 pb-2">
         <Text className="text-3xl font-sans font-bold text-text mb-1">Neighborhood Feed</Text>
         <Text className="text-text-muted font-sans text-base">
-          Discover tasks tailored to your interests.
+          {filterMode === 'community' ? 'Discover tasks tailored to your interests.' : 'Manage your open requests.'}
         </Text>
       </View>
+
+      {/* Segmented Control Toggle */}
+      <View className="flex-row bg-surface border border-surface-highlight p-1 rounded-xl mx-6 mb-4">
+        <TouchableOpacity 
+          className={`flex-1 py-2.5 items-center rounded-lg ${filterMode === 'community' ? 'bg-secondary' : 'bg-transparent'}`}
+          onPress={() => setFilterMode('community')}
+        >
+          <Text className={`font-sans font-bold ${filterMode === 'community' ? 'text-text' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
+            Community
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          className={`flex-1 py-2.5 items-center rounded-lg ${filterMode === 'mine' ? 'bg-secondary' : 'bg-transparent'}`}
+          onPress={() => setFilterMode('mine')}
+        >
+          <Text className={`font-sans font-bold ${filterMode === 'mine' ? 'text-text' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
+            My Tasks
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {renderPendingReviews()}
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
@@ -319,7 +351,7 @@ export default function FeedScreen() {
         </View>
       ) : (
         <FlatList
-          data={tasks}
+          data={displayTasks}
           keyExtractor={(item) => item.id}
           renderItem={renderTask}
           // INJECT PENDING REVIEWS AT THE TOP OF THE LIST
@@ -337,9 +369,13 @@ export default function FeedScreen() {
           ListEmptyComponent={
             <View className="items-center justify-center py-10">
               <MapPin color="#64748B" size={48} className="mb-4 opacity-50" />
-              <Text className="text-text font-sans font-bold text-lg mb-2">No tasks found</Text>
-              <Text className="text-text-muted font-sans text-center">
-                Be the first to ask for help or offer your services in your area!
+              <Text className="text-text font-sans font-bold text-lg mb-2">
+                {filterMode === 'mine' ? "You have no open tasks" : "No community tasks found"}
+              </Text>
+              <Text className="text-text-muted font-sans text-center px-4">
+                {filterMode === 'mine' 
+                  ? "Tap the '+' tab to ask your neighborhood for help!" 
+                  : "Check back later or ask for help yourself!"}
               </Text>
             </View>
           }
