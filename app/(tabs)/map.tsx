@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { MapPin } from 'lucide-react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 interface TaskLocation {
   id: string;
@@ -24,7 +25,7 @@ export default function MapScreen() {
   const [tasks, setTasks] = useState<TaskLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Focus the map on Athens area
+  // Focus the map on Melissia area
   const INITIAL_REGION = {
     latitude: 38.0500,
     longitude: 23.8333,
@@ -42,8 +43,21 @@ export default function MapScreen() {
 
       if (error) throw error;
       
-      // Filter out any anomalous data
-      const validTasks = (data || []).filter(t => t.latitude && t.longitude);
+      // Filter out invalid data and apply "Coordinate Jitter"
+      const validTasks = (data || [])
+        .filter(t => t.latitude && t.longitude)
+        .map(t => {
+          // Add a tiny random offset (~50 meters) so pins don't perfectly stack!
+          const jitterLat = t.latitude + (Math.random() - 0.5) * 0.003;
+          const jitterLon = t.longitude + (Math.random() - 0.5) * 0.003;
+          
+          return {
+            ...t,
+            latitude: jitterLat,
+            longitude: jitterLon
+          };
+        });
+
       setTasks(validTasks);
     } catch (error) {
       const err = error as Error;
@@ -53,9 +67,12 @@ export default function MapScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchTaskLocations();
-  }, [fetchTaskLocations]);
+  // Re-fetch pins every time the user taps the Map tab!
+  useFocusEffect(
+    useCallback(() => {
+      fetchTaskLocations();
+    }, [fetchTaskLocations])
+  );
 
   if (loading) {
     return (
@@ -71,13 +88,15 @@ export default function MapScreen() {
         style={StyleSheet.absoluteFillObject}
         initialRegion={INITIAL_REGION}
         showsUserLocation={true}
-        // MAGIC: This forces the native map to adopt a dark theme when Senior Mode is active!
+        // This forces the native map to adopt a dark theme when Senior Mode is active!
         userInterfaceStyle={isSeniorMode ? 'dark' : 'light'}
       >
         {tasks.map((task) => (
           <Marker 
             key={task.id}
             coordinate={{ latitude: task.latitude, longitude: task.longitude }}
+            // Helps the map prioritize taps on overlapping clusters
+            zIndex={1}
           >
             {/* Custom Marker Icon */}
             <View className="bg-primary p-2 rounded-full border-2 border-white shadow-md">
