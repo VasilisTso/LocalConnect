@@ -13,6 +13,7 @@ import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
+import * as Location from 'expo-location';
 
 // Define the shape of Task data
 interface Task {
@@ -73,9 +74,36 @@ export default function FeedScreen() {
     if (!session?.user?.id) return; // Failsafe
 
     try {
-      // Fetch Open Tasks (Smart Engine - public community feed)
+      // Get User's Current Location for the Spatial Engine
+      let currentLat = null;
+      let currentLon = null;
+
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          // Use Last Known Position first for instant loading 
+          // If null, fallback to calculating current position
+          let loc = await Location.getLastKnownPositionAsync({});
+          if (!loc) {
+            loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+          }
+          
+          if (loc) {
+            currentLat = loc.coords.latitude;
+            currentLon = loc.coords.longitude;
+          }
+        }
+      } catch (e) {
+        console.warn("Could not fetch location for spatial filter.");
+      }
+
+      // Fetch Open Tasks (Smart Engine + Spatial Filter - public community feed)
       const { data: openTasks, error: feedError } = await supabase
-        .rpc('fetch_adaptive_feed', { calling_user_id: session.user.id });
+        .rpc('fetch_adaptive_feed', { 
+          calling_user_id: session.user.id,
+          user_lat: currentLat,
+          user_lon: currentLon
+        });
       if (feedError) throw feedError;
 
       // Fetch MY active tasks (keeps them visible when pending or in_progress)

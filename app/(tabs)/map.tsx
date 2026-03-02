@@ -12,6 +12,8 @@ interface Task {
   id: string;
   title: string;
   category: string;
+  status: string;
+  user_id: string;
   latitude: number;
   longitude: number;
 }
@@ -32,8 +34,8 @@ const MapPinMarker = memo(({ cluster, isSeniorMode, onPress }: { cluster: Locati
   return (
     <Marker 
       coordinate={{ latitude: cluster.latitude, longitude: cluster.longitude }}
-      onPress={onPress} // 2. Trigger the alert directly from the marker tap
-      tracksViewChanges={trackChanges} // Start true, turn false after render
+      onPress={onPress} // Trigger the alert directly from the marker tap
+      tracksViewChanges={trackChanges}
     >
       <View 
         onLayout={() => { setTimeout(() => setTrackChanges(false), 500); }}
@@ -94,7 +96,11 @@ export default function MapScreen() {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') return; // Fail silently, they just stay at the default region
         
-        const location = await Location.getCurrentPositionAsync({});
+        // Use Last Known Position for immediate rendering
+        let location = await Location.getLastKnownPositionAsync({});
+        if (!location) {
+          location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+        }
         
         // Smoothly animate the map to their current city/neighborhood
         mapRef.current?.animateToRegion({
@@ -113,12 +119,14 @@ export default function MapScreen() {
     if (!session?.user?.id) return;
 
     try {
-      // Use the exact same Smart RPC as the feed to bypass RLS and sync data perfectly!
-      const { data, error } = await supabase
-        .rpc('fetch_adaptive_feed', { calling_user_id: session.user.id });
+      // MACRO-AWARENESS: Fetch ALL open tasks in the world, + my own active tasks
+      // Use new dedicated Map RPC
+      // safely bypasses RLS and automatically formats the coordinates
+      const { data, error } = await supabase.rpc('fetch_map_markers');
 
       if (error) throw error;
-      
+
+      // Filter out any data that somehow lacks coordinates
       const validTasks = (data || []).filter((t: Task) => t.latitude && t.longitude);
 
       // MARKER GROUPING
@@ -183,8 +191,8 @@ export default function MapScreen() {
         initialRegion={INITIAL_REGION}
         showsUserLocation={true}
         userInterfaceStyle={isSeniorMode ? 'dark' : 'light'}
-        // Optional: Adds a little padding to the map controls so they don't hug the very top edge
-        mapPadding={{ top: 20, right: 0, bottom: 0, left: 0 }}
+        // Adds a little padding to the map controls so they don't hug the very top edge
+        mapPadding={{ top: 30, right: 0, bottom: 0, left: 0 }}
       >
         {clusters.map((cluster) => (
           <MapPinMarker 
