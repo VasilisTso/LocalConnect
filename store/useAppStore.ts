@@ -18,9 +18,9 @@
     updates their tags in their settings!
 */
 
-// store/useAppStore.ts
 import { create } from 'zustand';
 import { Session } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 // Define the UserProfile type based on our Supabase schema
 export interface UserProfile {
@@ -39,9 +39,12 @@ interface AppState {
   session: Session | null;
   setSession: (session: Session | null) => void;
   
-  // User Profile State (Crucial for Adaptivity)
+  // User Profile State (Crucial for Adaptivity and Admin features)
   userProfile: UserProfile | null;
   setUserProfile: (profile: UserProfile | null) => void;
+
+  // A global function to securely fetch the user's profile and admin status
+  fetchUserProfile: (userId: string) => Promise<void>;
 
   // Accessibility / Human-Centric State
   isSeniorMode: boolean;
@@ -56,6 +59,19 @@ export const useAppStore = create<AppState>((set) => ({
 
   userProfile: null,
   setUserProfile: (profile) => set({ userProfile: profile }),
+
+  // Instantly pulls the profile data (including is_admin) into global memory
+  fetchUserProfile: async (userId) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+      
+    if (data && !error) {
+      set({ userProfile: data as UserProfile });
+    }
+  },
 
   // Default to false, but we can initialize this based on userProfile.is_senior later
   isSeniorMode: false, 
