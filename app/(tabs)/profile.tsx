@@ -42,7 +42,10 @@ export default function ProfileScreen() {
   const [transportMode, setTransportMode] = useState<'walking' | 'driving'>('walking');
 
   // A preset list of tags for our neighborhood app
-  const AVAILABLE_TAGS = ['Pets', 'Education', 'Tools', 'Errands', 'Tech Support'];
+  const AVAILABLE_TAGS = [
+    "Pets", "Education", "Tools", "Errands", "Tech", 
+    "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"
+  ];
 
   // FETCH ON TAB FOCUS: This ensures your Karma updates instantly when you switch tabs!
   useFocusEffect(

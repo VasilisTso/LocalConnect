@@ -20,7 +20,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // We use the same categories as the profile tags to ensure the
 // Adaptivity Engine can easily match tasks to user interests.
-const CATEGORIES = ["Pets", "Education", "Tools", "Errands", "Tech Support"];
+const CATEGORIES = [
+  "Pets", "Education", "Tools", "Errands", "Tech", 
+  "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"
+];
 
 // Privacy by Design: We use fuzzed "Neighborhood Centroids" instead of exact GPS.
 const NEIGHBORHOODS = [
