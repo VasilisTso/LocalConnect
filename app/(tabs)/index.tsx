@@ -56,7 +56,8 @@ interface PendingReviewTask extends Task {
  */
 export default function FeedScreen() {
   const router = useRouter();
-  const { session, isSeniorMode } = useAppStore();
+  // Pull in userProfile and fetchUserProfile to check for Admin status
+  const { session, isSeniorMode, userProfile, fetchUserProfile } = useAppStore();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [pendingReviews, setPendingReviews] = useState<PendingReviewTask[]>([]);
@@ -66,6 +67,13 @@ export default function FeedScreen() {
 
   // State to toggle between Community Feed and My Tasks
   const [filterMode, setFilterMode] = useState<'community' | 'mine'>('community');
+
+  // Fetch the user profile immediately on load to check for Admin powers!
+  useEffect(() => {
+    if (session?.user?.id && !userProfile) {
+      fetchUserProfile(session.user.id);
+    }
+  }, [session, userProfile, fetchUserProfile]);
 
   // Fetch both the Smart Feed AND any tasks waiting for a review
   const fetchTasks = useCallback(async () => {
@@ -227,7 +235,7 @@ export default function FeedScreen() {
     ]);
   }
 
-  // --- THE KARMA RESOLUTION LOGIC ---
+  // KARMA RESOLUTION LOGIC AFTER TASK
   async function handleHelpOut(task: Task) {
     Alert.alert(
       'Offer Help', 
@@ -261,7 +269,13 @@ export default function FeedScreen() {
 
   // UI Component for individual task cards
   const renderTask = ({ item }: { item: Task }) => {
+    const isAdmin = userProfile?.is_admin === true;
     const isMyTask = session?.user?.id === item.user_id;
+
+    // only edit if you own it and it's open
+    const canEdit = isMyTask && item.status === 'open';
+    // delete if you own it and it's open, OR if you are a global Admin
+    const canDelete = (isMyTask && item.status === 'open') || isAdmin;
 
     return (
       <TouchableOpacity 
@@ -288,15 +302,19 @@ export default function FeedScreen() {
             </Text>
           </View>
 
-          {/* Owner controls: Edit/Delete (Only show if it's still Open!) */}
-          {isMyTask && item.status === 'open' && (
+          {/* Owner/Admin controls: Edit/Delete (Only show if it's still Open) */}
+          {(canEdit || canDelete) && (
             <View className="flex-row items-center -mr-2 -mt-2">
-              <TouchableOpacity onPress={() => router.push({ pathname: '/modal', params: { taskId: item.id } })} className="p-2 mr-2">
-                <Edit2 color="#5f4b8b" size={20} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeleteTask(item.id)} className="p-2">
-                <Trash2 color="#EF4444" size={20} />
-              </TouchableOpacity>
+              {canEdit && (
+                <TouchableOpacity onPress={() => router.push({ pathname: '/modal', params: { taskId: item.id } })} className="p-2 mr-2">
+                  <Edit2 color="#5f4b8b" size={20} />
+                </TouchableOpacity>
+              )}
+              {canDelete && (
+                <TouchableOpacity onPress={() => handleDeleteTask(item.id)} className="p-2">
+                  <Trash2 color="#EF4444" size={20} />
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>
@@ -398,8 +416,16 @@ export default function FeedScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="px-6 pt-6 pb-2">
-        <Text className="text-3xl font-sans font-bold text-text mb-1">Neighborhood Feed</Text>
-        <Text className="text-text-muted font-sans text-base">
+        {/* Cool Mod Badge next to the title */}
+        <View className="flex-row items-center justify-between mb-1">
+          <Text className="text-3xl font-sans font-bold text-text">Neighborhood Feed</Text>
+          {userProfile?.is_admin && (
+            <View className="bg-error px-4 py-2 rounded-md ml-3 border border-black">
+              <Text className="text-white font-bold text-lg uppercase">ADMIN</Text>
+            </View>
+          )}
+        </View>
+        <Text className="text-text-muted font-sans text-base mt-1">
           {filterMode === 'community' ? 'Discover tasks tailored to your interests.' : 'Manage your open requests.'}
         </Text>
       </View>
