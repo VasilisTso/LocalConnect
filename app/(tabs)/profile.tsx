@@ -9,7 +9,7 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LogOut, User as UserIcon, Tag, ShieldAlert, Award, Phone, Shield } from 'lucide-react-native';
+import { LogOut, User as UserIcon, Tag, ShieldAlert, Award, Phone, Shield, Footprints, Car } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -38,6 +38,9 @@ export default function ProfileScreen() {
   const [userTags, setUserTags] = useState<string[]>([]);
   const [karma, setKarma] = useState(0);
 
+  // Transport Mode State
+  const [transportMode, setTransportMode] = useState<'walking' | 'driving'>('walking');
+
   // A preset list of tags for our neighborhood app
   const AVAILABLE_TAGS = ['Pets', 'Education', 'Tools', 'Errands', 'Tech Support'];
 
@@ -49,7 +52,7 @@ export default function ProfileScreen() {
         
         const { data, error } = await supabase
           .from('profiles')
-          .select('tags, karma_points')
+          .select('tags, karma_points, transport_mode')
           .eq('id', session.user.id)
           .single();
 
@@ -57,6 +60,7 @@ export default function ProfileScreen() {
           if (data.tags) setUserTags(data.tags);
           // Safely set karma, defaulting to 0 if it's null
           setKarma(data.karma_points || 0);
+          if (data.transport_mode) setTransportMode(data.transport_mode);
         }
       }
       fetchProfile();
@@ -85,6 +89,22 @@ export default function ProfileScreen() {
     }
   }
 
+  // Update Transport Mode in DB instantly
+  async function handleTransportMode(mode: 'walking' | 'driving') {
+    if (!session?.user?.id) return;
+    
+    setTransportMode(mode); // Update UI instantly
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ transport_mode: mode })
+      .eq('id', session.user.id);
+
+    if (error) {
+      Alert.alert('Error updating transport mode', error.message);
+    }
+  }
+
   // Handle logging out
   async function handleSignOut() {
     setLoading(true);
@@ -93,7 +113,7 @@ export default function ProfileScreen() {
       Alert.alert('Error signing out', error.message);
     }
     setLoading(false);
-    // Note: Our _layout.tsx listener will automatically detect the sign out and route to login!
+    // layout.tsx listener will automatically detect the sign out and route to login
   }
 
   return (
@@ -154,6 +174,40 @@ export default function ProfileScreen() {
               trackColor={{ false: '#E9ECEF', true: '#5F4B8B' }}
               thumbColor={isSeniorMode ? '#FFD167' : '#FFFFFF'}
             />
+          </View>
+        </View>
+
+        {/* Mobility & Reach Section */}
+        <View className="bg-surface rounded-2xl p-4 mb-6 border border-surface-highlight">
+          <Text className={`text-text font-sans font-bold mb-1 ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+            Mobility & Reach
+          </Text>
+          <Text className={`text-text-muted font-sans mb-4 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
+            How far can you travel to help neighbors? This limits tasks on your feed.
+          </Text>
+
+          <View className="flex-row gap-4">
+            <TouchableOpacity 
+              onPress={() => handleTransportMode('walking')}
+              className={`flex-1 flex-row items-center justify-center p-3 rounded-xl border ${transportMode === 'walking' ? 'bg-primary border-primary' : 'bg-transparent border-surface-highlight'}`}
+            >
+              <Footprints color={transportMode === 'walking' ? '#FFFFFF' : '#64748B'} size={20} className="mr-2" />
+              <View className='ml-2'>
+                <Text className={`font-sans font-bold ${transportMode === 'walking' ? 'text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>Walking</Text>
+                <Text className={`font-sans ${transportMode === 'walking' ? 'text-[#E2D8F0]' : 'text-text-muted'} ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>7.5 km</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={() => handleTransportMode('driving')}
+              className={`flex-1 flex-row items-center justify-center p-3 rounded-xl border ${transportMode === 'driving' ? 'bg-primary border-primary' : 'bg-transparent border-surface-highlight'}`}
+            >
+              <Car color={transportMode === 'driving' ? '#FFFFFF' : '#64748B'} size={20} className="mr-2" />
+              <View className='ml-2'>
+                <Text className={`font-sans font-bold ${transportMode === 'driving' ? 'text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>Driving</Text>
+                <Text className={`font-sans ${transportMode === 'driving' ? 'text-[#E2D8F0]' : 'text-text-muted'} ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>35.0 km</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
