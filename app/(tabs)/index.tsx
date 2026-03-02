@@ -242,19 +242,28 @@ export default function FeedScreen() {
         activeOpacity={0.7}
       >
         <View className="flex-row justify-between items-start mb-4">
-          {/* SCALED TITLES */}
-          <Text className={`text-text font-sans font-bold flex-1 mr-2 ${isSeniorMode ? 'text-2xl leading-8' : 'text-lg'}`} numberOfLines={2}>
-            {item.title}
-          </Text>
-
-          {/* Owner controls: Edit/Delete */}
-          {isMyTask && (
-            <View className="flex-row items-center -mr-2 -mt-2">
-              <TouchableOpacity 
-                // Pass the taskId as a URL parameter to the modal to edit
-                onPress={() => router.push({ pathname: '/modal', params: { taskId: item.id } })} 
-                className="p-2 mr-2"
+          <View className="flex-1 mr-2">
+            {/* Status Pill (Only shows up in "My Tasks" for active items) */}
+            {filterMode === 'mine' && item.status !== 'open' && (
+              <View 
+                style={{ alignSelf: 'flex-start' }}
+                className={`px-2 py-1 rounded-md mb-2 ${item.status === 'in_progress' ? 'bg-[#D1FAE5]' : 'bg-[#FEF3C7]'}`}
               >
+                <Text className={`text-xs font-bold font-sans uppercase ${item.status === 'in_progress' ? 'text-[#065F46]' : 'text-[#92400E]'}`}>
+                  {item.status === 'in_progress' ? 'In Progress' : 'Pending Approval'}
+                </Text>
+              </View>
+            )}
+            
+            <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-2xl leading-8' : 'text-lg'}`} numberOfLines={2}>
+              {item.title}
+            </Text>
+          </View>
+
+          {/* Owner controls: Edit/Delete (Only show if it's still Open!) */}
+          {isMyTask && item.status === 'open' && (
+            <View className="flex-row items-center -mr-2 -mt-2">
+              <TouchableOpacity onPress={() => router.push({ pathname: '/modal', params: { taskId: item.id } })} className="p-2 mr-2">
                 <Edit2 color="#5f4b8b" size={20} />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => handleDeleteTask(item.id)} className="p-2">
@@ -342,10 +351,20 @@ export default function FeedScreen() {
       // "My Tasks" now shows tasks I created OR tasks I am actively helping with
       return task.user_id === session?.user?.id || task.helper_id === session?.user?.id;
     }
-
     // For 'community', ONLY show tasks that are still open and belong to other people.
     // This stops pending tasks from cluttering the public feed!
     return task.user_id !== session?.user?.id && task.status === 'open';
+  });
+
+  // Smart Sorting Pins active tasks to the top of the list.
+  const sortedTasks = [...displayTasks].sort((a, b) => {
+    // Define priority (1 is highest, goes to the top)
+    const priority: Record<string, number> = { in_progress: 1, pending: 2, open: 3 };
+    
+    const rankA = priority[a.status] || 4;
+    const rankB = priority[b.status] || 4;
+    
+    return rankA - rankB; // Sorts lowest number to the top
   });
 
   return (
@@ -383,7 +402,7 @@ export default function FeedScreen() {
         </View>
       ) : (
         <FlatList
-          data={displayTasks}
+          data={sortedTasks}
           keyExtractor={(item) => item.id}
           renderItem={renderTask}
           // INJECT PENDING REVIEWS on MY TASKS
