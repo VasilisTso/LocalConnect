@@ -29,6 +29,8 @@ interface Task {
   // Smart RPC returns these to push to task details for location
   latitude?: number;
   longitude?: number;
+  helper_id?: string;
+  private_contact_info?: string;
 }
 
 // Helper function to calculate badges
@@ -71,13 +73,32 @@ export default function FeedScreen() {
     if (!session?.user?.id) return; // Failsafe
 
     try {
-      // Fetch Open Tasks (Smart Engine)
+      // Fetch Open Tasks (Smart Engine - public community feed)
       const { data: openTasks, error: feedError } = await supabase
         .rpc('fetch_adaptive_feed', { calling_user_id: session.user.id });
       if (feedError) throw feedError;
-      setTasks(openTasks || []);
 
-      // Fetch Completed Tasks (to see if they need a review)
+      // Fetch MY active tasks (keeps them visible when pending or in_progress)
+      const { data: myTasks } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .neq('status', 'completed');
+
+      // Fetch tasks I am helping with (so helpers can see if they were accepted)
+      const { data: helpingTasks } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('helper_id', session.user.id)
+        .neq('status', 'completed');
+
+      // MERGE ALL 3 AND REMOVE DUPLICATES (using Map by ID)
+      const allTasks = [...(openTasks || []), ...(myTasks || []), ...(helpingTasks || [])];
+      const uniqueTasks = Array.from(new Map(allTasks.map(task => [task.id, task])).values());
+      
+      setTasks(uniqueTasks);
+
+      // PENDING REVIEWS LOGIC Fetch Completed Tasks (to see if they need a review)
       const { data: myCompletedTasks } = await supabase
         .from('tasks')
         .select('*')
@@ -118,7 +139,7 @@ export default function FeedScreen() {
   };
 
   // IMPLICIT FEEDBACK: Learning mechanism, now leads to details screen
-  async function handleViewTask(task: Task) {
+  async function handleViewTask(task: Task & { helper_id?: string, private_contact_info?: string }) {
     if (!session?.user?.id) return;
 
     try {
@@ -144,6 +165,9 @@ export default function FeedScreen() {
         user_id: task.user_id,
         latitude: task.latitude,
         longitude: task.longitude,
+        status: task.status,
+        helper_id: task.helper_id || '',
+        private_contact_info: task.private_contact_info || '',
       }
     });
   }
@@ -314,9 +338,14 @@ export default function FeedScreen() {
 
   // Filter the tasks array right before rendering!
   const displayTasks = tasks.filter(task => {
-    if (filterMode === 'mine') return task.user_id === session?.user?.id;
-    // For 'community', only show tasks belonging to OTHER people
-    return task.user_id !== session?.user?.id; 
+    if (filterMode === 'mine') {
+      // "My Tasks" now shows tasks I created OR tasks I am actively helping with
+      return task.user_id === session?.user?.id || task.helper_id === session?.user?.id;
+    }
+
+    // For 'community', ONLY show tasks that are still open and belong to other people.
+    // This stops pending tasks from cluttering the public feed!
+    return task.user_id !== session?.user?.id && task.status === 'open';
   });
 
   return (
@@ -348,8 +377,6 @@ export default function FeedScreen() {
         </TouchableOpacity>
       </View>
 
-      {renderPendingReviews()}
-
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#5F4B8B" />
@@ -359,8 +386,8 @@ export default function FeedScreen() {
           data={displayTasks}
           keyExtractor={(item) => item.id}
           renderItem={renderTask}
-          // INJECT PENDING REVIEWS AT THE TOP OF THE LIST
-          ListHeaderComponent={renderPendingReviews}
+          // INJECT PENDING REVIEWS on MY TASKS
+          ListHeaderComponent={filterMode === 'mine' ? renderPendingReviews : null}
           contentContainerStyle={{ padding: 24, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           refreshControl={

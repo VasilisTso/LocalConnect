@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/store/useAppStore";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { Navigation } from "lucide-react-native";
+import { Navigation, Lock } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -46,6 +46,9 @@ export default function AddTaskScreen() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
+
+  // Secure Handshake State
+  const [privateInfo, setPrivateInfo] = useState("");
 
   // Location States
   const [selectedHood, setSelectedHood] = useState<string>(
@@ -139,6 +142,7 @@ export default function AddTaskScreen() {
           category: category,
           location: locationString,
           status: "open",
+          private_contact_info: privateInfo.trim(),
         },
       ]);
 
@@ -149,6 +153,7 @@ export default function AddTaskScreen() {
       // Reset form
       setTitle("");
       setDescription("");
+      setPrivateInfo("");
 
       // Route user back to the feed to see their new post
       router.replace("/(tabs)");
@@ -207,7 +212,7 @@ export default function AddTaskScreen() {
             <Text
               className={`text-text font-sans font-semibold mb-1 ${isSeniorMode ? "text-base" : "text-sm"}`}
             >
-              Description
+              Description (Public)
             </Text>
             <TextInput
               className={`bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans min-h-[100px] ${isSeniorMode ? "text-lg" : "text-base"}`}
@@ -215,6 +220,28 @@ export default function AddTaskScreen() {
               placeholderTextColor="#64748B"
               value={description}
               onChangeText={setDescription}
+              multiline
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* Secure Handshake Input */}
+          <View className="mb-6">
+            <View className="flex-row items-center mb-1">
+              <Lock color="#5F4B8B" size={16} className="mr-1.5" />
+              <Text className={`text-text ml-2 font-sans font-semibold ${isSeniorMode ? "text-base" : "text-sm"}`}>
+                Secure Handshake (Private)
+              </Text>
+            </View>
+            <Text className={`text-text-muted font-sans mb-3 ${isSeniorMode ? "text-sm" : "text-xs"}`}>
+              Only the specific neighbor you accept to help you can see this. Put your details so the he knows where to come, like address, intercom name, or phone number here.
+            </Text>
+            <TextInput
+              className={`bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans min-h-[80px] ${isSeniorMode ? "text-lg" : "text-base"}`}
+              placeholder="E.g., Ring bell 'Papadopoulos'. My number is 69..."
+              placeholderTextColor="#64748B"
+              value={privateInfo}
+              onChangeText={setPrivateInfo}
               multiline
               textAlignVertical="top"
             />
