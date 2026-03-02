@@ -1,9 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/store/useAppStore";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { Navigation, Lock } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -43,6 +43,9 @@ export default function AddTaskScreen() {
   const router = useRouter();
   const { session, isSeniorMode } = useAppStore();
 
+  // Ref to control the ScrollView
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
@@ -60,6 +63,13 @@ export default function AddTaskScreen() {
   } | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Force the screen to scroll to the absolute top every time the tab is opened
+  useFocusEffect(
+    useCallback(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    }, [])
+  );
 
   // The Privacy-Preserving GPS Function
   async function handleUseMyLocation() {
@@ -171,12 +181,15 @@ export default function AddTaskScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         className="flex-1"
       >
         <ScrollView
+          ref={scrollViewRef}
           contentContainerStyle={{ padding: 24, paddingBottom: 60 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets={true}
         >
           <View className="mb-6">
             <Text
@@ -222,6 +235,12 @@ export default function AddTaskScreen() {
               onChangeText={setDescription}
               multiline
               textAlignVertical="top"
+              // Auto-scroll when tapped
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ y: 150, animated: true });
+                }, 100);
+              }}
             />
           </View>
 
@@ -244,6 +263,12 @@ export default function AddTaskScreen() {
               onChangeText={setPrivateInfo}
               multiline
               textAlignVertical="top"
+              // Auto-scroll deep down when tapped
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ y: 350, animated: true });
+                }, 100);
+              }}
             />
           </View>
 
