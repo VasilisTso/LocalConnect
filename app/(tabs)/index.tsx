@@ -68,12 +68,15 @@ export default function FeedScreen() {
   // State to toggle between Community Feed and My Tasks
   const [filterMode, setFilterMode] = useState<'community' | 'mine'>('community');
 
-  // Fetch the user profile immediately on load to check for Admin powers!
+  // // Fetch the user profile immediately on load, OR if the logged-in user changes!
   useEffect(() => {
-    if (session?.user?.id && !userProfile) {
-      fetchUserProfile(session.user.id);
+    if (session?.user?.id) {
+      // If there is no profile, OR if the profile belongs to the previous user, fetch a fresh one
+      if (!userProfile || userProfile.id !== session.user.id) {
+        fetchUserProfile(session.user.id);
+      }
     }
-  }, [session, userProfile, fetchUserProfile]);
+  }, [session?.user?.id, userProfile?.id, fetchUserProfile]);
 
   // Fetch both the Smart Feed AND any tasks waiting for a review
   const fetchTasks = useCallback(async () => {
