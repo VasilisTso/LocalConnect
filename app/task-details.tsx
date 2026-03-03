@@ -295,7 +295,7 @@ export default function TaskDetailsScreen() {
                 {/* Rating */}
                 <View className="flex-row items-center">
                   <Star color="#D97706" fill="#D97706" size={16} className="mr-1" />
-                  <Text className="text-text font-sans font-bold text-base">
+                  <Text className="text-text font-sans ml-2 font-bold text-base">
                     {helperProfile.avg_rating > 0 ? helperProfile.avg_rating.toFixed(1) : "No ratings yet"}
                   </Text>
                 </View>
