@@ -32,6 +32,7 @@ export interface UserProfile {
   is_admin: boolean;
   avg_rating: number;
   avatar_url: string | null;
+  onboarding_completed: boolean;
 }
 
 // Define the shape of our global state

@@ -6,10 +6,12 @@ import {
   TouchableOpacity, 
   ActivityIndicator, 
   RefreshControl,
-  Alert
+  Alert,
+  Modal,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award } from 'lucide-react-native';
+import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award, Footprints, Car } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -57,7 +59,7 @@ interface PendingReviewTask extends Task {
 export default function FeedScreen() {
   const router = useRouter();
   // Pull in userProfile and fetchUserProfile to check for Admin status
-  const { session, isSeniorMode, userProfile, fetchUserProfile } = useAppStore();
+  const { session, isSeniorMode, userProfile, fetchUserProfile, setUserProfile } = useAppStore();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [pendingReviews, setPendingReviews] = useState<PendingReviewTask[]>([]);
@@ -68,15 +70,33 @@ export default function FeedScreen() {
   // State to toggle between Community Feed and My Tasks
   const [filterMode, setFilterMode] = useState<'community' | 'mine'>('community');
 
-  // // Fetch the user profile immediately on load, OR if the logged-in user changes!
+  // State for onboarding(new user, welcome modal)
+  const [onboardingTags, setOnboardingTags] = useState<string[]>([]);
+  const [onboardingMode, setOnboardingMode] = useState<'walking' | 'driving'>('walking');
+  const [savingOnboarding, setSavingOnboarding] = useState(false);
+
+  const AVAILABLE_TAGS = [
+    "Pets", "Education", "Tools", "Errands", "Tech", 
+    "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"
+  ];
+
+  // Securely sync profile and wipe memory on account switch
   useEffect(() => {
-    if (session?.user?.id) {
-      // If there is no profile, OR if the profile belongs to the previous user, fetch a fresh one
-      if (!userProfile || userProfile.id !== session.user.id) {
-        fetchUserProfile(session.user.id);
-      }
+    // If nobody is logged in, wipe the memory completely
+    if (!session?.user?.id) {
+      setUserProfile(null);
+      return;
     }
-  }, [session?.user?.id, userProfile?.id, fetchUserProfile]);
+
+    // If the memory still holds the PREVIOUS user (Admin), wipe it instantly
+    if (userProfile && userProfile.id !== session.user.id) {
+      setUserProfile(null);
+    }
+
+    // Fetch the fresh profile for the new user
+    fetchUserProfile(session.user.id);
+    
+  }, [session?.user?.id]); // Only re-run when the actual Session ID changes
 
   // Fetch both the Smart Feed AND any tasks waiting for a review
   const fetchTasks = useCallback(async () => {
@@ -238,36 +258,31 @@ export default function FeedScreen() {
     ]);
   }
 
-  // KARMA RESOLUTION LOGIC AFTER TASK
-  async function handleHelpOut(task: Task) {
-    Alert.alert(
-      'Offer Help', 
-      'Are you sure you want to complete this task? You will earn 10 Karma Points!', 
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'I Helped!', 
-          style: 'default',
-          onPress: async () => {
-            try {
-              // This calls the secure RPC function we created earlier
-              const { error } = await supabase.rpc('resolve_task', {
-                target_task_id: task.id,
-                helper_id: session?.user?.id
-              });
+  // ONBOARDING LOGIC
+  async function handleFinishOnboarding() {
+    if (!session?.user?.id) return;
+    setSavingOnboarding(true);
+    
+    // Save their choices and flip the flag to TRUE
+    const { error } = await supabase
+      .from('profiles')
+      .update({ 
+        tags: onboardingTags, 
+        transport_mode: onboardingMode,
+        onboarding_completed: true 
+      })
+      .eq('id', session.user.id);
 
-              if (error) throw error;
+    if (error) {
+      Alert.alert("Error saving profile", error.message);
+      setSavingOnboarding(false);
+      return;
+    }
 
-              Alert.alert('Thank you!', 'You earned 10 Karma Points for helping your neighborhood.');
-              // Instantly remove it from the UI feed
-              setTasks(prev => prev.filter(t => t.id !== task.id));
-            } catch (error: any) {
-              Alert.alert('Error', error.message);
-            }
-          }
-        }
-      ]
-    );
+    // Refresh the local store and feed so the modal instantly closes and feed adapts!
+    await fetchUserProfile(session.user.id);
+    fetchTasks();
+    setSavingOnboarding(false);
   }
 
   // UI Component for individual task cards
@@ -418,6 +433,84 @@ export default function FeedScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      {/* THE WELCOME ONBOARDING MODAL */}
+      {userProfile !== null && userProfile.onboarding_completed === false && (
+        <Modal animationType="slide" transparent={false} visible={true}>
+          <SafeAreaView className="flex-1 bg-background px-8 pt-5">
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View className="items-center mb-8 mt-4">
+                <View className="bg-primary/20 p-6 rounded-full mb-6">
+                  <HeartHandshake color="#5F4B8B" size={64} />
+                </View>
+                <Text className="text-3xl font-sans font-bold text-text text-center mb-2">
+                  Welcome to the Neighborhood!
+                </Text>
+                <Text className="text-text-muted font-sans text-lg text-center px-4">
+                  Let's set up your profile so we can show you the tasks that matter to you.
+                </Text>
+              </View>
+
+              {/* Transport Mode */}
+              <Text className="text-text font-sans font-bold text-xl mb-4">1. How far can you travel to help?</Text>
+              <View className="flex-row gap-4 mb-8">
+                <TouchableOpacity 
+                  onPress={() => setOnboardingMode('walking')}
+                  className={`flex-1 flex-row items-center justify-center p-4 rounded-xl border-2 ${onboardingMode === 'walking' ? 'bg-primary border-primary' : 'bg-surface border-surface-highlight'}`}
+                >
+                  <Footprints color={onboardingMode === 'walking' ? '#FFFFFF' : '#64748B'} size={24} className="mr-2" />
+                  <View className='ml-2'>
+                    <Text className={`font-sans font-bold text-lg ${onboardingMode === 'walking' ? 'text-white' : 'text-text'}`}>Walking</Text>
+                    <Text className={`font-sans text-base ${onboardingMode === 'walking' ? 'text-[#E2D8F0]' : 'text-text-muted'}`}>7.5 km</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  onPress={() => setOnboardingMode('driving')}
+                  className={`flex-1 flex-row items-center justify-center p-4 rounded-xl border-2 ${onboardingMode === 'driving' ? 'bg-primary border-primary' : 'bg-surface border-surface-highlight'}`}
+                >
+                  <Car color={onboardingMode === 'driving' ? '#FFFFFF' : '#64748B'} size={24} className="mr-2" />
+                  <View className='ml-2'>
+                    <Text className={`font-sans font-bold text-lg ${onboardingMode === 'driving' ? 'text-white' : 'text-text'}`}>Driving</Text>
+                    <Text className={`font-sans text-base ${onboardingMode === 'driving' ? 'text-[#E2D8F0]' : 'text-text-muted'} `}>35.0 km</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Interests */}
+              <Text className="text-text font-sans font-bold text-xl mb-4">2. What are you good at or what are your hobbies? (Pick a few)</Text>
+              <View className="flex-row flex-wrap  gap-3 mb-12">
+                {AVAILABLE_TAGS.map((tag) => {
+                  const isActive = onboardingTags.includes(tag);
+                  return (
+                    <TouchableOpacity
+                      key={tag}
+                      onPress={() => setOnboardingTags(prev => isActive ? prev.filter(t => t !== tag) : [...prev, tag])}
+                      className={`px-5 py-3 rounded-full border-2 ${isActive ? 'bg-primary border-primary' : 'bg-surface border-surface-highlight'}`}
+                    >
+                      <Text className={`font-sans font-bold text-base ${isActive ? 'text-white' : 'text-text'}`}>{tag}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity 
+                className="bg-primary py-5 rounded-xl items-center mb-10 shadow-lg"
+                onPress={handleFinishOnboarding}
+                disabled={savingOnboarding}
+              >
+                {savingOnboarding ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text className="text-white font-sans font-bold text-xl">Let's Go!</Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
+      )}
+
+      {/* STANDARD FEED UI BELOW */}
       <View className="px-6 pt-6 pb-2">
         {/* Cool Mod Badge next to the title */}
         <View className="flex-row items-center justify-between mb-1">
