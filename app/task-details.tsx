@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
-import { ArrowLeft, HeartHandshake, MapPin, Shield, ShieldAlert, Tag, User as UserIcon, Award, CheckCircle, XCircle, Lock, Star } from 'lucide-react-native';
+import { ArrowLeft, HeartHandshake, MapPin, Shield, ShieldAlert, Tag, User as UserIcon, Award, CheckCircle, XCircle, Lock, Star, Flag } from 'lucide-react-native';
 import * as Location from 'expo-location';
 
 // badge helper for this screen
@@ -186,16 +186,67 @@ export default function TaskDetailsScreen() {
     }
   }
 
+  // for the report system of a task
+  async function handleReportTask() {
+    Alert.alert(
+      'Report Task',
+      'Does this task contain spam, inappropriate content, or violate community guidelines?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Report',
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              const { error } = await supabase.from('reports').insert({
+                reporter_id: session?.user?.id,
+                task_id: taskId
+              });
+
+              // If it's a unique constraint error, it means they already reported it
+              if (error && error.code === '23505') {
+                Alert.alert('Already Reported', 'You have already flagged this task for admin review.');
+              } else if (error) {
+                throw error;
+              } else {
+                Alert.alert('Report Sent', 'Thank you for keeping the neighborhood safe. An admin will review this shortly.');
+              }
+            } catch (error: any) {
+              Alert.alert('Error', error.message);
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
-      <View className="flex-row items-center px-6 pt-4 pb-4 border-b border-surface-highlight">
-        <TouchableOpacity onPress={() => router.back()} className="mr-2 p-2 -ml-2">
-          <ArrowLeft color={isSeniorMode ? "#000000" : "#1F1C2C"} size={28} />
-        </TouchableOpacity>
-        <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
-          Task Details
-        </Text>
+      <View className="flex-row items-center justify-between px-6 pt-4 pb-4 border-b border-surface-highlight">
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => router.back()} className="mr-2 p-2 -ml-2">
+            <ArrowLeft color={isSeniorMode ? "#000000" : "#1F1C2C"} size={28} />
+          </TouchableOpacity>
+          <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
+            Task Details
+          </Text>
+        </View>
+
+        {/* Report Flag (Only visible if it's NOT your task) */}
+        {!isMyTask && (
+          <TouchableOpacity onPress={handleReportTask} className="p-2 -mr-2 flex-row items-center">
+            <Flag color="#EF4444" size={isSeniorMode ? 28 : 24} />
+            {isSeniorMode && (
+              <Text className="text-[#EF4444] font-sans font-bold ml-2 text-xl">
+                Report
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 180 }} showsVerticalScrollIndicator={false}>

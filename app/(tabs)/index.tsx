@@ -68,7 +68,8 @@ export default function FeedScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   // State to toggle between Community Feed and My Tasks
-  const [filterMode, setFilterMode] = useState<'community' | 'mine'>('community');
+  const [filterMode, setFilterMode] = useState<'community' | 'mine' | 'reports'>('community');
+  const [reportedTaskIds, setReportedTaskIds] = useState<string[]>([]);
 
   // State for onboarding(new user, welcome modal)
   const [onboardingTags, setOnboardingTags] = useState<string[]>([]);
@@ -151,8 +152,25 @@ export default function FeedScreen() {
         .eq('helper_id', session.user.id)
         .neq('status', 'completed');
 
-      // MERGE ALL 3 AND REMOVE DUPLICATES (using Map by ID)
-      const allTasks = [...(openTasks || []), ...(myTasks || []), ...(helpingTasks || [])];
+      // Fetch Reports if Admin
+      let adminReportIds: string[] = [];
+      let adminReportedTasks: Task[] = [];
+      if (userProfile?.is_admin) {
+        const { data: reports } = await supabase.from('reports').select('task_id');
+        if (reports && reports.length > 0) {
+          adminReportIds = reports.map(r => r.task_id);
+          setReportedTaskIds(adminReportIds);
+          
+          // Fetch the actual tasks that were reported
+          const { data: rTasks } = await supabase.from('tasks').select('*').in('id', adminReportIds);
+          if (rTasks) adminReportedTasks = rTasks;
+        } else {
+          setReportedTaskIds([]);
+        }
+      }
+
+      // MERGE ALL AND REMOVE DUPLICATES (using Map by ID)
+      const allTasks = [...(openTasks || []), ...(myTasks || []), ...(helpingTasks || []), ...adminReportedTasks];
       const uniqueTasks = Array.from(new Map(allTasks.map(task => [task.id, task])).values());
       
       setTasks(uniqueTasks);
@@ -250,6 +268,8 @@ export default function FeedScreen() {
             
             // Remove from local state to update UI instantly
             setTasks(prev => prev.filter(t => t.id !== taskId));
+            // If it was a reported task, instantly remove it from the list
+            setReportedTaskIds(prev => prev.filter(id => id !== taskId));
           } catch (error: any) {
             Alert.alert('Error deleting task', error.message);
           }
@@ -411,6 +431,9 @@ export default function FeedScreen() {
 
   // Filter the tasks array right before rendering!
   const displayTasks = tasks.filter(task => {
+    if (filterMode === 'reports') {
+      return reportedTaskIds.includes(task.id);
+    }
     if (filterMode === 'mine') {
       // "My Tasks" now shows tasks I created OR tasks I am actively helping with
       return task.user_id === session?.user?.id || task.helper_id === session?.user?.id;
@@ -522,28 +545,25 @@ export default function FeedScreen() {
           )}
         </View>
         <Text className="text-text-muted font-sans text-base mt-1">
-          {filterMode === 'community' ? 'Discover tasks tailored to your interests.' : 'Manage your open requests.'}
+          {filterMode === 'community' ? 'Discover tasks tailored to your interests.' : filterMode === 'reports' ? 'Moderate reported tasks.' : 'Manage your open requests.'}
         </Text>
       </View>
 
-      {/* Segmented Control Toggle */}
+      {/* Segmented Control Toggle (Third tab only visible to Admin) */}
       <View className="flex-row bg-surface border border-surface-highlight p-1 rounded-xl mx-6 mb-4">
-        <TouchableOpacity 
-          className={`flex-1 py-2.5 items-center rounded-lg ${filterMode === 'community' ? 'bg-secondary' : 'bg-transparent'}`}
-          onPress={() => setFilterMode('community')}
-        >
-          <Text className={`font-sans font-bold ${filterMode === 'community' ? 'text-text' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
-            Community
-          </Text>
+        <TouchableOpacity className={`flex-1 py-2.5 items-center rounded-lg ${filterMode === 'community' ? 'bg-secondary' : 'bg-transparent'}`} onPress={() => setFilterMode('community')}>
+          <Text className={`font-sans font-bold ${filterMode === 'community' ? 'text-text' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>Community</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          className={`flex-1 py-2.5 items-center rounded-lg ${filterMode === 'mine' ? 'bg-secondary' : 'bg-transparent'}`}
-          onPress={() => setFilterMode('mine')}
-        >
-          <Text className={`font-sans font-bold ${filterMode === 'mine' ? 'text-text' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
-            My Tasks
-          </Text>
+        
+        <TouchableOpacity className={`flex-1 py-2.5 items-center rounded-lg ${filterMode === 'mine' ? 'bg-secondary' : 'bg-transparent'}`} onPress={() => setFilterMode('mine')}>
+          <Text className={`font-sans font-bold ${filterMode === 'mine' ? 'text-text' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>My Tasks</Text>
         </TouchableOpacity>
+
+        {userProfile?.is_admin && (
+          <TouchableOpacity className={`flex-1 py-2.5 items-center rounded-lg ${filterMode === 'reports' ? 'bg-[rgba(239,68,68,0.2)]' : 'bg-transparent'}`} onPress={() => setFilterMode('reports')}>
+            <Text className={`font-sans font-bold ${filterMode === 'reports' ? 'text-error' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>🚩 Review</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {loading ? (
