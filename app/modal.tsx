@@ -22,9 +22,12 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { StatusBar } from 'expo-status-bar';
-import { X } from 'lucide-react-native';
+import { X, Lock } from 'lucide-react-native';
 
-const CATEGORIES = ['Pets', 'Education', 'Tools', 'Errands', 'Tech Support'];
+const CATEGORIES = [
+  "Pets", "Education", "Tools", "Errands", "Tech", 
+  "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"
+];
 
 export default function EditTaskModal() {
   const router = useRouter();
@@ -35,6 +38,7 @@ export default function EditTaskModal() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
+  const [privateInfo, setPrivateInfo] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -56,6 +60,7 @@ export default function EditTaskModal() {
           setTitle(data.title);
           setDescription(data.description);
           setCategory(data.category);
+          setPrivateInfo(data.private_contact_info || '');
         }
       } catch (error: any) {
         Alert.alert('Error', 'Could not load task details.');
@@ -85,6 +90,7 @@ export default function EditTaskModal() {
           title: title.trim(),
           description: description.trim(),
           category: category,
+          private_contact_info: privateInfo.trim(),
         })
         .eq('id', taskId)
         // RLS backup: strictly enforce that only the owner can edit this!
@@ -145,6 +151,21 @@ export default function EditTaskModal() {
                   className={`bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans min-h-[100px] ${isSeniorMode ? 'text-lg' : 'text-base'}`}
                   value={description}
                   onChangeText={setDescription}
+                  multiline textAlignVertical="top"
+                />
+              </View>
+
+              <View className="mb-8">
+                <View className="flex-row items-center mb-1">
+                  <Lock color="#5F4B8B" size={16} className="mr-1.5" />
+                  <Text className={`text-text font-sans ml-2 font-semibold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Secure Handshake (Private)</Text>
+                </View>
+                <TextInput
+                  className={`bg-surface border border-surface-highlight rounded-xl px-4 py-3 text-text font-sans min-h-[80px] ${isSeniorMode ? 'text-lg' : 'text-base'}`}
+                  value={privateInfo}
+                  onChangeText={setPrivateInfo}
+                  placeholder="Address, intercom, phone number..."
+                  placeholderTextColor="#64748B"
                   multiline textAlignVertical="top"
                 />
               </View>
