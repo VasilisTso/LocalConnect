@@ -6,13 +6,16 @@ import {
   TouchableOpacity, 
   Alert, 
   ScrollView, 
-  ActivityIndicator 
+  ActivityIndicator,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LogOut, User as UserIcon, Tag, ShieldAlert, Award, Phone, Shield, Footprints, Car } from 'lucide-react-native';
+import { LogOut, User as UserIcon, Tag, ShieldAlert, Award, Phone, Shield, Footprints, Car, Camera } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { decode } from 'base64-arraybuffer';
 
 // Helper function to determine badge status based on Karma points
 function getBadge(karma: number) {
@@ -32,9 +35,11 @@ export default function ProfileScreen() {
   const router = useRouter();
   
   // Pull our global state and actions from Zustand
-  const { session, isSeniorMode, toggleSeniorMode } = useAppStore();
+  const { session, isSeniorMode, toggleSeniorMode, userProfile, fetchUserProfile } = useAppStore();
   
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const [userTags, setUserTags] = useState<string[]>([]);
   const [karma, setKarma] = useState(0);
 
@@ -69,6 +74,61 @@ export default function ProfileScreen() {
       fetchProfile();
     }, [session])
   );
+
+  // IMAGE UPLOAD LOGIC
+  async function handlePickImage() {
+    try {
+      // Ask the user to pick an image AND request the base64 data
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true, 
+        aspect: [1, 1],
+        quality: 0.5, 
+        base64: true, // Tell Expo we want the raw image data
+      });
+
+      if (result.canceled || !result.assets[0] || !result.assets[0].base64) return;
+
+      setUploadingImage(true);
+      const photoUri = result.assets[0].uri;
+      const base64FileData = result.assets[0].base64;
+      
+      const fileExt = photoUri.split('.').pop() || 'jpeg';
+      const fileName = `${session?.user?.id}-${Date.now()}.${fileExt}`;
+
+      // Upload to Supabase using the 'decode' function to bypass fetch
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, decode(base64FileData), {
+          contentType: `image/${fileExt}`,
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      const publicUrl = data.publicUrl;
+
+      // Update the user's profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', session?.user?.id);
+
+      if (updateError) throw updateError;
+
+      // Refresh global state
+      if (session?.user?.id) {
+        await fetchUserProfile(session.user.id);
+      }
+      
+    } catch (error: any) {
+      Alert.alert("Upload Error", error.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  }
 
   // Toggle a tag on/off and save to Supabase
   async function handleToggleTag(tag: string) {
@@ -119,17 +179,52 @@ export default function ProfileScreen() {
     // layout.tsx listener will automatically detect the sign out and route to login
   }
 
+  const avatarSize = isSeniorMode ? 100 : 80;
+
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         
         {/* Header Section */}
         <View className="items-center mb-8">
-          <View className="bg-surface-highlight p-6 rounded-full mb-4">
-            <UserIcon color="#5F4B8B" size={isSeniorMode ? 64 : 48} />
-          </View>
-          <Text className={`text-text font-sans font-bold mb-2 ${isSeniorMode ? 'text-3xl' : 'text-2xl'}`}>
-            {session?.user?.email || 'User'}
+          {/* INTERACTIVE PROFILE PICTURE */}
+          <TouchableOpacity 
+            onPress={handlePickImage} 
+            disabled={uploadingImage}
+            className="mb-4 relative"
+          >
+            {userProfile?.avatar_url ? (
+              <Image 
+                source={{ uri: userProfile.avatar_url }} 
+                style={{ width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }} 
+              />
+            ) : (
+              <View className="bg-surface-highlight p-6 rounded-full" style={{ width: avatarSize, height: avatarSize, alignItems: 'center', justifyContent: 'center' }}>
+                <UserIcon color="#5F4B8B" size={isSeniorMode ? 48 : 36} />
+              </View>
+            )}
+            
+            {/* Little Camera Badge */}
+            <View className="absolute bottom-0 right-0 bg-primary p-2 rounded-full border-2 border-background">
+              <Camera color="#FFFFFF" size={14} />
+            </View>
+
+            {/* Loading Overlay */}
+            {uploadingImage && (
+              <View className="absolute inset-0 bg-black/40 rounded-full items-center justify-center">
+                <ActivityIndicator color="#FFFFFF" />
+              </View>
+            )}
+          </TouchableOpacity>
+          
+          {/* Extracted Username from Email */}
+          <Text className={`text-text font-sans font-bold mb-1 ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>
+            {session?.user?.email ? session.user.email.split('@')[0] : 'Neighbor'}
+          </Text>
+          
+          {/* The actual email rendered smaller underneath */}
+          <Text className={`text-text-muted font-sans mb-4 ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
+            {session?.user?.email}
           </Text>
 
           {/*KARMA BADGE - HIDE GAMIFICATION IN SENIOR MODE */}
