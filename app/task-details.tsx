@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
-import { ArrowLeft, HeartHandshake, MapPin, Shield, ShieldAlert, Tag, User as UserIcon, Award, CheckCircle, XCircle, Lock } from 'lucide-react-native';
+import { ArrowLeft, HeartHandshake, MapPin, Shield, ShieldAlert, Tag, User as UserIcon, Award, CheckCircle, XCircle, Lock, Star } from 'lucide-react-native';
 import * as Location from 'expo-location';
 
 // badge helper for this screen
@@ -22,6 +22,9 @@ export default function TaskDetailsScreen() {
 
   // State to hold the human-readable location name
   const [locationName, setLocationName] = useState<string>("Loading area...");
+
+  // State to hold the helper's trust metrics
+  const [helperProfile, setHelperProfile] = useState<{ avatar_url: string | null, karma_points: number, avg_rating: number } | null>(null);
 
   // Grab all the task data passed from the Feed
   const params = useLocalSearchParams();
@@ -77,6 +80,24 @@ export default function TaskDetailsScreen() {
 
     fetchLocationName();
   }, [latitude, longitude]);
+
+  // Fetch Helper Profile (Only if you are the owner and it is pending)
+  useEffect(() => {
+    async function fetchHelperProfile() {
+      if (isMyTask && status === 'pending' && helperId) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('avatar_url, karma_points, avg_rating')
+          .eq('id', helperId)
+          .single();
+          
+        if (data && !error) {
+          setHelperProfile(data);
+        }
+      }
+    }
+    fetchHelperProfile();
+  }, [isMyTask, status, helperId]);
 
   // ACTION 1: A Helper offers help (Changes status from open -> pending)
   async function handleOfferHelp() {
@@ -177,7 +198,7 @@ export default function TaskDetailsScreen() {
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 180 }} showsVerticalScrollIndicator={false}>
         {/* Title & Badge */}
         <Text className={`text-text font-sans font-bold mb-5 ${isSeniorMode ? 'text-4xl leading-10' : 'text-3xl'}`}>
           {title}
@@ -236,6 +257,52 @@ export default function TaskDetailsScreen() {
             </Text>
           </View>
         ) : null}
+
+        {/* HELPER TRUST CARD (Only visible to the owner when deciding to accept/decline) */}
+        {isMyTask && status === 'pending' && helperProfile && (
+          <View className="bg-secondary/10 rounded-2xl p-5 mb-8 border-2 border-secondary shadow-sm">
+            <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
+              A neighbor wants to help! Check him out.
+            </Text>
+            
+            <View className="flex-row items-center">
+              {/* Profile Pic */}
+              {helperProfile.avatar_url ? (
+                <Image 
+                  source={{ uri: helperProfile.avatar_url }} 
+                  style={{ width: 64, height: 64, borderRadius: 32, marginRight: 16 }} 
+                />
+              ) : (
+                <View className="bg-surface-highlight p-4 rounded-full mr-4" style={{ width: 64, height: 64, alignItems: 'center', justifyContent: 'center' }}>
+                  <UserIcon color="#5F4B8B" size={32} />
+                </View>
+              )}
+              
+              <View className="flex-1">
+                {/* Dynamic Karma Badge */}
+                <View className="flex-row items-center mb-2">
+                  <View 
+                    className="flex-row items-center px-3 py-1 rounded-full border"
+                    style={{ backgroundColor: `${getBadge(helperProfile.karma_points).color}15`, borderColor: getBadge(helperProfile.karma_points).color }}
+                  >
+                    {React.createElement(getBadge(helperProfile.karma_points).icon, { color: getBadge(helperProfile.karma_points).color, size: 14, className: "mr-1.5" })}
+                    <Text className="font-sans font-bold text-xs" style={{ color: getBadge(helperProfile.karma_points).color }}>
+                      {getBadge(helperProfile.karma_points).title}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Rating */}
+                <View className="flex-row items-center">
+                  <Star color="#D97706" fill="#D97706" size={16} className="mr-1" />
+                  <Text className="text-text font-sans font-bold text-base">
+                    {helperProfile.avg_rating > 0 ? helperProfile.avg_rating.toFixed(1) : "No ratings yet"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       {/* DYNAMIC ACTION BUTTONS (Floating at the bottom) */}
