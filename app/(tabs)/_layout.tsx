@@ -99,15 +99,26 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: backgroundColor,
           borderTopColor: borderColor,
-          borderTopWidth: isSeniorMode ? 2 : 1,
+          borderTopWidth: isSeniorMode ? 3 : 1,
+          // Keep the taller height
+          height: Platform.OS === 'ios' ? (isSeniorMode ? 100 : 85) : (isSeniorMode ? 80 : 65),
+          // INCREASED PADDING BOTTOM: This specifically pushes the icons/text UP away from the gesture bar
+          paddingBottom: Platform.OS === 'ios' ? 35 : 15, 
+          // Adjusted top padding so it doesn't push them down too much
+          paddingTop: Platform.OS === 'ios' ? 10 : 5,
         },
         
         // Styling the text labels specifically for Senior Mode
         tabBarLabelStyle: {
-          fontFamily: 'Inter',
-          fontSize: 12,
+          fontSize: isSeniorMode ? 14 : 12,
           fontWeight: 'bold',
-          marginBottom: 4, 
+          marginTop: 3, // Add a little breathing room between the icon and the text
+        },
+
+        // Center the icons perfectly in Normal mode since there are no labels
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
         }
       }}
     >
@@ -115,28 +126,28 @@ export default function TabLayout() {
         name="index" 
         options={{ 
           title: 'Feed', 
-          tabBarIcon: ({ color }) => <Home color={color} size={isSeniorMode ? 28 : 24} />
+          tabBarIcon: ({ color }) => <Home color={color} size={isSeniorMode ? 32 : 28} />
         }} 
       />
       <Tabs.Screen 
         name="map" 
         options={{ 
           title: 'Map', 
-          tabBarIcon: ({ color }) => <MapIcon color={color} size={isSeniorMode ? 28 : 24} />
+          tabBarIcon: ({ color }) => <MapIcon color={color} size={isSeniorMode ? 32 : 28} />
         }} 
       />
       <Tabs.Screen 
         name="add" 
         options={{ 
           title: 'Add Task', 
-          tabBarIcon: ({ color }) => <PlusCircle color={color} size={isSeniorMode ? 28 : 24} />
+          tabBarIcon: ({ color }) => <PlusCircle color={color} size={isSeniorMode ? 32 : 28} />
         }} 
       />
       <Tabs.Screen 
         name="profile" 
         options={{ 
           title: 'Profile', 
-          tabBarIcon: ({ color }) => <User color={color} size={isSeniorMode ? 28 : 24} />
+          tabBarIcon: ({ color }) => <User color={color} size={isSeniorMode ? 32 : 28} />
         }} 
       />
     </Tabs>
