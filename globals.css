@@ -2,17 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+:root {
+    --color-primary: #5F4B8B;          
+    --color-primary-dark: #4B3B6E;     
+    --color-secondary: #FFD167;        
+    --color-background: #F8F9FA;       
+    --color-surface: #FFFFFF;          
+    --color-surface-highlight: #F3F0FF;
+    --color-text: #1F2937;             
+    --color-text-muted: #6B7280;       
+    --color-border: #E5E7EB;          
+    --color-error: #EF4444;            
+    --color-success: #10B981;          
+  }
+*/
+
+
 @layer base {  
   /* Default Theme (Standard User) */
   :root {
-    --color-primary: #5f4b8b; 
-    --color-secondary: #ffd167; 
-    --color-background: #fafafa; 
-    --color-surface: #ffffff; 
-    --color-surface-highlight: #f3f0ff;
-    --color-text: #1f1c2c; 
-    --color-text-muted: #64748b; 
-    --color-error: #ef4444;
+    --color-primary: #8382FE;          /* Vibrant Pastel Purple/Blue */
+    --color-primary-dark: #6564D1;     /* Slightly darker for pressed states */
+    --color-on-primary: #FFFFFF;       /* White text looks great on the purple */
+
+    --color-secondary: #FFD167;        /* Warm Yellow for Gamification/Points */
+    --color-on-secondary: #1A1826;     /* Dark background color for text on yellow */
+    
+    --color-background: #1A1826;       /* Deep dark background */
+    --color-surface: #323147;          /* Lighter surface for Cards/Inputs */
+    --color-surface-highlight: #4A4968;/* Lighter accent for active/selected states */
+    --color-text: #FFFFFF;             /* Pure White for optimal reading */
+    --color-text-muted: #A1A0B8;       /* Soft grayish-purple for secondary text */
+    --color-border: #4A4968;           /* Subtle borders blending with surface */
+    --color-error: #EF4444;            /* Standard red */
+    --color-success: #10B981;          /* Standard green */
   }
 
   /* * Senior Mode Theme (Adaptivity Target) 
@@ -23,14 +47,20 @@
     :root {
       /* I have temporarily made these colors DRASTICALLY different 
          so you can physically see the change happen. */
-      --color-primary: #000000; /* Pitch black buttons */
-      --color-secondary: #FFB300; 
-      --color-background: #FFF9E6; /* Pale yellow accessibility background */
-      --color-surface: #FFFFFF; 
-      --color-surface-highlight: #000000; /* Harsh black borders for cards */
-      --color-text: #000000; 
-      --color-text-muted: #111111; 
-      --color-error: #D32F2F; 
+      --color-primary: #000000;          /* Pitch Black for main buttons - max contrast */
+      --color-primary-dark: #333333;     /* Dark gray for pressed states */
+      --color-on-primary: #FFFFFF;
+      --color-secondary: #FFC107;        /* High-visibility Amber/Yellow for alerts */
+      --color-on-secondary: #000000;
+      
+      --color-background: #FFFFFF;       /* Pure white background for maximum contrast */
+      --color-surface: #FFFFFF;          /* Pure white cards */
+      --color-surface-highlight: #000000;/* Used for thick black borders/outlines */
+      --color-text: #000000;             /* Pure black text ONLY */
+      --color-text-muted: #222222;       /* Very dark gray - still highly readable */
+      --color-border: #000000;           /* Harsh, thick black borders for structure */
+      --color-error: #D32F2F;            /* WCAG AA compliant dark red */
+      --color-success: #006400;          /* WCAG AA compliant dark green */
     }
   }
 }

@@ -1,19 +1,27 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+const primaryNormal = '#8382FE';
+const primarySenior = '#000000';
 
 export default {
+  // NORMAL MODE (Dark Deep Purple)
   light: {
-    text: '#000',
-    background: '#fff',
-    tint: tintColorLight,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorLight,
+    text: '#FFFFFF',
+    background: '#1A1826',
+    tint: primaryNormal,
+    tabIconDefault: '#A1A0B8',
+    tabIconSelected: primaryNormal,
+    primary: primaryNormal,
+    surface: '#323147',
+    border: '#4A4968',
   },
+  // SENIOR MODE (High Contrast Light)
   dark: {
-    text: '#fff',
-    background: '#000',
-    tint: tintColorDark,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorDark,
+    text: '#000000',
+    background: '#FFFFFF',
+    tint: primarySenior,
+    tabIconDefault: '#222222',
+    tabIconSelected: primarySenior,
+    primary: primarySenior,
+    surface: '#FFFFFF',
+    border: '#000000',
   },
 };

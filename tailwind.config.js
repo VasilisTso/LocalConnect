@@ -8,23 +8,32 @@ module.exports = {
   darkMode: 'class', // for seniormode
   theme: {
     extend: {
-      // 1. Map your semantic colors to the CSS variables
       colors: {
-        primary: 'var(--color-primary)',
+        primary: {
+          DEFAULT: 'var(--color-primary)',
+          dark: 'var(--color-primary-dark)',
+        },
+        'on-primary': 'var(--color-on-primary)',     // <-- NEW
         secondary: 'var(--color-secondary)',
+        'on-secondary': 'var(--color-on-secondary)', // <-- NEW
         background: 'var(--color-background)',
         surface: 'var(--color-surface)',
         'surface-highlight': 'var(--color-surface-highlight)',
-        text: 'var(--color-text)',
-        'text-muted': 'var(--color-text-muted)',
+        text: {
+          DEFAULT: 'var(--color-text)',
+          muted: 'var(--color-text-muted)',
+        },
+        border: 'var(--color-border)',
         error: 'var(--color-error)',
+        success: 'var(--color-success)',
       },
-      // 2. Enforce strictly Inter font family per your thesis guidelines
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
+      borderWidth: {
+        'senior': '4px',
+      }
     },
   },
   plugins: [],
 }
-
