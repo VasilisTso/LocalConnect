@@ -16,13 +16,14 @@ import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
+import Colors from '@/constants/Colors';
 
 // Helper function to determine badge status based on Karma points
-function getBadge(karma: number) {
-  if (karma < 0) return { title: 'Flagged Account', color: '#EF4444', icon: ShieldAlert };
-  if (karma < 50) return { title: 'New Neighbor', color: '#64748B', icon: UserIcon };
-  if (karma < 150) return { title: 'Active Helper', color: '#5F4B8B', icon: Shield };
-  return { title: 'Local Hero', color: '#D97706', icon: Award }; // 150+ points
+function getBadge(karmaPoints: number) {
+  if (karmaPoints < 0) return { title: 'Flagged Account', color: Colors.light.error, icon: ShieldAlert };
+  if (karmaPoints < 50) return { title: 'New Neighbor', color: Colors.light.tabIconDefault, icon: UserIcon };
+  if (karmaPoints < 150) return { title: 'Active Helper', color: Colors.light.primary, icon: Shield };
+  return { title: 'Local Hero', color: Colors.light.secondary, icon: Award }; 
 }
 
 /**
@@ -51,6 +52,10 @@ export default function ProfileScreen() {
     "Pets", "Education", "Tools", "Errands", "Tech", 
     "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"
   ];
+
+  // Colors for icons dynamically matched to theme
+  const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
+  const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
 
   // FETCH ON TAB FOCUS: This ensures your Karma updates instantly when you switch tabs!
   useFocusEffect(
@@ -199,213 +204,234 @@ export default function ProfileScreen() {
     }
   }
 
-  const avatarSize = isSeniorMode ? 100 : 80;
+  const avatarSize = isSeniorMode ? 110 : 90;
+  const currentBadge = getBadge(karma);
+  const BadgeIcon = currentBadge.icon;
 
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         
-        {/* Header Section */}
-        <View className="items-center mb-8">
-          {/* INTERACTIVE PROFILE PICTURE */}
-          <TouchableOpacity 
-            onPress={handlePickImage} 
-            disabled={uploadingImage}
-            className="mb-4 relative"
-          >
-            {userProfile?.avatar_url ? (
-              <Image 
-                source={{ uri: userProfile.avatar_url }} 
-                style={{ width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }} 
-              />
-            ) : (
-              <View className="bg-surface-highlight p-6 rounded-full" style={{ width: avatarSize, height: avatarSize, alignItems: 'center', justifyContent: 'center' }}>
-                <UserIcon color="#5F4B8B" size={isSeniorMode ? 48 : 36} />
+        <View className="flex-1 w-full max-w-2xl mx-auto">
+          {/* Header Section */}
+          <View className="items-center mb-8">
+            {/* INTERACTIVE PROFILE PICTURE */}
+            <TouchableOpacity 
+              onPress={handlePickImage} 
+              disabled={uploadingImage}
+              className={`mb-4 relative rounded-full ${isSeniorMode ? 'border-senior border-border' : ''}`}
+            >
+              {userProfile?.avatar_url ? (
+                <Image 
+                  source={{ uri: userProfile.avatar_url }} 
+                  style={{ width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }} 
+                />
+              ) : (
+                <View 
+                  className="bg-surface p-6 rounded-full border border-border dark:border-0" 
+                  style={{ width: avatarSize, height: avatarSize, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <UserIcon color={primaryIconColor} size={isSeniorMode ? 54 : 40} />
+                </View>
+              )}
+              
+              {/* Little Camera Badge */}
+              <View className="absolute bottom-0 right-0 bg-primary dark:bg-black p-2 rounded-full border-2 border-background dark:border-white">
+                <Camera color="#FFFFFF" size={isSeniorMode ? 18 : 16} />
               </View>
-            )}
+
+              {/* Loading Overlay */}
+              {uploadingImage && (
+                <View className="absolute inset-0 bg-black/60 rounded-full items-center justify-center">
+                  <ActivityIndicator color="#FFFFFF" />
+                </View>
+              )}
+            </TouchableOpacity>
             
-            {/* Little Camera Badge */}
-            <View className="absolute bottom-0 right-0 bg-primary p-2 rounded-full border-2 border-background">
-              <Camera color="#FFFFFF" size={14} />
-            </View>
+            {/* username */}
+            <Text className={`text-text font-sans font-bold mb-1 ${isSeniorMode ? 'text-4xl' : 'text-2xl'}`}>
+              {userProfile?.username ? userProfile.username : 'Neighbor'}
+            </Text>
+            
+            {/* The actual email rendered smaller underneath */}
+            <Text className={`text-text-muted font-sans mb-4 ${isSeniorMode ? 'text-xl' : 'text-sm'}`}>
+              {session?.user?.email}
+            </Text>
 
-            {/* Loading Overlay */}
-            {uploadingImage && (
-              <View className="absolute inset-0 bg-black/40 rounded-full items-center justify-center">
-                <ActivityIndicator color="#FFFFFF" />
+            {/*KARMA BADGE - HIDE GAMIFICATION IN SENIOR MODE */}
+            {!isSeniorMode && (
+              <View className="items-center mt-2 gap-2">
+                {/* Pill 1: Points */}
+                <View className="flex-row items-center bg-secondary/15 px-4 py-2 rounded-full border border-secondary">
+                  <Award color={Colors.light.secondary} size={18} className="mr-2" />
+                  <Text className="text-secondary font-sans font-bold text-base">
+                    {karma} Points
+                  </Text>
+                </View>
+                
+                {/* Pill 2: Badge */}
+                <View 
+                  className="flex-row items-center px-4 py-1.5 rounded-full border"
+                  style={{ backgroundColor: `${currentBadge.color}15`, borderColor: currentBadge.color }}
+                >
+                  <BadgeIcon color={currentBadge.color} size={16} className="mr-2" />
+                  <Text className="font-sans font-bold text-sm" style={{ color: currentBadge.color }}>
+                    {currentBadge.title}
+                  </Text>
+                </View>
               </View>
             )}
-          </TouchableOpacity>
-          
-          {/* username */}
-          <Text className={`text-text font-sans font-bold mb-1 ${isSeniorMode ? 'text-3xl' : 'text-2xl'}`}>
-            {userProfile?.username ? userProfile.username : 'Neighbor'}
-          </Text>
-          
-          {/* The actual email rendered smaller underneath */}
-          <Text className={`text-text-muted font-sans mb-4 ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
-            {session?.user?.email}
-          </Text>
+          </View>
 
-          {/*KARMA BADGE - HIDE GAMIFICATION IN SENIOR MODE */}
-          {!isSeniorMode && (
-            <View className="flex-row items-center mt-1">
-              {/* Score Bubble */}
-              <View className="flex-row items-center bg-secondary/20 px-4 py-2 rounded-l-full border border-secondary border-r-0">
-                <Award color="#D97706" size={18} className="mr-2" />
-                <Text className="text-text ml-1 font-sans font-bold text-base">
-                  {karma} pts
-                </Text>
+          {/* Accessibility & Adaptivity Section */}
+          <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-xl">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center flex-1 pr-4">
+                <ShieldAlert color={primaryIconColor} size={isSeniorMode ? 36 : 28} className="mr-4" />
+                <View className="flex-1 ml-2">
+                  {/* DYNAMIC TYPOGRAPHY */}
+                  <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+                    Senior Mode
+                  </Text>
+                  <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-lg leading-6' : 'text-sm'}`}>
+                    Enables high contrast, large text, and emergency tools.
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={isSeniorMode} 
+                onValueChange={handleToggleSeniorMode}
+                trackColor={{ false: Colors.light.border, true: isSeniorMode ? '#000000' : Colors.light.primary }}
+                thumbColor="#FFFFFF"
+                style={{ transform: [{ scaleX: isSeniorMode ? 1.3 : 1 }, { scaleY: isSeniorMode ? 1.3 : 1 }] }}
+              />
+            </View>
+          </View>
+
+          {/* Mobility & Reach Section */}
+          <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-xl">
+            <Text className={`text-text font-sans font-bold mb-2 ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+              Mobility & Reach
+            </Text>
+            <Text className={`text-text-muted font-sans mb-5 ${isSeniorMode ? 'text-lg leading-6' : 'text-sm'}`}>
+              How far can you travel to help neighbors? This filters tasks on your feed.
+            </Text>
+
+            <View className={`flex-row gap-4 ${isSeniorMode ? 'flex-col' : ''}`}>
+              <TouchableOpacity 
+                onPress={() => handleTransportMode('walking')}
+                activeOpacity={0.7}
+                className={`flex-1 flex-row items-center justify-center p-4 rounded-xl border-2 dark:rounded-md dark:border-senior ${
+                  transportMode === 'walking' 
+                    ? 'bg-primary border-primary dark:bg-black dark:border-black' 
+                    : 'bg-transparent border-border dark:border-border'
+                }`}
+              >
+                <Footprints color={transportMode === 'walking' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 28 : 20} className="mr-3" />
+                <View className='ml-2'>
+                  <Text className={`font-sans font-bold ${transportMode === 'walking' ? 'text-white dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-2xl' : 'text-base'}`}>Walking</Text>
+                  <Text className={`font-sans ${transportMode === 'walking' ? 'text-white/80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-xs'}`}>7.5 km</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={() => handleTransportMode('driving')}
+                activeOpacity={0.7}
+                className={`flex-1 flex-row items-center justify-center p-4 rounded-xl border-2 dark:rounded-md dark:border-senior ${
+                  transportMode === 'driving' 
+                    ? 'bg-primary border-primary dark:bg-black dark:border-black' 
+                    : 'bg-transparent border-border dark:border-border'
+                }`}
+              >
+                <Car color={transportMode === 'driving' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 28 : 20} className="mr-3" />
+                <View className='ml-2'>
+                  <Text className={`font-sans font-bold ${transportMode === 'driving' ? 'text-white dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-2xl' : 'text-base'}`}>Driving</Text>
+                  <Text className={`font-sans ${transportMode === 'driving' ? 'text-white/80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-xs'}`}>35.0 km</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* EMERGENCY CONTACTS (ONLY VISIBLE IN SENIOR MODE) */}
+          {isSeniorMode && (
+            <View className="bg-white border-senior border-error rounded-xl p-5 mb-6 shadow-sm">
+              <View className="flex-row justify-between items-center mb-6">
+                <Text className="text-black font-sans font-bold text-3xl">Emergency</Text>
+                <Phone color={Colors.dark.error} size={32} />
               </View>
               
-              {/* Dynamic Title Bubble */}
-              <View 
-                className="flex-row items-center px-4 py-2 rounded-r-full border"
-                style={{ backgroundColor: `${getBadge(karma).color}20`, borderColor: getBadge(karma).color }}
-              >
-                <Text className="font-sans font-bold text-sm" style={{ color: getBadge(karma).color }}>
-                  {getBadge(karma).title}
-                </Text>
-              </View>
+              <TouchableOpacity className="bg-white py-5 px-5 rounded-md flex-row justify-between items-center mb-4 border-senior border-border active:bg-gray-100">
+                <Text className="text-black font-sans font-bold text-2xl">General</Text>
+                <Text className="text-error font-sans font-extrabold text-3xl">112</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity className="bg-white py-5 px-5 rounded-md flex-row justify-between items-center mb-4 border-senior border-border active:bg-gray-100">
+                <Text className="text-black font-sans font-bold text-2xl">Ambulance</Text>
+                <Text className="text-error font-sans font-extrabold text-3xl">166</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity className="bg-white py-5 px-5 rounded-md flex-row justify-between items-center border-senior border-border active:bg-gray-100">
+                <Text className="text-black font-sans font-bold text-2xl">Police</Text>
+                <Text className="text-error font-sans font-extrabold text-3xl">100</Text>
+              </TouchableOpacity>
             </View>
           )}
-        </View>
 
-        {/* Accessibility & Adaptivity Section */}
-        <View className="bg-surface rounded-2xl p-4 mb-6 border border-surface-highlight">
-          <View className="flex-row items-center justify-between mb-2">
-            <View className="flex-row items-center flex-1 pr-4">
-              <ShieldAlert color="#5F4B8B" size={28} className="mr-3" />
-              <View className='ml-2'>
-                {/* DYNAMIC TYPOGRAPHY */}
-                <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
-                  Senior Mode
-                </Text>
-                <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
-                  Enables high contrast, large text, and emergency tools.
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={isSeniorMode} 
-              onValueChange={handleToggleSeniorMode}
-              trackColor={{ false: '#E9ECEF', true: '#5F4B8B' }}
-              thumbColor={isSeniorMode ? '#FFD167' : '#FFFFFF'}
-            />
-          </View>
-        </View>
-
-        {/* Mobility & Reach Section */}
-        <View className="bg-surface rounded-2xl p-4 mb-6 border border-surface-highlight">
-          <Text className={`text-text font-sans font-bold mb-1 ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
-            Mobility & Reach
-          </Text>
-          <Text className={`text-text-muted font-sans mb-4 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
-            How far can you travel to help neighbors? This limits tasks on your feed.
-          </Text>
-
-          <View className="flex-row gap-4">
-            <TouchableOpacity 
-              onPress={() => handleTransportMode('walking')}
-              className={`flex-1 flex-row items-center justify-center p-3 rounded-xl border ${transportMode === 'walking' ? 'bg-primary border-primary' : 'bg-transparent border-surface-highlight'}`}
-            >
-              <Footprints color={transportMode === 'walking' ? '#FFFFFF' : '#64748B'} size={20} className="mr-2" />
-              <View className='ml-2'>
-                <Text className={`font-sans font-bold ${transportMode === 'walking' ? 'text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>Walking</Text>
-                <Text className={`font-sans ${transportMode === 'walking' ? 'text-[#E2D8F0]' : 'text-text-muted'} ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>7.5 km</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              onPress={() => handleTransportMode('driving')}
-              className={`flex-1 flex-row items-center justify-center p-3 rounded-xl border ${transportMode === 'driving' ? 'bg-primary border-primary' : 'bg-transparent border-surface-highlight'}`}
-            >
-              <Car color={transportMode === 'driving' ? '#FFFFFF' : '#64748B'} size={20} className="mr-2" />
-              <View className='ml-2'>
-                <Text className={`font-sans font-bold ${transportMode === 'driving' ? 'text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>Driving</Text>
-                <Text className={`font-sans ${transportMode === 'driving' ? 'text-[#E2D8F0]' : 'text-text-muted'} ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>35.0 km</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* EMERGENCY CONTACTS (ONLY VISIBLE IN SENIOR MODE) */}
-        {isSeniorMode && (
-          <View className="bg-error/10 border-2 border-error rounded-2xl p-4 mb-6">
-            <View className="flex-row justify-between items-center mb-5">
-              <Text className="text-text font-sans font-bold text-2xl">Emergency Contacts</Text>
-              <Phone color="#D32F2F" size={28} className="mr-3" />
-            </View>
-            
-            <TouchableOpacity className="bg-surface py-4 px-4 rounded-xl flex-row justify-between items-center mb-3 border border-surface-highlight">
-              <Text className="text-text font-sans font-bold text-xl">General Emergency</Text>
-              <Text className="text-error font-sans font-bold text-2xl">112</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity className="bg-surface py-4 px-4 rounded-xl flex-row justify-between items-center mb-3 border border-surface-highlight">
-              <Text className="text-text font-sans font-bold text-xl">Ambulance (EKAB)</Text>
-              <Text className="text-error font-sans font-bold text-2xl">166</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity className="bg-surface py-4 px-4 rounded-xl flex-row justify-between items-center border border-surface-highlight">
-              <Text className="text-text font-sans font-bold text-xl">Police</Text>
-              <Text className="text-error font-sans font-bold text-2xl">100</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Interests / Tags Section (Crucial for Thesis Feed) */}
-        <View className="bg-surface rounded-2xl p-4 mb-8 border border-surface-highlight">
-          <View className="flex-row items-center mb-4">
-            <Tag color="#5F4B8B" size={24} className="mr-3" />
-            <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
-              My Interests
-            </Text>
-          </View>
-          <Text className={`text-text-muted font-sans mb-4 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
-            Select what you care about. Your feed will automatically adapt.
-          </Text>
-          
-          <View className="flex-row flex-wrap gap-3 mt-4">
-            {AVAILABLE_TAGS.map((tag) => {
-              const isActive = userTags.includes(tag);
-              return (
-                <TouchableOpacity
-                  key={tag}
-                  onPress={() => handleToggleTag(tag)}
-                  className={`px-4 py-3 rounded-full border ${
-                    isActive ? 'bg-primary border-primary' : 'bg-transparent border-text-muted'
-                  }`}
-                >
-                  <Text className={`font-sans font-semibold ${
-                    isActive ? 'text-white' : 'text-text-muted'
-                  } ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-                    {tag}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Sign Out Button */}
-        <TouchableOpacity 
-          className="bg-error py-4 rounded-xl items-center flex-row justify-center"
-          onPress={handleSignOut}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <>
-              <LogOut color="#FFFFFF" size={24} className="mr-2" />
-              <Text className={`text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
-                Sign Out
+          {/* Interests / Tags Section (Crucial for Thesis Feed) */}
+          <View className="bg-surface rounded-2xl p-5 mb-8 border border-border dark:border-senior dark:border-border dark:rounded-xl">
+            <View className="flex-row items-center mb-2">
+              <Tag color={primaryIconColor} size={isSeniorMode ? 32 : 24} className="mr-3" />
+              <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+                My Interests
               </Text>
-            </>
-          )}
-        </TouchableOpacity>
+            </View>
+            <Text className={`text-text-muted font-sans mb-5 ${isSeniorMode ? 'text-lg leading-6' : 'text-sm'}`}>
+              Select what you care about. Your feed will automatically adapt to show relevant tasks.
+            </Text>
+            
+            <View className="flex-row flex-wrap gap-3">
+              {AVAILABLE_TAGS.map((tag) => {
+                const isActive = userTags.includes(tag);
+                return (
+                  <TouchableOpacity
+                    key={tag}
+                    activeOpacity={0.7}
+                    onPress={() => handleToggleTag(tag)}
+                    className={`px-5 py-3 rounded-full border-2 dark:rounded-md dark:border-senior ${
+                      isActive 
+                        ? 'bg-primary border-primary dark:bg-black dark:border-black' 
+                        : 'bg-transparent border-border dark:border-border'
+                    }`}
+                  >
+                    <Text className={`font-sans font-semibold ${
+                      isActive ? 'text-white dark:text-white' : 'text-text'
+                    } ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+                      {tag}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
 
+          {/* Sign Out Button */}
+          <TouchableOpacity 
+            className="bg-error py-4 dark:py-6 rounded-xl dark:rounded-md dark:border-senior dark:border-black items-center flex-row justify-center active:opacity-80"
+            onPress={handleSignOut}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <LogOut color="#FFFFFF" size={isSeniorMode ? 28 : 24} className="mr-3" />
+                <Text className={`text-white font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+                  Sign Out
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
