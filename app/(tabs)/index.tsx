@@ -446,7 +446,7 @@ export default function FeedScreen() {
     }
     if (filterMode === 'mine') {
       // "My Tasks" now shows tasks I created OR tasks I am actively helping with
-      return task.user_id === session?.user?.id || task.helper_id === session?.user?.id;
+      return (task.user_id === session?.user?.id || task.helper_id === session?.user?.id) && task.status !== 'completed';
     }
     // For 'community', ONLY show tasks that are still open and belong to other people.
     // This stops pending tasks from cluttering the public feed!
