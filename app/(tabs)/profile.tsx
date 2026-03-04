@@ -209,7 +209,7 @@ export default function ProfileScreen() {
   const BadgeIcon = currentBadge.icon;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         
         <View className="flex-1 w-full max-w-2xl mx-auto">

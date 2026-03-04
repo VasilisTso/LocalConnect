@@ -465,7 +465,7 @@ export default function FeedScreen() {
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* THE WELCOME ONBOARDING MODAL */}
       {userProfile !== null && userProfile.onboarding_completed === false && (
         <Modal animationType="slide" transparent={false} visible={true}>
