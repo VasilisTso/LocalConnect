@@ -72,7 +72,11 @@ export const useAppStore = create<AppState>((set) => ({
       .single();
       
     if (data && !error) {
-      set({ userProfile: data as UserProfile });
+      set({ 
+        userProfile: data as UserProfile,
+        // Instantly sync the UI to match their database preference
+        isSeniorMode: data.is_senior 
+      });
     }
   },
 

@@ -179,6 +179,26 @@ export default function ProfileScreen() {
     // layout.tsx listener will automatically detect the sign out and route to login
   }
 
+  // isSenior toggle for database
+  async function handleToggleSeniorMode(newValue: boolean) {
+    // Optimistically update the local UI instantly for a snappy feel
+    toggleSeniorMode();
+
+    if (session?.user?.id) {
+      // Silently update the database in the background
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_senior: newValue })
+        .eq('id', session.user.id);
+
+      // If the database fails (e.g., lost internet), revert the UI and warn them
+      if (error) {
+        toggleSeniorMode(); // Revert back
+        Alert.alert('Network Error', 'Could not save your accessibility settings. Please check your connection.');
+      }
+    }
+  }
+
   const avatarSize = isSeniorMode ? 100 : 80;
 
   return (
@@ -268,7 +288,7 @@ export default function ProfileScreen() {
             </View>
             <Switch 
               value={isSeniorMode} 
-              onValueChange={toggleSeniorMode}
+              onValueChange={handleToggleSeniorMode}
               trackColor={{ false: '#E9ECEF', true: '#5F4B8B' }}
               thumbColor={isSeniorMode ? '#FFD167' : '#FFFFFF'}
             />
