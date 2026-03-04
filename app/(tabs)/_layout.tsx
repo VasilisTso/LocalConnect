@@ -2,8 +2,9 @@ import { Tabs, useRouter } from 'expo-router';
 import { Home, Map as MapIcon, PlusCircle, User } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { useEffect } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
+import Colors from '@/constants/Colors';
 
 export default function TabLayout() {
   const { isSeniorMode, session } = useAppStore();
@@ -42,7 +43,7 @@ export default function TabLayout() {
       )
       .subscribe();
 
-      // LISTENER 2: I am the HELPER. Tell me if the owner accepts my offer.
+    // LISTENER 2: I am the HELPER. Tell me if the owner accepts my offer.
     const helperSubscription = supabase
       .channel('helper_updates')
       .on(
@@ -80,45 +81,62 @@ export default function TabLayout() {
     };
   }, [session?.user?.id]); // Restart listener if the logged-in user changes
 
+  // Calculate tab bar colors based on mode
+  const activeColor = isSeniorMode ? Colors.dark.tabIconSelected : Colors.light.tabIconSelected;
+  const inactiveColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
+  const backgroundColor = isSeniorMode ? Colors.dark.surface : Colors.light.surface;
+  const borderColor = isSeniorMode ? Colors.dark.border : Colors.light.border;
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        // We use the CSS variable here so the tab bar adapts to Senior Mode automatically!
-        tabBarActiveTintColor: isSeniorMode ? '#FFB300' : '#5F4B8B', // Fallback colors representing primary/secondary
+        tabBarActiveTintColor: activeColor, 
+        tabBarInactiveTintColor: inactiveColor, // Dimmed icons when not selected
+        tabBarShowLabel: isSeniorMode, // Show labels only in Senior Mode
+        
+        // UI styling for the Tab Bar
         tabBarStyle: {
-          backgroundColor: isSeniorMode ? '#FFFFFF' : '#FAFAFA',
-          borderTopColor: isSeniorMode ? '#E9ECEF' : '#F3F0FF',
+          backgroundColor: backgroundColor,
+          borderTopColor: borderColor,
+          borderTopWidth: isSeniorMode ? 2 : 1,
         },
-        tabBarShowLabel: isSeniorMode, // Adaptivity: Show labels in Senior Mode for better accessibility
+        
+        // Styling the text labels specifically for Senior Mode
+        tabBarLabelStyle: {
+          fontFamily: 'Inter',
+          fontSize: 12,
+          fontWeight: 'bold',
+          marginBottom: 4, 
+        }
       }}
     >
       <Tabs.Screen 
         name="index" 
         options={{ 
           title: 'Feed', 
-          tabBarIcon: ({ color }) => <Home color={color} size={isSeniorMode ? 28 : 24} /> 
+          tabBarIcon: ({ color }) => <Home color={color} size={isSeniorMode ? 28 : 24} />
         }} 
       />
       <Tabs.Screen 
         name="map" 
         options={{ 
           title: 'Map', 
-          tabBarIcon: ({ color }) => <MapIcon color={color} size={isSeniorMode ? 28 : 24} /> 
+          tabBarIcon: ({ color }) => <MapIcon color={color} size={isSeniorMode ? 28 : 24} />
         }} 
       />
       <Tabs.Screen 
         name="add" 
         options={{ 
           title: 'Add Task', 
-          tabBarIcon: ({ color }) => <PlusCircle color={color} size={isSeniorMode ? 28 : 24} /> 
+          tabBarIcon: ({ color }) => <PlusCircle color={color} size={isSeniorMode ? 28 : 24} />
         }} 
       />
       <Tabs.Screen 
         name="profile" 
         options={{ 
           title: 'Profile', 
-          tabBarIcon: ({ color }) => <User color={color} size={isSeniorMode ? 28 : 24} /> 
+          tabBarIcon: ({ color }) => <User color={color} size={isSeniorMode ? 28 : 24} />
         }} 
       />
     </Tabs>
