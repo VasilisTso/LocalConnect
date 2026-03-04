@@ -1,6 +1,9 @@
 const primaryNormal = '#8382FE';
 const primarySenior = '#000000';
 
+const secondaryNormal = '#FFD167';
+const secondarySenior = '#FFC107';
+
 export default {
   // NORMAL MODE (Dark Deep Purple)
   light: {
@@ -10,6 +13,7 @@ export default {
     tabIconDefault: '#A1A0B8',
     tabIconSelected: primaryNormal,
     primary: primaryNormal,
+    secondary: secondaryNormal,
     surface: '#323147',
     border: '#4A4968',
   },
@@ -21,6 +25,7 @@ export default {
     tabIconDefault: '#222222',
     tabIconSelected: primarySenior,
     primary: primarySenior,
+    secondary: secondarySenior,
     surface: '#FFFFFF',
     border: '#000000',
   },
