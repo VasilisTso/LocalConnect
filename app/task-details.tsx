@@ -24,7 +24,7 @@ export default function TaskDetailsScreen() {
   const [locationName, setLocationName] = useState<string>("Loading area...");
 
   // State to hold the helper's trust metrics
-  const [helperProfile, setHelperProfile] = useState<{ avatar_url: string | null, karma_points: number, avg_rating: number } | null>(null);
+  const [helperProfile, setHelperProfile] = useState<{ avatar_url: string | null, karma_points: number, avg_rating: number, username: string | null } | null>(null);
 
   // Grab all the task data passed from the Feed
   const params = useLocalSearchParams();
@@ -87,7 +87,7 @@ export default function TaskDetailsScreen() {
       if (isMyTask && status === 'pending' && helperId) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('avatar_url, karma_points, avg_rating')
+          .select('avatar_url, karma_points, avg_rating, username')
           .eq('id', helperId)
           .single();
           
@@ -313,7 +313,7 @@ export default function TaskDetailsScreen() {
         {isMyTask && status === 'pending' && helperProfile && (
           <View className="bg-secondary/10 rounded-2xl p-5 mb-8 border-2 border-secondary shadow-sm">
             <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
-              A neighbor wants to help! Check him out.
+              {helperProfile.username ? `${helperProfile.username} wants to help!` : 'A neighbor wants to help!'}
             </Text>
             
             <View className="flex-row items-center">

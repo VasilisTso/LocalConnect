@@ -8,7 +8,8 @@ import {
   RefreshControl,
   Alert,
   Modal,
-  ScrollView
+  ScrollView,
+  TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award, Footprints, Car } from 'lucide-react-native';
@@ -74,6 +75,7 @@ export default function FeedScreen() {
   // State for onboarding(new user, welcome modal)
   const [onboardingTags, setOnboardingTags] = useState<string[]>([]);
   const [onboardingMode, setOnboardingMode] = useState<'walking' | 'driving'>('walking');
+  const [onboardingUsername, setOnboardingUsername] = useState('');
   const [savingOnboarding, setSavingOnboarding] = useState(false);
 
   const AVAILABLE_TAGS = [
@@ -281,6 +283,13 @@ export default function FeedScreen() {
   // ONBOARDING LOGIC
   async function handleFinishOnboarding() {
     if (!session?.user?.id) return;
+
+    // Force them to pick a name
+    if (!onboardingUsername.trim()) {
+      Alert.alert("Missing Name", "Please enter a username or first name to continue.");
+      return;
+    }
+
     setSavingOnboarding(true);
     
     // Save their choices and flip the flag to TRUE
@@ -289,7 +298,8 @@ export default function FeedScreen() {
       .update({ 
         tags: onboardingTags, 
         transport_mode: onboardingMode,
-        onboarding_completed: true 
+        onboarding_completed: true,
+        username: onboardingUsername.trim()
       })
       .eq('id', session.user.id);
 
@@ -473,8 +483,20 @@ export default function FeedScreen() {
                 </Text>
               </View>
 
+              {/* Username Input */}
+              <Text className="text-text font-sans font-bold text-xl mb-4">1. What should neighbors call you?</Text>
+              <View className="mb-8">
+                <TextInput
+                  className={`bg-surface border border-surface-highlight rounded-xl px-4 py-4 text-text font-sans ${isSeniorMode ? 'text-xl' : 'text-lg'}`}
+                  placeholder="Enter a username or first name..."
+                  placeholderTextColor="#64748B"
+                  value={onboardingUsername}
+                  onChangeText={setOnboardingUsername}
+                />
+              </View>
+
               {/* Transport Mode */}
-              <Text className="text-text font-sans font-bold text-xl mb-4">1. How far can you travel to help?</Text>
+              <Text className="text-text font-sans font-bold text-xl mb-4">2. How far can you travel to help?</Text>
               <View className="flex-row gap-4 mb-8">
                 <TouchableOpacity 
                   onPress={() => setOnboardingMode('walking')}
@@ -500,7 +522,7 @@ export default function FeedScreen() {
               </View>
 
               {/* Interests */}
-              <Text className="text-text font-sans font-bold text-xl mb-4">2. What are you good at or what are your hobbies? (Pick a few)</Text>
+              <Text className="text-text font-sans font-bold text-xl mb-4">3. What are you good at or what are your hobbies? (Pick a few)</Text>
               <View className="flex-row flex-wrap  gap-3 mb-12">
                 {AVAILABLE_TAGS.map((tag) => {
                   const isActive = onboardingTags.includes(tag);

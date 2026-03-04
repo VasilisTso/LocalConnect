@@ -217,9 +217,9 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
           
-          {/* Extracted Username from Email */}
-          <Text className={`text-text font-sans font-bold mb-1 ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>
-            {session?.user?.email ? session.user.email.split('@')[0] : 'Neighbor'}
+          {/* username */}
+          <Text className={`text-text font-sans font-bold mb-1 ${isSeniorMode ? 'text-3xl' : 'text-2xl'}`}>
+            {userProfile?.username ? userProfile.username : 'Neighbor'}
           </Text>
           
           {/* The actual email rendered smaller underneath */}
