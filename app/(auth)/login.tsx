@@ -15,6 +15,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+
+import { useAppStore } from "@/store/useAppStore";
+import Colors from "@/constants/Colors";
 
 /**
  * @description Authentication Login Screen
@@ -30,6 +34,12 @@ export default function LoginScreen() {
 
   // local state to track visibility
   const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  // We need the Zustand state to pass raw hex colors to non-Tailwind elements 
+  // like the Lucide Icons and TextInput placeholders.
+  const isSeniorMode = useAppStore((state) => state.isSeniorMode);
+  const iconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
+  const placeholderColor = isSeniorMode ? "#555555" : Colors.light.tabIconDefault;
 
   async function handleLogin() {
     if (!email || !password) {
@@ -75,90 +85,109 @@ export default function LoginScreen() {
           bounces={false}
           showsVerticalScrollIndicator={false}
         >
-          <View className="mb-10 items-center">
-            <Text className="text-4xl font-sans font-bold text-primary mb-2">
-              LocalConnect
-            </Text>
-            <Text className="text-text-muted font-sans text-base text-center">
-              Your neighborhood mutual aid network.
-            </Text>
-          </View>
+          <View className="flex-1 w-full max-w-lg mx-auto">
+            {/* HEADER */}
+            <Animated.View 
+              entering={FadeInDown.duration(600).springify()} 
+              className="mb-12 items-center"
+            >
+              <Text className="text-4xl font-sans font-bold text-primary mb-2">
+                LocalConnect
+              </Text>
+              <Text className="text-text-muted font-sans text-base text-center dark:text-lg">
+                Your neighborhood mutual aid network.
+              </Text>
+            </Animated.View>
 
-          {/* Email Input */}
-          <View className="mb-4">
-            <Text className="text-text font-sans text-sm mb-1 font-semibold">
-              Email
-            </Text>
-            <View className="flex-row items-center bg-surface border border-surface-highlight rounded-xl px-4 py-3">
-              <Mail color="#5F4B8B" size={20} className="mr-3" />
-              <TextInput
-                className="flex-1 ml-2 text-text font-sans text-base"
-                placeholder="Enter your email"
-                placeholderTextColor="#64748B"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-            </View>
-          </View>
+            {/* Email Input */}
+            <Animated.View 
+              entering={FadeInDown.delay(100).duration(600).springify()} 
+              className="mb-6"
+            >
+              <Text className="text-text font-sans text-sm mb-2 font-semibold dark:text-lg">
+                Email
+              </Text>
+              <View className="flex-row items-center bg-surface border border-surface-highlight dark:border-senior dark:border-border rounded-xl dark:rounded-md px-4 py-3 dark:py-5">
+                <Mail color={iconColor} size={isSeniorMode ? 28 : 20} className="mr-3" />
+                <TextInput
+                  className="flex-1 ml-2 text-text font-sans text-base dark:text-xl"
+                  placeholder="Enter your email"
+                  placeholderTextColor={placeholderColor}
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+            </Animated.View>
 
-          {/* Password Input */}
-          <View className="mb-8">
-            <Text className="text-text font-sans text-sm mb-1 font-semibold">
-              Password
-            </Text>
-            <View className="flex-row items-center bg-surface border border-surface-highlight rounded-xl px-4 py-3">
-              <Lock color="#5F4B8B" size={20} className="mr-3" />
-              <TextInput
-                className="flex-1 ml-2 text-text font-sans text-base"
-                placeholder="Enter your password"
-                placeholderTextColor="#64748B"
-                value={password}
-                onChangeText={setPassword}
-                // Bind the secure entry to the inverse of our state
-                secureTextEntry={!showPassword}
-              />
-              {/*Add the toggle button */}
+            {/* Password Input */}
+            <Animated.View 
+              entering={FadeInDown.delay(200).duration(600).springify()} 
+              className="mb-10"
+            >
+              <Text className="text-text font-sans text-sm mb-2 font-semibold dark:text-lg">
+                Password
+              </Text>
+              <View className="flex-row items-center bg-surface border border-surface-highlight dark:border-senior dark:border-border rounded-xl dark:rounded-md px-4 py-3 dark:py-5">
+                <Lock color={iconColor} size={isSeniorMode ? 28 : 20} className="mr-3" />
+                <TextInput
+                  className="flex-1 ml-2 text-text font-sans text-base dark:text-xl"
+                  placeholder="Enter your password"
+                  placeholderTextColor={placeholderColor}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  className="p-1 ml-2"
+                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                >
+                  {showPassword ? (
+                    <EyeOff color={iconColor} size={isSeniorMode ? 28 : 20} />
+                  ) : (
+                    <Eye color={iconColor} size={isSeniorMode ? 28 : 20} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+
+            {/* Login Button */}
+            <Animated.View entering={FadeInDown.delay(300).duration(600).springify()}>
               <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                className="p-1 ml-2"
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // Makes it easier to tap
+                className="bg-primary py-4 dark:py-6 rounded-xl dark:rounded-md items-center flex-row justify-center mb-6"
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.8}
               >
-                {showPassword ? (
-                  <EyeOff color="#64748B" size={20} />
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Eye color="#64748B" size={20} />
+                  <Text className="text-on-primary font-sans text-lg dark:text-2xl font-bold">
+                    Log In
+                  </Text>
                 )}
               </TouchableOpacity>
-            </View>
-          </View>
+            </Animated.View>
 
-          {/* Login Button */}
-          <TouchableOpacity
-            className="bg-primary py-4 rounded-xl items-center flex-row justify-center mb-4"
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-white font-sans text-lg font-bold">
-                Log In
+            {/* Navigation to Signup */}
+            <Animated.View 
+              entering={FadeInUp.delay(500).duration(600).springify()} 
+              className="flex-row justify-center mt-auto"
+            >
+              <Text className="text-text-muted font-sans text-base dark:text-lg">
+                Don't have an account?{" "}
               </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Navigation to Signup */}
-          <View className="flex-row justify-center">
-            <Text className="text-text-muted font-sans text-base">
-              Don't have an account?{" "}
-            </Text>
-            <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
-              <Text className="text-secondary font-sans text-base font-bold">
-                Sign Up
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => router.push("/(auth)/signup")}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text className="text-secondary font-sans text-base dark:text-lg font-bold dark:text-text dark:underline">
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
