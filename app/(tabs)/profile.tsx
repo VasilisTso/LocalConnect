@@ -286,7 +286,7 @@ export default function ProfileScreen() {
                 </Text>
               </View>
             </View>
-            <Switch 
+            <Switch
               value={isSeniorMode} 
               onValueChange={handleToggleSeniorMode}
               trackColor={{ false: '#E9ECEF', true: '#5F4B8B' }}
