@@ -18,6 +18,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import Colors from "@/constants/Colors";
+
 // We use the same categories as the profile tags to ensure the
 // Adaptivity Engine can easily match tasks to user interests.
 const CATEGORIES = [
@@ -76,8 +78,8 @@ export default function AddTaskScreen() {
   const [loading, setLoading] = useState(false);
 
   // We should add colors for lucide icons based on Theme
-  const primaryIconColor = isSeniorMode ? "#000000" : "#8382FE";
-  const mutedIconColor = isSeniorMode ? "#222222" : "#A1A0B8";
+  const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
+  const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
 
   // Force the screen to scroll to the absolute top every time the tab is opened
   useFocusEffect(
@@ -206,264 +208,266 @@ export default function AddTaskScreen() {
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets={true}
         >
-          <View className="mb-6">
-            <Text
-              className={`font-sans font-bold text-text mb-2 ${isSeniorMode ? "text-4xl" : "text-3xl"}`}
-            >
-              Create a Task
-            </Text>
-            <Text
-              className={`text-text-muted font-sans ${isSeniorMode ? "text-lg" : "text-base"}`}
-            >
-              Ask for help or offer your services to the neighborhood.
-            </Text>
-          </View>
-
-          {/* Task Details Panel */}
-          <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-xl">
-            <View className="flex-row items-center mb-4">
-              <PlusCircle
-                color={primaryIconColor}
-                size={isSeniorMode ? 32 : 24}
-                className="mr-3"
-              />
+          <View className="flex-1 w-full max-w-2xl mx-auto">
+            <View className="mb-6">
               <Text
-                className={`text-text font-sans ml-2 font-bold ${isSeniorMode ? "text-2xl" : "text-lg"}`}
+                className={`font-sans font-bold text-text mb-2 ${isSeniorMode ? "text-4xl" : "text-3xl"}`}
               >
-                Task Details
+                Create a Task
+              </Text>
+              <Text
+                className={`text-text-muted font-sans ${isSeniorMode ? "text-lg" : "text-base"}`}
+              >
+                Ask for help or offer your services to the neighborhood.
               </Text>
             </View>
 
-            {/* Title Input */}
-            <View className="mb-5">
-              <Text
-                className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? "text-lg" : "text-sm"}`}
-              >
-                Title
-              </Text>
-              <TextInput
-                className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl px-4 py-3 text-text font-sans ${isSeniorMode ? "text-xl" : "text-base"}`}
-                placeholder="E.g., Need help moving a couch"
-                placeholderTextColor={mutedIconColor}
-                value={title}
-                onChangeText={setTitle}
-              />
+            {/* Task Details Panel */}
+            <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-xl">
+              <View className="flex-row items-center mb-4">
+                <PlusCircle
+                  color={primaryIconColor}
+                  size={isSeniorMode ? 32 : 24}
+                  className="mr-3"
+                />
+                <Text
+                  className={`text-text font-sans ml-2 font-bold ${isSeniorMode ? "text-2xl" : "text-lg"}`}
+                >
+                  Task Details
+                </Text>
+              </View>
+
+              {/* Title Input */}
+              <View className="mb-5">
+                <Text
+                  className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? "text-lg" : "text-sm"}`}
+                >
+                  Title
+                </Text>
+                <TextInput
+                  className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl px-4 py-3 text-text font-sans ${isSeniorMode ? "text-xl" : "text-base"}`}
+                  placeholder="E.g., Need help moving a couch"
+                  placeholderTextColor={mutedIconColor}
+                  value={title}
+                  onChangeText={setTitle}
+                />
+              </View>
+
+              {/* Description Input */}
+              <View className="mb-2">
+                <Text
+                  className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? "text-lg" : "text-sm"}`}
+                >
+                  Description (Public)
+                </Text>
+                <TextInput
+                  className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl px-4 py-3 text-text font-sans min-h-[100px] ${isSeniorMode ? "text-xl" : "text-base"}`}
+                  placeholder="Provide some details..."
+                  placeholderTextColor={mutedIconColor}
+                  value={description}
+                  onChangeText={setDescription}
+                  multiline
+                  textAlignVertical="top"
+                  // Auto-scroll when tapped
+                  onFocus={() => {
+                    setTimeout(() => {
+                      scrollViewRef.current?.scrollTo({ y: 150, animated: true });
+                    }, 100);
+                  }}
+                />
+              </View>
             </View>
 
-            {/* Description Input */}
-            <View className="mb-2">
+            {/* Secure Handshake Panel */}
+            <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-xl">
+              <View className="flex-row items-center mb-2">
+                <Lock
+                  color={primaryIconColor}
+                  size={isSeniorMode ? 32 : 24}
+                  className="mr-3"
+                />
+                <Text
+                  className={`text-text font-sans ml-2 font-bold ${isSeniorMode ? "text-2xl" : "text-lg"}`}
+                >
+                  Secure Handshake (Private)
+                </Text>
+              </View>
               <Text
-                className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? "text-lg" : "text-sm"}`}
+                className={`text-text-muted font-sans mb-5 ${isSeniorMode ? "text-lg leading-6" : "text-sm"}`}
               >
-                Description (Public)
+                Only the specific neighbor you accept to help you can see this.
+                Put your details so he knows where to come, like address, intercom
+                name, or phone number here.
               </Text>
               <TextInput
-                className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl px-4 py-3 text-text font-sans min-h-[100px] ${isSeniorMode ? "text-xl" : "text-base"}`}
-                placeholder="Provide some details..."
+                className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl px-4 py-3 text-text font-sans min-h-[80px] ${isSeniorMode ? "text-xl" : "text-base"}`}
+                placeholder="E.g., Ring bell 'Papadopoulos'. My number is 69..."
                 placeholderTextColor={mutedIconColor}
-                value={description}
-                onChangeText={setDescription}
+                value={privateInfo}
+                onChangeText={setPrivateInfo}
                 multiline
                 textAlignVertical="top"
-                // Auto-scroll when tapped
+                // Auto-scroll deep down when tapped
                 onFocus={() => {
                   setTimeout(() => {
-                    scrollViewRef.current?.scrollTo({ y: 150, animated: true });
+                    scrollViewRef.current?.scrollTo({ y: 350, animated: true });
                   }, 100);
                 }}
               />
             </View>
-          </View>
 
-          {/* Secure Handshake Panel */}
-          <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-xl">
-            <View className="flex-row items-center mb-2">
-              <Lock
-                color={primaryIconColor}
-                size={isSeniorMode ? 32 : 24}
-                className="mr-3"
-              />
+            {/* Category Panel */}
+            <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-xl">
               <Text
-                className={`text-text font-sans ml-2 font-bold ${isSeniorMode ? "text-2xl" : "text-lg"}`}
+                className={`text-text font-sans font-bold mb-5 ${isSeniorMode ? "text-2xl" : "text-lg"}`}
               >
-                Secure Handshake (Private)
+                Category
               </Text>
-            </View>
-            <Text
-              className={`text-text-muted font-sans mb-5 ${isSeniorMode ? "text-lg leading-6" : "text-sm"}`}
-            >
-              Only the specific neighbor you accept to help you can see this.
-              Put your details so he knows where to come, like address, intercom
-              name, or phone number here.
-            </Text>
-            <TextInput
-              className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl px-4 py-3 text-text font-sans min-h-[80px] ${isSeniorMode ? "text-xl" : "text-base"}`}
-              placeholder="E.g., Ring bell 'Papadopoulos'. My number is 69..."
-              placeholderTextColor={mutedIconColor}
-              value={privateInfo}
-              onChangeText={setPrivateInfo}
-              multiline
-              textAlignVertical="top"
-              // Auto-scroll deep down when tapped
-              onFocus={() => {
-                setTimeout(() => {
-                  scrollViewRef.current?.scrollTo({ y: 350, animated: true });
-                }, 100);
-              }}
-            />
-          </View>
-
-          {/* Category Panel */}
-          <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-xl">
-            <Text
-              className={`text-text font-sans font-bold mb-5 ${isSeniorMode ? "text-2xl" : "text-lg"}`}
-            >
-              Category
-            </Text>
-            <View className="flex-row flex-wrap gap-3">
-              {CATEGORIES.map((cat) => {
-                const isActive = category === cat;
-                return (
-                  <TouchableOpacity
-                    key={cat}
-                    activeOpacity={0.7}
-                    onPress={() => setCategory(cat)}
-                    className={`px-5 py-3 rounded-full border-2 dark:rounded-md dark:border-senior ${
-                      isActive
-                        ? "bg-primary border-primary dark:bg-black dark:border-black"
-                        : "bg-transparent border-border dark:border-border"
-                    }`}
-                  >
-                    <Text
-                      className={`font-sans font-semibold ${
-                        isActive ? "text-white dark:text-white" : "text-text"
-                      } ${isSeniorMode ? "text-xl" : "text-base"}`}
+              <View className="flex-row flex-wrap gap-3">
+                {CATEGORIES.map((cat) => {
+                  const isActive = category === cat;
+                  return (
+                    <TouchableOpacity
+                      key={cat}
+                      activeOpacity={0.7}
+                      onPress={() => setCategory(cat)}
+                      className={`px-5 py-3 rounded-full border-2 dark:rounded-md dark:border-senior ${
+                        isActive
+                          ? "bg-primary border-primary dark:bg-black dark:border-black"
+                          : "bg-transparent border-border dark:border-border"
+                      }`}
                     >
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Neighborhood Selector Panel */}
-          <View className="bg-surface rounded-2xl p-5 mb-8 border border-border dark:border-senior dark:border-border dark:rounded-xl">
-            <View className="flex-row items-center mb-2">
-              <Navigation
-                color={primaryIconColor}
-                size={isSeniorMode ? 32 : 24}
-                className="mr-3"
-              />
-              <Text
-                className={`text-text font-sans ml-2 font-bold ${isSeniorMode ? "text-2xl" : "text-lg"}`}
-              >
-                General Location (Kept private)
-              </Text>
-            </View>
-            <Text
-              className={`text-text-muted font-sans mb-5 ${isSeniorMode ? "text-lg leading-6" : "text-sm"}`}
-            >
-              Used to match you with nearby neighbors. Exact location is kept
-              private.
-            </Text>
-
-            {/* GPS Button */}
-            <TouchableOpacity
-              onPress={handleUseMyLocation}
-              disabled={gettingLocation}
-              activeOpacity={0.7}
-              className={`flex-row items-center px-4 py-4 rounded-xl border-2 dark:rounded-md dark:border-senior mb-5 ${
-                fuzzedGps
-                  ? "bg-secondary border-secondary dark:bg-secondary dark:border-secondary"
-                  : "bg-transparent border-border dark:border-border"
-              }`}
-            >
-              {gettingLocation ? (
-                <ActivityIndicator
-                  color={fuzzedGps ? "#000000" : primaryIconColor}
-                  size="small"
-                  className="mr-3"
-                />
-              ) : (
-                <Navigation
-                  color={fuzzedGps ? "#000000" : primaryIconColor}
-                  size={isSeniorMode ? 28 : 24}
-                  className="mr-3"
-                />
-              )}
-              <View>
-                <Text
-                  className={`font-sans font-bold ${fuzzedGps ? "text-black dark:text-black" : "text-text"} ${isSeniorMode ? "text-xl" : "text-base"}`}
-                >
-                  Use My Current Area
-                </Text>
-                {fuzzedGps && (
-                  <Text
-                    className={`text-black/80 font-sans mt-0.5 ${isSeniorMode ? "text-base" : "text-xs"}`}
-                  >
-                    Anonymized to 1Km radius
-                  </Text>
-                )}
+                      <Text
+                        className={`font-sans font-semibold ${
+                          isActive ? "text-white dark:text-white" : "text-text"
+                        } ${isSeniorMode ? "text-xl" : "text-base"}`}
+                      >
+                        {cat}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-            </TouchableOpacity>
-
-            <View className="flex-row items-center mb-5">
-              <View className="flex-1 h-[1px] bg-border dark:bg-black" />
-              <Text className="mx-4 text-text-muted font-sans font-bold text-sm">
-                OR MANUALLY SELECT
-              </Text>
-              <View className="flex-1 h-[1px] bg-border dark:bg-black" />
             </View>
 
-            {/* Manual Neighborhoods */}
-            <View className="flex-row flex-wrap justify-between gap-y-3">
-              {NEIGHBORHOODS.map((hood) => {
-                const isActive = selectedHood === hood.name;
-                return (
-                  <TouchableOpacity
-                    key={hood.name}
-                    style={{ width: "48%" }}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setSelectedHood(hood.name);
-                      setFuzzedGps(null); // Clear GPS if they select a manual node
-                    }}
-                    className={`px-2 py-4 rounded-xl border-2 dark:rounded-md dark:border-senior items-center justify-center ${
-                      isActive
-                        ? "bg-primary border-primary dark:bg-black dark:border-black"
-                        : "bg-transparent border-border dark:border-border"
-                    }`}
-                  >
-                    <Text
-                      className={`font-sans font-semibold text-center ${
-                        isActive ? "text-white dark:text-white" : "text-text"
-                      } ${isSeniorMode ? "text-lg" : "text-sm"}`}
-                    >
-                      {hood.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Submit Button */}
-          <TouchableOpacity
-            className="bg-primary py-4 dark:py-6 rounded-xl dark:rounded-md dark:border-senior dark:border-black items-center flex-row justify-center active:opacity-80"
-            onPress={handleCreateTask}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
+            {/* Neighborhood Selector Panel */}
+            <View className="bg-surface rounded-2xl p-5 mb-8 border border-border dark:border-senior dark:border-border dark:rounded-xl">
+              <View className="flex-row items-center mb-2">
+                <Navigation
+                  color={primaryIconColor}
+                  size={isSeniorMode ? 32 : 24}
+                  className="mr-3"
+                />
+                <Text
+                  className={`text-text font-sans ml-2 font-bold ${isSeniorMode ? "text-2xl" : "text-lg"}`}
+                >
+                  General Location (Kept private)
+                </Text>
+              </View>
               <Text
-                className={`text-white font-sans font-bold ${isSeniorMode ? "text-2xl" : "text-lg"}`}
+                className={`text-text-muted font-sans mb-5 ${isSeniorMode ? "text-lg leading-6" : "text-sm"}`}
               >
-                Post Task
+                Used to match you with nearby neighbors. Exact location is kept
+                private.
               </Text>
-            )}
-          </TouchableOpacity>
+
+              {/* GPS Button */}
+              <TouchableOpacity
+                onPress={handleUseMyLocation}
+                disabled={gettingLocation}
+                activeOpacity={0.7}
+                className={`flex-row items-center px-4 py-4 rounded-xl border-2 dark:rounded-md dark:border-senior mb-5 ${
+                  fuzzedGps
+                    ? "bg-secondary border-secondary dark:bg-secondary dark:border-secondary"
+                    : "bg-transparent border-border dark:border-border"
+                }`}
+              >
+                {gettingLocation ? (
+                  <ActivityIndicator
+                    color={fuzzedGps ? "#000000" : primaryIconColor}
+                    size="small"
+                    className="mr-3"
+                  />
+                ) : (
+                  <Navigation
+                    color={fuzzedGps ? "#000000" : primaryIconColor}
+                    size={isSeniorMode ? 28 : 24}
+                    className="mr-3"
+                  />
+                )}
+                <View>
+                  <Text
+                    className={`font-sans font-bold ${fuzzedGps ? "text-on-secondary dark:text-on-secondary" : "text-text"} ${isSeniorMode ? "text-xl" : "text-base"}`}
+                  >
+                    Use My Current Area
+                  </Text>
+                  {fuzzedGps && (
+                    <Text
+                      className={`text-on-secondary opacity-80 font-sans mt-0.5 ${isSeniorMode ? "text-base" : "text-xs"}`}
+                    >
+                      Anonymized to 1Km radius
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+
+              <View className="flex-row items-center mb-5">
+                <View className="flex-1 h-[1px] bg-border dark:bg-black" />
+                <Text className="mx-4 text-text-muted font-sans font-bold text-sm">
+                  OR MANUALLY SELECT
+                </Text>
+                <View className="flex-1 h-[1px] bg-border dark:bg-black" />
+              </View>
+
+              {/* Manual Neighborhoods */}
+              <View className="flex-row flex-wrap justify-between gap-y-3">
+                {NEIGHBORHOODS.map((hood) => {
+                  const isActive = selectedHood === hood.name;
+                  return (
+                    <TouchableOpacity
+                      key={hood.name}
+                      style={{ width: "48%" }}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedHood(hood.name);
+                        setFuzzedGps(null); // Clear GPS if they select a manual node
+                      }}
+                      className={`px-2 py-4 rounded-xl border-2 dark:rounded-md dark:border-senior items-center justify-center ${
+                        isActive
+                          ? "bg-primary border-primary dark:bg-black dark:border-black"
+                          : "bg-transparent border-border dark:border-border"
+                      }`}
+                    >
+                      <Text
+                        className={`font-sans font-semibold text-center ${
+                          isActive ? "text-white dark:text-white" : "text-text"
+                        } ${isSeniorMode ? "text-lg" : "text-sm"}`}
+                      >
+                        {hood.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              className="bg-primary py-4 dark:py-6 rounded-xl dark:rounded-md dark:border-senior dark:border-black items-center flex-row justify-center active:opacity-80"
+              onPress={handleCreateTask}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text
+                  className={`text-white font-sans font-bold ${isSeniorMode ? "text-2xl" : "text-lg"}`}
+                >
+                  Post Task
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
