@@ -474,215 +474,213 @@ export default function FeedScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="flex-1 w-full max-w-2xl mx-auto relative">
-        {/* THE WELCOME ONBOARDING MODAL */}
-        {userProfile !== null && userProfile.onboarding_completed === false && (
-          <Modal animationType="slide" transparent={false} visible={true}>
-            <SafeAreaView className="flex-1 bg-background px-8 pt-5">
-              <View className="flex-1 w-full max-w-2xl mx-auto">
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  <View className="items-center mb-10 mt-6">
-                    <View className="bg-primary/20 p-8 rounded-full mb-6">
-                      <HeartHandshake color={primaryIconColor} size={isSeniorMode ? 80 : 64} />
+      {/* THE WELCOME ONBOARDING MODAL */}
+      {userProfile !== null && userProfile.onboarding_completed === false && (
+        <Modal animationType="slide" transparent={false} visible={true}>
+          <SafeAreaView className="flex-1 bg-background px-8 pt-5">
+            <View className="flex-1 w-full max-w-2xl mx-auto">
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <View className="items-center mb-10 mt-6">
+                  <View className="bg-primary/20 p-8 rounded-full mb-6">
+                    <HeartHandshake color={primaryIconColor} size={isSeniorMode ? 80 : 64} />
+                  </View>
+                  <Text className={`font-sans font-bold text-text text-center mb-3 ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>
+                    Welcome to the Neighborhood!
+                  </Text>
+                  <Text className={`text-text-muted font-sans text-center px-4 ${isSeniorMode ? 'text-xl leading-8' : 'text-lg'}`}>
+                    Let's set up your profile so we can show you the tasks that matter to you.
+                  </Text>
+                </View>
+
+                {/* Username Input */}
+                <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>1. What should neighbors call you?</Text>
+                <View className="mb-10">
+                  <TextInput
+                    className={`bg-surface border-2 border-border dark:border-senior dark:border-border rounded-xl px-5 py-4 text-text font-sans ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}
+                    placeholder="Enter a username or first name..."
+                    placeholderTextColor={mutedIconColor}
+                    value={onboardingUsername}
+                    onChangeText={setOnboardingUsername}
+                  />
+                </View>
+
+                {/* Transport Mode */}
+                <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>2. How far can you travel to help?</Text>
+                <View className={`flex-row gap-4 mb-10 ${isSeniorMode ? 'flex-col' : ''}`}>
+                  <TouchableOpacity 
+                    onPress={() => setOnboardingMode('walking')}
+                    activeOpacity={0.7}
+                    className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-md dark:border-senior ${
+                      onboardingMode === 'walking' 
+                        ? 'bg-primary border-primary dark:bg-black dark:border-black' 
+                        : 'bg-transparent border-border dark:border-border'
+                    }`}
+                  >
+                    <Footprints color={onboardingMode === 'walking' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 28 : 24} className="mr-3" />
+                    <View className='ml-2'>
+                      <Text className={`font-sans font-bold ${onboardingMode === 'walking' ? 'text-on-primary dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>Walking</Text>
+                      <Text className={`font-sans ${onboardingMode === 'walking' ? 'text-on-primary opacity-80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>7.5 km</Text>
                     </View>
-                    <Text className={`font-sans font-bold text-text text-center mb-3 ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>
-                      Welcome to the Neighborhood!
-                    </Text>
-                    <Text className={`text-text-muted font-sans text-center px-4 ${isSeniorMode ? 'text-xl leading-8' : 'text-lg'}`}>
-                      Let's set up your profile so we can show you the tasks that matter to you.
-                    </Text>
-                  </View>
-
-                  {/* Username Input */}
-                  <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>1. What should neighbors call you?</Text>
-                  <View className="mb-10">
-                    <TextInput
-                      className={`bg-surface border-2 border-border dark:border-senior dark:border-border rounded-xl px-5 py-4 text-text font-sans ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}
-                      placeholder="Enter a username or first name..."
-                      placeholderTextColor={mutedIconColor}
-                      value={onboardingUsername}
-                      onChangeText={setOnboardingUsername}
-                    />
-                  </View>
-
-                  {/* Transport Mode */}
-                  <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>2. How far can you travel to help?</Text>
-                  <View className={`flex-row gap-4 mb-10 ${isSeniorMode ? 'flex-col' : ''}`}>
-                    <TouchableOpacity 
-                      onPress={() => setOnboardingMode('walking')}
-                      activeOpacity={0.7}
-                      className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-md dark:border-senior ${
-                        onboardingMode === 'walking' 
-                          ? 'bg-primary border-primary dark:bg-black dark:border-black' 
-                          : 'bg-transparent border-border dark:border-border'
-                      }`}
-                    >
-                      <Footprints color={onboardingMode === 'walking' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 28 : 24} className="mr-3" />
-                      <View className='ml-2'>
-                        <Text className={`font-sans font-bold ${onboardingMode === 'walking' ? 'text-on-primary dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>Walking</Text>
-                        <Text className={`font-sans ${onboardingMode === 'walking' ? 'text-on-primary opacity-80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>7.5 km</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity 
-                      onPress={() => setOnboardingMode('driving')}
-                      activeOpacity={0.7}
-                      className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-md dark:border-senior ${
-                        onboardingMode === 'driving' 
-                          ? 'bg-primary border-primary dark:bg-black dark:border-black' 
-                          : 'bg-transparent border-border dark:border-border'
-                      }`}
-                    >
-                      <Car color={onboardingMode === 'driving' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 28 : 24} className="mr-3" />
-                      <View className='ml-2'>
-                        <Text className={`font-sans font-bold ${onboardingMode === 'driving' ? 'text-on-primary dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>Driving</Text>
-                        <Text className={`font-sans ${onboardingMode === 'driving' ? 'text-on-primary opacity-80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>35.0 km</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Interests */}
-                  <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>3. What are your hobbies? (Pick a few)</Text>
-                  <View className="flex-row flex-wrap gap-3 mb-12">
-                    {AVAILABLE_TAGS.map((tag) => {
-                      const isActive = onboardingTags.includes(tag);
-                      return (
-                        <TouchableOpacity
-                          key={tag}
-                          activeOpacity={0.7}
-                          onPress={() => setOnboardingTags(prev => isActive ? prev.filter(t => t !== tag) : [...prev, tag])}
-                          className={`px-5 py-4 rounded-full border-2 dark:rounded-md dark:border-senior ${
-                            isActive 
-                              ? 'bg-primary border-primary dark:bg-black dark:border-black' 
-                              : 'bg-transparent border-border dark:border-border'
-                          }`}
-                        >
-                          <Text className={`font-sans font-bold ${
-                            isActive ? 'text-on-primary dark:text-white' : 'text-text'
-                          } ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
-                            {tag}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
+                  </TouchableOpacity>
 
                   <TouchableOpacity 
-                    className="bg-primary py-5 dark:py-6 rounded-xl dark:rounded-md dark:border-senior dark:border-black items-center mb-10 shadow-lg"
-                    onPress={handleFinishOnboarding}
-                    disabled={savingOnboarding}
-                    activeOpacity={0.8}
+                    onPress={() => setOnboardingMode('driving')}
+                    activeOpacity={0.7}
+                    className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-md dark:border-senior ${
+                      onboardingMode === 'driving' 
+                        ? 'bg-primary border-primary dark:bg-black dark:border-black' 
+                        : 'bg-transparent border-border dark:border-border'
+                    }`}
                   >
-                    {savingOnboarding ? (
-                      <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                      <Text className={`text-on-primary dark:text-white font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
-                        Let's Go!
-                      </Text>
-                    )}
+                    <Car color={onboardingMode === 'driving' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 28 : 24} className="mr-3" />
+                    <View className='ml-2'>
+                      <Text className={`font-sans font-bold ${onboardingMode === 'driving' ? 'text-on-primary dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>Driving</Text>
+                      <Text className={`font-sans ${onboardingMode === 'driving' ? 'text-on-primary opacity-80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>35.0 km</Text>
+                    </View>
                   </TouchableOpacity>
-                </ScrollView>
-              </View>
-            </SafeAreaView>
-          </Modal>
-        )}
+                </View>
 
-        {/* STANDARD FEED UI BELOW */}
-        <View className="px-6 pt-6 pb-4">
-          {/* Cool Mod Badge next to the title */}
-          <View className="flex-row items-center justify-between mb-2">
-            <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>Neighborhood</Text>
-            {userProfile?.is_admin && (
-              <View className="bg-error px-4 py-2 rounded-md ml-3 border-2 border-border dark:border-black">
-                <Text className="text-white font-bold text-lg uppercase">ADMIN</Text>
-              </View>
-            )}
-          </View>
-          <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
-            {filterMode === 'community' ? 'Discover tasks tailored to your interests.' : filterMode === 'reports' ? 'Moderate reported tasks.' : 'Manage your open requests.'}
-          </Text>
-        </View>
+                {/* Interests */}
+                <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>3. What are your hobbies? (Pick a few)</Text>
+                <View className="flex-row flex-wrap gap-3 mb-12">
+                  {AVAILABLE_TAGS.map((tag) => {
+                    const isActive = onboardingTags.includes(tag);
+                    return (
+                      <TouchableOpacity
+                        key={tag}
+                        activeOpacity={0.7}
+                        onPress={() => setOnboardingTags(prev => isActive ? prev.filter(t => t !== tag) : [...prev, tag])}
+                        className={`px-5 py-4 rounded-full border-2 dark:rounded-md dark:border-senior ${
+                          isActive 
+                            ? 'bg-primary border-primary dark:bg-black dark:border-black' 
+                            : 'bg-transparent border-border dark:border-border'
+                        }`}
+                      >
+                        <Text className={`font-sans font-bold ${
+                          isActive ? 'text-on-primary dark:text-white' : 'text-text'
+                        } ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+                          {tag}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
 
-        {/* Segmented Control Toggle (Third tab only visible to Admin) */}
-        <View className="flex-row bg-surface border-2 border-border dark:border-senior dark:border-border p-1.5 rounded-xl dark:rounded-md mx-6 mb-6">
-          <TouchableOpacity 
-            className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'community' ? 'bg-primary dark:bg-black' : 'bg-transparent'}`} 
-            onPress={() => setFilterMode('community')}
-          >
-            <Text className={`font-sans font-bold ${filterMode === 'community' ? 'text-on-primary dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
-              Community
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'mine' ? 'bg-primary dark:bg-black' : 'bg-transparent'}`} 
-            onPress={() => setFilterMode('mine')}
-          >
-            <Text className={`font-sans font-bold ${filterMode === 'mine' ? 'text-on-primary dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
-              My Tasks
-            </Text>
-          </TouchableOpacity>
+                <TouchableOpacity 
+                  className="bg-primary py-5 dark:py-6 rounded-xl dark:rounded-md dark:border-senior dark:border-black items-center mb-10 shadow-lg"
+                  onPress={handleFinishOnboarding}
+                  disabled={savingOnboarding}
+                  activeOpacity={0.8}
+                >
+                  {savingOnboarding ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text className={`text-on-primary dark:text-white font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
+                      Let's Go!
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </SafeAreaView>
+        </Modal>
+      )}
 
+      {/* STANDARD FEED UI BELOW */}
+      <View className="px-6 pt-6 pb-4">
+        {/* Cool Mod Badge next to the title */}
+        <View className="flex-row items-center justify-between mb-2">
+          <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>Neighborhood</Text>
           {userProfile?.is_admin && (
-            <TouchableOpacity 
-              className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'reports' ? 'bg-error dark:bg-black' : 'bg-transparent'}`} 
-              onPress={() => setFilterMode('reports')}
-            >
-              <Text className={`font-sans font-bold ${filterMode === 'reports' ? 'text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
-                🚩 Review
-              </Text>
-            </TouchableOpacity>
+            <View className="bg-error px-4 py-2 rounded-md ml-3 border-2 border-border dark:border-black">
+              <Text className="text-white font-bold text-lg uppercase">ADMIN</Text>
+            </View>
           )}
         </View>
+        <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+          {filterMode === 'community' ? 'Discover tasks tailored to your interests.' : filterMode === 'reports' ? 'Moderate reported tasks.' : 'Manage your open requests.'}
+        </Text>
+      </View>
 
-        {loading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={primaryIconColor} />
-          </View>
-        ) : (
-          <FlatList
-            data={sortedTasks}
-            keyExtractor={(item) => item.id}
-            renderItem={renderTask}
-            ListHeaderComponent={filterMode === 'mine' ? renderPendingReviews : null}
-            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl 
-                refreshing={refreshing} 
-                onRefresh={onRefresh} 
-                tintColor={primaryIconColor}
-                colors={[primaryIconColor]}
-              />
-            }
-            ListEmptyComponent={
-              <View className="items-center justify-center py-16">
-                <MapPin color={mutedIconColor} size={isSeniorMode ? 64 : 48} className="mb-6 opacity-50" />
-                <Text className={`text-text font-sans font-bold text-center mb-3 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
-                  {filterMode === 'mine' ? "You have no open tasks" : "No community tasks found"}
-                </Text>
-                <Text className={`text-text-muted font-sans text-center px-6 ${isSeniorMode ? 'text-xl leading-8' : 'text-base leading-6'}`}>
-                  {filterMode === 'mine' 
-                    ? "Tap the '+' tab to ask your neighborhood for help!" 
-                    : "Check back later or ask for help yourself!"}
-                </Text>
-              </View>
-            }
-          />
-        )}
-
-        {/* THE FLOATING CHAT BUTTON */}
+      {/* Segmented Control Toggle (Third tab only visible to Admin) */}
+      <View className="flex-row bg-surface border-2 border-border dark:border-senior dark:border-border p-1.5 rounded-xl dark:rounded-md mx-6 mb-6">
         <TouchableOpacity 
-          className={`absolute bottom-6 right-6 rounded-full items-center justify-center shadow-xl border-[3px] border-background dark:border-white ${
-            isSeniorMode ? 'bg-black w-20 h-20' : 'bg-primary w-16 h-16'
-          }`}
-          onPress={() => router.push('/chat')}
-          activeOpacity={0.8}
+          className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'community' ? 'bg-primary dark:bg-black' : 'bg-transparent'}`} 
+          onPress={() => setFilterMode('community')}
         >
-          <MessageCircle color="#FFFFFF" size={isSeniorMode ? 36 : 28} />
+          <Text className={`font-sans font-bold ${filterMode === 'community' ? 'text-on-primary dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+            Community
+          </Text>
         </TouchableOpacity>
         
+        <TouchableOpacity 
+          className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'mine' ? 'bg-primary dark:bg-black' : 'bg-transparent'}`} 
+          onPress={() => setFilterMode('mine')}
+        >
+          <Text className={`font-sans font-bold ${filterMode === 'mine' ? 'text-on-primary dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+            My Tasks
+          </Text>
+        </TouchableOpacity>
+
+        {userProfile?.is_admin && (
+          <TouchableOpacity 
+            className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'reports' ? 'bg-error dark:bg-black' : 'bg-transparent'}`} 
+            onPress={() => setFilterMode('reports')}
+          >
+            <Text className={`font-sans font-bold ${filterMode === 'reports' ? 'text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+              🚩 Review
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
+
+      {loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color={primaryIconColor} />
+        </View>
+      ) : (
+        <FlatList
+          data={sortedTasks}
+          keyExtractor={(item) => item.id}
+          renderItem={renderTask}
+          ListHeaderComponent={filterMode === 'mine' ? renderPendingReviews : null}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh} 
+              tintColor={primaryIconColor}
+              colors={[primaryIconColor]}
+            />
+          }
+          ListEmptyComponent={
+            <View className="items-center justify-center py-16">
+              <MapPin color={mutedIconColor} size={isSeniorMode ? 64 : 48} className="mb-6 opacity-50" />
+              <Text className={`text-text font-sans font-bold text-center mb-3 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
+                {filterMode === 'mine' ? "You have no open tasks" : "No community tasks found"}
+              </Text>
+              <Text className={`text-text-muted font-sans text-center px-6 ${isSeniorMode ? 'text-xl leading-8' : 'text-base leading-6'}`}>
+                {filterMode === 'mine' 
+                  ? "Tap the '+' tab to ask your neighborhood for help!" 
+                  : "Check back later or ask for help yourself!"}
+              </Text>
+            </View>
+          }
+        />
+      )}
+
+      {/* THE FLOATING CHAT BUTTON */}
+      <TouchableOpacity 
+        className={`absolute bottom-6 right-6 rounded-full items-center justify-center shadow-xl border-[3px] border-background dark:border-white ${
+          isSeniorMode ? 'bg-black w-20 h-20' : 'bg-primary w-16 h-16'
+        }`}
+        onPress={() => router.push('/chat')}
+        activeOpacity={0.8}
+      >
+        <MessageCircle color="#FFFFFF" size={isSeniorMode ? 36 : 28} />
+      </TouchableOpacity>
+      
     </SafeAreaView>
   );
 }

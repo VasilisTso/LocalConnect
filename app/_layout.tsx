@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
 import { ThemeProvider, DefaultTheme, DarkTheme, Theme } from "@react-navigation/native";
+import { View } from 'react-native';
 
 // Our custom state and backend
 import { supabase } from "@/lib/supabase";
@@ -145,44 +146,55 @@ function RootLayoutNav() {
           translucent 
         />
 
-        <Stack 
-          screenOptions={{ 
-            headerShown: false, 
-            // Enforce our design system's exact background colors for React Navigation
-            contentStyle: { 
-              backgroundColor: isSeniorMode ? Colors.dark.background : Colors.light.background 
-            },
-            // ACCESSIBILITY FEATURE: "Reduce Motion"
-            // Slide animations are modern, but fade animations prevent disorientation for seniors
-            animation: isSeniorMode ? "fade" : "slide_from_right"
+        <View 
+          style={{ 
+            flex: 1, 
+            backgroundColor: isSeniorMode ? Colors.dark.background : Colors.light.background 
           }}
         >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          {/* GLOBAL TABLET WRAPPER: Constrains app width on iPads, remains 100% width on phones */}
+          <View className="flex-1 w-full max-w-2xl mx-auto overflow-hidden shadow-2xl">
 
-          <Stack.Screen 
-            name="modal" 
-            options={{ 
-              presentation: "modal",
-              animation: isSeniorMode ? "fade" : "slide_from_bottom"
-            }} 
-          />
-          <Stack.Screen 
-            name="chat" 
-            options={{ 
-              presentation: "modal",
-              animation: isSeniorMode ? "fade" : "slide_from_bottom"
-            }} 
-          />
-          <Stack.Screen 
-            name="review" 
-            options={{ 
-              presentation: "modal",
-              animation: isSeniorMode ? "fade" : "slide_from_bottom"
-            }} 
-          />
-          <Stack.Screen name="task-details" options={{ headerShown: false }} />
-        </Stack>
+            <Stack 
+              screenOptions={{ 
+                headerShown: false, 
+                // Enforce our design system's exact background colors for React Navigation
+                contentStyle: { 
+                  backgroundColor: isSeniorMode ? Colors.dark.background : Colors.light.background 
+                },
+                // ACCESSIBILITY FEATURE: "Reduce Motion"
+                // Slide animations are modern, but fade animations prevent disorientation for seniors
+                animation: isSeniorMode ? "fade" : "slide_from_right"
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
+              <Stack.Screen 
+                name="modal" 
+                options={{ 
+                  presentation: "modal",
+                  animation: isSeniorMode ? "fade" : "slide_from_bottom"
+                }} 
+              />
+              <Stack.Screen 
+                name="chat" 
+                options={{ 
+                  presentation: "modal",
+                  animation: isSeniorMode ? "fade" : "slide_from_bottom"
+                }} 
+              />
+              <Stack.Screen 
+                name="review" 
+                options={{ 
+                  presentation: "modal",
+                  animation: isSeniorMode ? "fade" : "slide_from_bottom"
+                }} 
+              />
+              <Stack.Screen name="task-details" options={{ headerShown: false }} />
+            </Stack>
+          </View>
+        </View>
       </ThemeProvider>
     </SafeAreaProvider>
   );
