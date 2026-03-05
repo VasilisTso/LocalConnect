@@ -10,7 +10,9 @@ import {
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { StatusBar } from 'expo-status-bar';
-import { X, Bot, User as UserIcon } from 'lucide-react-native';
+import { X, Bot } from 'lucide-react-native';
+
+import Colors from '@/constants/Colors';
 
 // THE RULE-BASED ENGINE: Predetermined answers for local parsing
 const QA_DATABASE: Record<string, string> = {
@@ -94,32 +96,32 @@ export default function ChatScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <StatusBar style={Platform.OS === 'ios' ? 'light' : 'dark'} />
+      <StatusBar style={isSeniorMode ? 'dark' : 'light'} />
       
       {/* HEADER */}
-      <View className="flex-row justify-between items-center p-6 mt-10 border-b border-surface-highlight bg-surface">
+      <View className="flex-row justify-between items-center p-6 pt-16 border-b border-border dark:border-senior dark:border-border bg-surface">
         <View className="flex-row items-center">
-          <View className="bg-primary p-2 rounded-full mr-3">
+          <View className="bg-primary dark:bg-black p-3 rounded-full mr-3 border border-transparent dark:border-senior dark:border-border">
             <Bot color="#FFFFFF" size={isSeniorMode ? 32 : 24} />
           </View>
           <View>
             <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-3xl' : 'text-xl'}`}>Help Center</Text>
-            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-base' : 'text-sm'}`}>AI Assistant</Text>
+            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>AI Assistant</Text>
           </View>
         </View>
         <TouchableOpacity 
           onPress={() => router.back()}
-          className="bg-background border border-surface-highlight p-2 rounded-full"
+          className="bg-background border-2 border-border dark:border-senior dark:border-border p-3 rounded-full dark:rounded-md active:opacity-70"
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
         >
-          <X color="#64748B" size={isSeniorMode ? 32 : 24} />
+          <X color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 32 : 24} />
         </TouchableOpacity>
       </View>
 
       {/* CHAT WINDOW */}
       <ScrollView 
         ref={scrollViewRef}
-        className="flex-1 px-4 py-6"
+        className="flex-1 px-5 py-6"
         showsVerticalScrollIndicator={false}
       >
         {messages.map((msg) => {
@@ -128,20 +130,31 @@ export default function ChatScreen() {
             <View key={msg.id} className={`mb-6 ${isBot ? 'items-start' : 'items-end'}`}>
               
               {/* Message Bubble */}
-              <View className={`max-w-[85%] rounded-2xl p-4 ${isBot ? 'bg-surface border border-surface-highlight rounded-tl-sm' : 'bg-primary rounded-tr-sm'}`}>
-                <Text className={`font-sans ${isBot ? 'text-text' : 'text-white'} ${isSeniorMode ? 'text-xl leading-8' : 'text-base leading-6'}`}>
+              <View 
+                className={`max-w-[85%] rounded-3xl dark:rounded-xl p-5 border-2 dark:border-senior ${
+                  isBot 
+                    ? 'bg-surface border-border dark:border-border rounded-tl-sm' 
+                    : 'bg-primary border-primary dark:bg-black dark:border-black rounded-tr-sm'
+                }`}
+              >
+                <Text 
+                  className={`font-sans ${
+                    isBot ? 'text-text' : 'text-on-primary dark:text-white'
+                  } ${isSeniorMode ? 'text-2xl leading-9' : 'text-base leading-6'}`}
+                >
                   {msg.text}
                 </Text>
               </View>
 
               {/* Interactive Menu Buttons (Only appear on the latest bot message) */}
               {msg.options && msg.options.length > 0 && (
-                <View className="mt-4 w-full items-start">
+                <View className="mt-4 w-full items-start pl-2">
                   {msg.options.map((opt, index) => (
                     <TouchableOpacity
                       key={index}
                       onPress={() => handleSelectOption(opt)}
-                      className="bg-secondary/20 border-2 border-primary px-5 py-3 rounded-full mb-3 shadow-sm"
+                      activeOpacity={0.7}
+                      className="bg-background border-2 border-primary dark:border-senior dark:border-border px-5 py-4 rounded-full dark:rounded-md mb-3 shadow-sm"
                     >
                       <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
                         {opt}
