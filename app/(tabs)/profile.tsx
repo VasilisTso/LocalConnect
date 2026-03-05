@@ -275,7 +275,7 @@ export default function ProfileScreen() {
                   style={{ backgroundColor: `${currentBadge.color}15`, borderColor: currentBadge.color }}
                 >
                   <BadgeIcon color={currentBadge.color} size={16} className="mr-2" />
-                  <Text className="font-sans font-bold text-sm" style={{ color: currentBadge.color }}>
+                  <Text className="font-sans ml-2 font-bold text-sm" style={{ color: currentBadge.color }}>
                     {currentBadge.title}
                   </Text>
                 </View>

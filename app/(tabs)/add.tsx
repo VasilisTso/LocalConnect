@@ -395,7 +395,7 @@ export default function AddTaskScreen() {
                     className="mr-3"
                   />
                 )}
-                <View>
+                <View className="ml-2">
                   <Text
                     className={`font-sans font-bold ${fuzzedGps ? "text-on-secondary dark:text-on-secondary" : "text-text"} ${isSeniorMode ? "text-xl" : "text-base"}`}
                   >
