@@ -101,20 +101,20 @@ export default function ChatScreen() {
       {/* HEADER */}
       <View className="flex-row justify-between items-center p-6 pt-16 border-b border-border dark:border-senior dark:border-border bg-surface">
         <View className="flex-row items-center">
-          <View className="bg-primary dark:bg-black p-3 rounded-full mr-3 border border-transparent dark:border-senior dark:border-border">
+          <View className="bg-primary dark:bg-primary p-3 rounded-full mr-3 border border-transparent dark:border-senior dark:border-primary">
             <Bot color="#FFFFFF" size={isSeniorMode ? 32 : 24} />
           </View>
           <View>
-            <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-3xl' : 'text-xl'}`}>Help Center</Text>
+            <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Help Center</Text>
             <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>AI Assistant</Text>
           </View>
         </View>
         <TouchableOpacity 
           onPress={() => router.back()}
-          className="bg-background border-2 border-border dark:border-senior dark:border-border p-3 rounded-full dark:rounded-md active:opacity-70"
+          className="bg-background border-2 border-border dark:border-senior dark:border-border p-3 rounded-full dark:rounded-senior active:opacity-70"
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
         >
-          <X color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 32 : 24} />
+          <X color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 28 : 24} />
         </TouchableOpacity>
       </View>
 
@@ -131,16 +131,16 @@ export default function ChatScreen() {
               
               {/* Message Bubble */}
               <View 
-                className={`max-w-[85%] rounded-3xl dark:rounded-xl p-5 border-2 dark:border-senior ${
+                className={`max-w-[85%] rounded-3xl dark:rounded-senior p-5 border-2 dark:border-senior ${
                   isBot 
                     ? 'bg-surface border-border dark:border-border rounded-tl-sm' 
-                    : 'bg-primary border-primary dark:bg-black dark:border-black rounded-tr-sm'
+                    : 'bg-primary border-primary dark:bg-primary dark:border-primary rounded-tr-sm'
                 }`}
               >
                 <Text 
                   className={`font-sans ${
                     isBot ? 'text-text' : 'text-on-primary dark:text-white'
-                  } ${isSeniorMode ? 'text-2xl leading-9' : 'text-base leading-6'}`}
+                  } ${isSeniorMode ? 'text-lg leading-7' : 'text-base leading-6'}`}
                 >
                   {msg.text}
                 </Text>
@@ -154,9 +154,9 @@ export default function ChatScreen() {
                       key={index}
                       onPress={() => handleSelectOption(opt)}
                       activeOpacity={0.7}
-                      className="bg-background border-2 border-primary dark:border-senior dark:border-border px-5 py-4 rounded-full dark:rounded-md mb-3 shadow-sm"
+                      className="bg-background border-2 border-primary dark:border-senior dark:border-primary px-5 py-4 rounded-full dark:rounded-senior mb-3 shadow-sm"
                     >
-                      <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+                      <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
                         {opt}
                       </Text>
                     </TouchableOpacity>

@@ -133,25 +133,25 @@ export default function EditTaskModal() {
             <>
               <View className="flex-row justify-between items-start mb-6 mt-10">
                 <View className="flex-1 pr-4">
-                  <Text className={`font-sans font-bold text-text mb-2 ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>
+                  <Text className={`font-sans font-bold text-text mb-2 ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>
                     Edit Task
                   </Text>
-                  <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+                  <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
                     Update your neighborhood request.
                   </Text>
                 </View>
                 <TouchableOpacity 
                   onPress={() => router.back()} 
-                  className="bg-surface border-2 border-border dark:border-senior dark:border-border p-3 rounded-full dark:rounded-md active:opacity-70"
+                  className="bg-surface border-2 border-border dark:border-senior dark:border-border p-3 rounded-full dark:rounded-senior active:opacity-70"
                 >
-                  <X color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 32 : 24} />
+                  <X color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 28 : 24} />
                 </TouchableOpacity>
               </View>
 
               <View className="mb-5">
                 <Text className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>Title</Text>
                 <TextInput
-                  className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl px-4 py-3 text-text font-sans ${isSeniorMode ? 'text-xl' : 'text-base'}`}
+                  className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl dark:rounded-senior px-4 py-3 text-text font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}
                   value={title}
                   onChangeText={setTitle}
                   placeholderTextColor={mutedIconColor}
@@ -161,7 +161,7 @@ export default function EditTaskModal() {
               <View className="mb-6">
                 <Text className={`text-text font-sans font-semibold mb-2 ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>Description</Text>
                 <TextInput
-                  className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl px-4 py-3 text-text font-sans min-h-[100px] ${isSeniorMode ? 'text-xl' : 'text-base'}`}
+                  className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl dark:rounded-senior px-4 py-3 text-text font-sans min-h-[100px] ${isSeniorMode ? 'text-lg' : 'text-base'}`}
                   value={description}
                   onChangeText={setDescription}
                   multiline textAlignVertical="top"
@@ -171,11 +171,11 @@ export default function EditTaskModal() {
 
               <View className="mb-8">
                 <View className="flex-row items-center mb-2">
-                  <Lock color={primaryIconColor} size={isSeniorMode ? 24 : 16} className="mr-2" />
-                  <Text className={`text-text ml-2 font-sans font-semibold ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>Secure Handshake (Private)</Text>
+                  <Lock color={primaryIconColor} size={isSeniorMode ? 24 : 20} className="mr-2" />
+                  <Text className={`text-text ml-2 font-sans font-semibold ${isSeniorMode ? 'text-xl' : 'text-base'}`}>Secure Handshake (Private)</Text>
                 </View>
                 <TextInput
-                  className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl px-4 py-3 text-text font-sans min-h-[80px] ${isSeniorMode ? 'text-xl' : 'text-base'}`}
+                  className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl dark:rounded-senior px-4 py-3 text-text font-sans min-h-[80px] ${isSeniorMode ? 'text-lg' : 'text-base'}`}
                   value={privateInfo}
                   onChangeText={setPrivateInfo}
                   placeholder="Address, intercom, phone number..."
@@ -194,15 +194,15 @@ export default function EditTaskModal() {
                         key={cat} 
                         onPress={() => setCategory(cat)} 
                         activeOpacity={0.7}
-                        className={`px-5 py-3 rounded-full border-2 dark:rounded-md dark:border-senior ${
+                        className={`px-4 py-2 rounded-full border-2 dark:rounded-senior dark:border-senior ${
                           isActive 
-                            ? 'bg-primary border-primary dark:bg-black dark:border-black' 
+                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary' 
                             : 'bg-transparent border-border dark:border-border'
                         }`}
                       >
                         <Text className={`font-sans font-semibold ${
-                          isActive ? 'text-on-primary dark:text-white' : 'text-text'
-                        } ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+                          isActive ? 'text-white dark:text-white' : 'text-text'
+                        } ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
                           {cat}
                         </Text>
                       </TouchableOpacity>

@@ -23,8 +23,7 @@ export default function ReviewModal() {
   const [submitting, setSubmitting] = useState(false);
 
   const activeStarColor = isSeniorMode ? Colors.dark.secondary : Colors.light.secondary;
-  const inactiveStarColor = isSeniorMode ? '#E2E8F0' : Colors.light.tabIconDefault;
-  const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
+  const inactiveStarColor = isSeniorMode ? Colors.dark.border : Colors.light.tabIconDefault;
 
   async function handleSubmitReview() {
     if (rating === 0) {
@@ -58,10 +57,10 @@ export default function ReviewModal() {
       
       <View className="flex-row justify-between items-start mb-8 mt-6">
         <View className="flex-1 pr-4">
-          <Text className={`font-sans font-bold text-text mb-2 ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>
+          <Text className={`font-sans font-bold text-text mb-2 ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>
             Rate Helper
           </Text>
-          <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+          <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
             How was your experience with "{taskTitle}"?
           </Text>
         </View>
@@ -69,14 +68,14 @@ export default function ReviewModal() {
         <TouchableOpacity 
           onPress={() => router.back()}
           activeOpacity={0.7}
-          className="bg-surface border-2 border-border dark:border-senior dark:border-border p-3 rounded-full dark:rounded-md"
+          className="bg-surface border-2 border-border dark:border-senior dark:border-border p-3 rounded-full dark:rounded-senior"
         >
-          <X color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 32 : 24} />
+          <X color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 28 : 24} />
         </TouchableOpacity>
       </View>
 
       {/* 5-Star Interactive Selector */}
-      <View className="bg-surface border-2 border-border dark:border-senior dark:border-border rounded-2xl dark:rounded-xl p-8 items-center justify-center mb-10 shadow-sm dark:shadow-none">
+      <View className="bg-surface border-2 border-border dark:border-senior dark:border-border rounded-2xl dark:rounded-senior p-8 items-center justify-center mb-10 shadow-sm dark:shadow-none">
         <View className="flex-row justify-between w-full px-2">
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity 
@@ -87,26 +86,26 @@ export default function ReviewModal() {
             >
               <Star 
                 color={star <= rating ? activeStarColor : inactiveStarColor} 
-                fill={star <= rating ? activeStarColor : "transparent"} 
-                size={isSeniorMode ? 56 : 44} 
+                fill={star <= rating ? activeStarColor : "transparent"}
+                size={isSeniorMode ? 48 : 44} 
               />
             </TouchableOpacity>
           ))}
         </View>
-        <Text className={`text-text font-sans font-bold mt-8 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
+        <Text className={`text-text font-sans font-bold mt-8 ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>
           {rating === 0 ? 'Tap a star to rate' : `${rating} out of 5 Stars`}
         </Text>
       </View>
 
       <TouchableOpacity 
-        className="bg-primary py-4 dark:py-6 rounded-xl dark:rounded-md dark:border-senior dark:border-black items-center flex-row justify-center active:opacity-80"
+        className="bg-primary py-4 dark:py-5 rounded-xl dark:rounded-senior dark:border-senior dark:border-primary items-center flex-row justify-center active:opacity-80"
         onPress={handleSubmitReview}
         disabled={submitting}
       >
         {submitting ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
-          <Text className={`text-on-primary dark:text-white font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+          <Text className={`text-on-primary dark:text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
             Submit Review
           </Text>
         )}

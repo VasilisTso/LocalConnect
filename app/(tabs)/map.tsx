@@ -52,7 +52,10 @@ const MapPinMarker = memo(
 
     const bgColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
     const actualTextColor = "#FFFFFF";
-    const borderColor = isSeniorMode ? "#FFFFFF" : Colors.light.surface;
+    const borderColor = isSeniorMode ? Colors.dark.border : Colors.light.surface;
+    
+    const pinSize = isSeniorMode ? 44 : 34;
+    const fontSize = isSeniorMode ? 18 : 16;
     
     useEffect(() => {
       setTrackChanges(true);
@@ -68,8 +71,8 @@ const MapPinMarker = memo(
         onLayout={() => { setTimeout(() => setTrackChanges(false), 500); }}
         style={{ 
           backgroundColor: bgColor,
-          borderColor: borderColor, 
-          borderWidth: 1,
+          borderColor: borderColor,
+          borderWidth: isSeniorMode ? 2 : 1,
           borderRadius: 20, 
           width: 34, 
           height: 34, 
@@ -77,7 +80,7 @@ const MapPinMarker = memo(
           justifyContent: 'center', 
         }}
       >
-        <Text style={{ color: actualTextColor, fontWeight: 'bold', fontSize: 16 }}>
+        <Text style={{ color: actualTextColor, fontWeight: 'bold', fontSize: fontSize }}>
           {taskCount}
         </Text>
       </View>
@@ -280,11 +283,11 @@ export default function MapScreen() {
           <View className="bg-surface border-2 border-border dark:border-senior dark:border-border rounded-full flex-row items-center px-6 py-3 shadow-lg pointer-events-auto">
             <MapIcon
               color={isSeniorMode ? Colors.dark.primary : Colors.light.primary}
-              size={isSeniorMode ? 28 : 20}
+              size={isSeniorMode ? 26 : 20}
               className="mr-3"
             />
             <Text
-              className={`font-sans ml-2 font-bold text-text ${isSeniorMode ? "text-2xl" : "text-base"}`}
+              className={`font-sans ml-2 font-bold text-text ${isSeniorMode ? "text-lg" : "text-base"}`}
             >
               {totalTasks} Active Tasks
             </Text>
@@ -296,9 +299,9 @@ export default function MapScreen() {
           <TouchableOpacity
             onPress={recenterMap}
             activeOpacity={0.8}
-            className="bg-primary dark:bg-black w-16 h-16 dark:w-20 dark:h-20 rounded-full items-center justify-center border-2 border-border dark:border-senior dark:border-border shadow-xl pointer-events-auto"
+            className="bg-primary dark:bg-primary w-16 h-16 rounded-full items-center justify-center border-2 border-border dark:border-senior dark:border-border shadow-xl pointer-events-auto"
           >
-            <LocateFixed color="#FFFFFF" size={isSeniorMode ? 36 : 28} />
+            <LocateFixed color="#FFFFFF" size={isSeniorMode ? 32 : 28} />
           </TouchableOpacity>
         </View>
       </View>

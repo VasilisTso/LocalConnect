@@ -117,7 +117,7 @@ export default function TaskDetailsScreen() {
           onPress: async () => {
             setLoading(true);
             try {
-              // FIXED: We now use our secure RPC to bypass RLS safely!
+              // We now use our secure RPC to bypass RLS safely!
               const { error } = await supabase.rpc('offer_help', {
                 target_task_id: taskId,
                 helper_uuid: session?.user?.id
@@ -236,16 +236,16 @@ export default function TaskDetailsScreen() {
           <TouchableOpacity onPress={() => router.back()} className="mr-2 p-2 -ml-2 active:opacity-70">
             <ArrowLeft color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 32 : 28} />
           </TouchableOpacity>
-          <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-3xl' : 'text-xl'}`}>
+          <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
             Task Details
           </Text>
         </View>
 
         {!isMyTask && (
           <TouchableOpacity onPress={handleReportTask} className="p-2 -mr-2 flex-row items-center active:opacity-70">
-            <Flag color={errorIconColor} size={isSeniorMode ? 28 : 24} />
+            <Flag color={errorIconColor} size={isSeniorMode ? 24 : 24} />
             {isSeniorMode && (
-              <Text className="text-error dark:text-error font-sans font-bold ml-2 text-xl">
+              <Text className="text-error dark:text-error font-sans font-bold ml-2 text-lg">
                 Report
               </Text>
             )}
@@ -255,7 +255,7 @@ export default function TaskDetailsScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 180 }} showsVerticalScrollIndicator={false}>
         {/* Title */}
-        <Text className={`text-text font-sans font-bold mb-5 ${isSeniorMode ? 'text-4xl leading-10' : 'text-3xl'}`}>
+        <Text className={`text-text font-sans font-bold mb-5 ${isSeniorMode ? 'text-3xl leading-9' : 'text-3xl'}`}>
           {title}
         </Text>
 
@@ -268,7 +268,7 @@ export default function TaskDetailsScreen() {
             style={{ borderColor: badge.color }}
           >
             {React.createElement(badge.icon, { color: badge.color, size: isSeniorMode ? 20 : 16, className: "mr-2" })}
-            <Text className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-xl' : 'text-sm'}`} style={{ color: badge.color }}>
+            <Text className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-base' : 'text-sm'}`} style={{ color: badge.color }}>
               Posted by {badge.title}
             </Text>
           </View>
@@ -276,40 +276,40 @@ export default function TaskDetailsScreen() {
           {/* Category Tag */}
           <View className="flex-row items-center bg-surface px-4 py-2 rounded-full border border-border dark:border-senior dark:border-border">
             <Tag color={primaryIconColor} size={isSeniorMode ? 20 : 16} className="mr-2" />
-            <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-xl' : 'text-sm'}`}>
+            <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
               {category}
             </Text>
           </View>
 
           {/* Location Pin */}
           <View className="flex-row items-center bg-surface px-4 py-2 rounded-full border border-border dark:border-senior dark:border-border">
-            <MapPin color={Colors.light.secondary} size={isSeniorMode ? 20 : 16} className="mr-2" />
-            <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-xl' : 'text-sm'}`}>
+            <MapPin color={isSeniorMode ? Colors.dark.secondary : Colors.light.secondary} size={isSeniorMode ? 20 : 16} className="mr-2" />
+            <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
               {locationName}
             </Text>
           </View>
         </View>
 
         {/* Description Section */}
-        <Text className={`text-text font-sans font-bold mb-3 ${isSeniorMode ? 'text-3xl' : 'text-xl'}`}>
+        <Text className={`text-text font-sans font-bold mb-3 ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>
           Description
         </Text>
-        <View className='bg-surface rounded-2xl dark:rounded-xl p-5 mb-10 border border-border dark:border-senior dark:border-border'>
-            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-2xl leading-9' : 'text-base leading-6'}`}>
+        <View className='bg-surface rounded-2xl dark:rounded-senior p-5 mb-10 border border-border dark:border-senior dark:border-border'>
+            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg leading-7' : 'text-base leading-6'}`}>
             {description}
             </Text>
         </View>
 
-        {/* SECURE HANDSHAKE: Only visible if task is in progress and you are involved! */}
+        {/* SECURE HANDSHAKE: Only visible if task is in progress and you are involved */}
         {status === 'in_progress' && (isMyTask || session?.user?.id === helperId) && privateContactInfo ? (
-          <View className='bg-primary dark:bg-black rounded-2xl dark:rounded-xl p-6 mb-8 border border-border dark:border-senior dark:border-border shadow-sm'>
+          <View className='bg-primary dark:bg-primary rounded-2xl dark:rounded-senior p-6 mb-8 border border-border dark:border-senior dark:border-primary shadow-sm'>
             <View className="flex-row items-center mb-4">
               <Lock color="#FFFFFF" size={isSeniorMode ? 28 : 20} className="mr-3" />
-              <Text className={`text-on-primary ml-2 dark:text-white font-sans font-bold ${isSeniorMode ? 'text-3xl' : 'text-xl'}`}>
+              <Text className={`text-on-primary ml-2 dark:text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>
                 Private Instructions
               </Text>
             </View>
-            <Text className={`text-on-primary dark:text-white opacity-90 font-sans ${isSeniorMode ? 'text-2xl leading-9' : 'text-base leading-6'}`}>
+            <Text className={`text-on-primary dark:text-white opacity-90 font-sans ${isSeniorMode ? 'text-lg leading-7' : 'text-base leading-6'}`}>
               {privateContactInfo}
             </Text>
           </View>
@@ -317,8 +317,8 @@ export default function TaskDetailsScreen() {
 
         {/* HELPER TRUST CARD (Only visible to the owner when deciding to accept/decline) */}
         {isMyTask && status === 'pending' && helperProfile && (
-          <View className="bg-surface rounded-2xl dark:rounded-xl p-6 mb-8 border-2 border-secondary shadow-sm">
-            <Text className={`text-text font-sans font-bold mb-5 ${isSeniorMode ? 'text-3xl' : 'text-xl'}`}>
+          <View className="bg-surface rounded-2xl dark:rounded-senior p-6 mb-8 border-2 border-secondary dark:border-secondary shadow-sm">
+            <Text className={`text-text font-sans font-bold mb-5 ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>
               {helperProfile.username ? `${helperProfile.username} wants to help!` : 'A neighbor wants to help!'}
             </Text>
             
@@ -326,11 +326,11 @@ export default function TaskDetailsScreen() {
               {helperProfile.avatar_url ? (
                 <Image 
                   source={{ uri: helperProfile.avatar_url }} 
-                  style={{ width: isSeniorMode ? 80 : 64, height: isSeniorMode ? 80 : 64, borderRadius: isSeniorMode ? 40 : 32, marginRight: 16 }} 
+                  style={{ width: 64, height: 64, borderRadius: 32, marginRight: 16 }} 
                 />
               ) : (
-                <View className="bg-surface border-2 border-border p-4 rounded-full mr-4" style={{ width: isSeniorMode ? 80 : 64, height: isSeniorMode ? 80 : 64, alignItems: 'center', justifyContent: 'center' }}>
-                  <UserIcon color={primaryIconColor} size={isSeniorMode ? 40 : 32} />
+                <View className="bg-surface border-2 border-border p-4 rounded-full mr-4" style={{ width: 64, height: 64, alignItems: 'center', justifyContent: 'center' }}>
+                  <UserIcon color={primaryIconColor} size={isSeniorMode ? 32 : 32} />
                 </View>
               )}
               
@@ -340,16 +340,16 @@ export default function TaskDetailsScreen() {
                     className="flex-row items-center px-4 py-1.5 rounded-full border bg-background"
                     style={{ borderColor: getBadge(helperProfile.karma_points).color }}
                   >
-                    {React.createElement(getBadge(helperProfile.karma_points).icon, { color: getBadge(helperProfile.karma_points).color, size: isSeniorMode ? 18 : 14, className: "mr-2" })}
-                    <Text className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-base' : 'text-xs'}`} style={{ color: getBadge(helperProfile.karma_points).color }}>
+                    {React.createElement(getBadge(helperProfile.karma_points).icon, { color: getBadge(helperProfile.karma_points).color, size: isSeniorMode ? 16 : 14, className: "mr-2" })}
+                    <Text className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-sm' : 'text-xs'}`} style={{ color: getBadge(helperProfile.karma_points).color }}>
                       {getBadge(helperProfile.karma_points).title}
                     </Text>
                   </View>
                 </View>
 
                 <View className="flex-row items-center">
-                  <Star color={Colors.light.secondary} fill={Colors.light.secondary} size={isSeniorMode ? 24 : 16} className="mr-2" />
-                  <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+                  <Star color={isSeniorMode ? Colors.dark.secondary : Colors.light.secondary} fill={isSeniorMode ? Colors.dark.secondary : Colors.light.secondary} size={isSeniorMode ? 20 : 16} className="mr-2" />
+                  <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-base' : 'text-base'}`}>
                     {helperProfile.avg_rating > 0 ? helperProfile.avg_rating.toFixed(1) : "No ratings yet"}
                   </Text>
                 </View>
@@ -365,14 +365,14 @@ export default function TaskDetailsScreen() {
         {/* State 1: Open Task (Helper views it) */}
         {!isMyTask && status === 'open' && (
           <TouchableOpacity 
-            className="bg-secondary py-4 dark:py-6 rounded-xl dark:rounded-md dark:border-senior dark:border-black items-center flex-row justify-center active:opacity-80 shadow-sm" 
+            className="bg-secondary py-4 dark:py-5 rounded-xl dark:rounded-senior dark:border-senior dark:border-secondary items-center flex-row justify-center active:opacity-80 shadow-sm" 
             onPress={handleOfferHelp} 
             disabled={loading}
           >
-            {loading ? <ActivityIndicator color={isSeniorMode ? "#000000" : "#1A1826"} /> : (
+            {loading ? <ActivityIndicator color={isSeniorMode ? "#FFFFFF" : "#1A1826"} /> : (
               <>
-                <HeartHandshake color={isSeniorMode ? "#000000" : "#1A1826"} size={isSeniorMode ? 32 : 24} className="mr-3" />
-                <Text className={`text-on-secondary ml-2 dark:text-text font-sans font-bold ${isSeniorMode ? 'text-3xl' : 'text-xl'}`}>Offer Help</Text>
+                <HeartHandshake color={isSeniorMode ? "#FFFFFF" : "#1A1826"} size={isSeniorMode ? 28 : 24} className="mr-3" />
+                <Text className={`text-on-secondary ml-2 dark:text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>Offer Help</Text>
               </>
             )}
           </TouchableOpacity>
@@ -381,22 +381,22 @@ export default function TaskDetailsScreen() {
         {/* State 2: Pending Task (Owner views it to Accept/Decline) */}
         {isMyTask && status === 'pending' && (
           <View className="flex-row justify-between gap-4">
-            <TouchableOpacity 
-              className="flex-1 bg-surface border-2 border-border dark:border-senior dark:border-error py-4 rounded-xl dark:rounded-md items-center flex-row justify-center shadow-sm active:opacity-70" 
+            <TouchableOpacity
+              className="flex-1 bg-surface border-2 border-border dark:border-senior dark:border-error py-4 rounded-xl dark:rounded-senior items-center flex-row justify-center shadow-sm active:opacity-70" 
               onPress={handleDeclineHelper} 
               disabled={loading}
             >
-              <XCircle color={errorIconColor} size={isSeniorMode ? 28 : 24} className="mr-2" />
-              <Text className={`text-error ml-2 dark:text-error font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>Decline</Text>
+              <XCircle color={errorIconColor} size={isSeniorMode ? 24 : 24} className="mr-2" />
+              <Text className={`text-error ml-2 dark:text-error font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-lg'}`}>Decline</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              className="flex-1 bg-primary dark:bg-black py-4 rounded-xl dark:rounded-md dark:border-senior dark:border-black items-center flex-row justify-center shadow-sm active:opacity-80" 
+              className="flex-1 bg-primary dark:bg-primary py-4 rounded-xl dark:rounded-senior dark:border-senior dark:border-primary items-center flex-row justify-center shadow-sm active:opacity-80" 
               onPress={handleAcceptHelper} 
               disabled={loading}
             >
-              <CheckCircle color="#FFFFFF" size={isSeniorMode ? 28 : 24} className="mr-2" />
-              <Text className={`text-white ml-2 font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>Accept</Text>
+              <CheckCircle color="#FFFFFF" size={isSeniorMode ? 24 : 24} className="mr-2" />
+              <Text className={`text-white ml-2 font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-lg'}`}>Accept</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -404,14 +404,14 @@ export default function TaskDetailsScreen() {
         {/* State 3: In Progress (Helper views it to Complete) */}
         {!isMyTask && status === 'in_progress' && session?.user?.id === helperId && (
           <TouchableOpacity 
-            className="bg-primary dark:bg-black py-4 dark:py-6 rounded-xl dark:rounded-md dark:border-senior dark:border-black items-center flex-row justify-center shadow-sm active:opacity-80" 
+            className="bg-primary dark:bg-primary py-4 dark:py-5 rounded-xl dark:rounded-senior dark:border-senior dark:border-primary items-center flex-row justify-center shadow-sm active:opacity-80" 
             onPress={handleMarkCompleted} 
             disabled={loading}
           >
             {loading ? <ActivityIndicator color="#FFFFFF" /> : (
               <>
-                <CheckCircle color="#FFFFFF" size={isSeniorMode ? 32 : 24} className="mr-3" />
-                <Text className={`text-white ml-2 font-sans font-bold ${isSeniorMode ? 'text-3xl' : 'text-xl'}`}>Mark Completed</Text>
+                <CheckCircle color="#FFFFFF" size={isSeniorMode ? 28 : 24} className="mr-3" />
+                <Text className={`text-white ml-2 font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>Mark Completed</Text>
               </>
             )}
           </TouchableOpacity>
@@ -419,8 +419,8 @@ export default function TaskDetailsScreen() {
 
         {/* State 4: Waiting / Already handled messages */}
         {!isMyTask && status === 'pending' && session?.user?.id === helperId && (
-          <View className="bg-surface py-5 rounded-xl dark:rounded-md items-center shadow-sm border-2 border-border dark:border-senior dark:border-border">
-             <Text className={`text-text-muted font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-base'}`}>
+          <View className="bg-surface py-5 rounded-xl dark:rounded-senior items-center shadow-sm border-2 border-border dark:border-senior dark:border-border">
+             <Text className={`text-text-muted font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
                Waiting for owner to accept...
              </Text>
           </View>
