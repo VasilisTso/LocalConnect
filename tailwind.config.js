@@ -5,7 +5,7 @@ module.exports = {
     "./components/**/*.{js,jsx,ts,tsx}"
   ],
   presets: [require("nativewind/preset")],
-  darkMode: 'class', // for seniormode
+  darkMode: 'class', // for senior mode
   theme: {
     extend: {
       colors: {
@@ -31,7 +31,10 @@ module.exports = {
         sans: ['Inter', 'sans-serif'],
       },
       borderWidth: {
-        'senior': '4px',
+        'senior': '2px', // 2px provides strong definition without breaking layouts
+      },
+      borderRadius: {
+        'senior': '8px', // Friendly but structured touch targets
       }
     },
   },

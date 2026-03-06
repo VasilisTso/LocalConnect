@@ -45,22 +45,24 @@
    */
   @media (prefers-color-scheme: dark) {
     :root {
-      /* I have temporarily made these colors DRASTICALLY different 
-         so you can physically see the change happen. */
-      --color-primary: #000000;          /* Pitch Black for main buttons - max contrast */
-      --color-primary-dark: #333333;     /* Dark gray for pressed states */
-      --color-on-primary: #FFFFFF;
-      --color-secondary: #FFC107;        /* High-visibility Amber/Yellow for alerts */
-      --color-on-secondary: #000000;
+      /* High Contrast, Cognitive-Friendly Colors */
+      --color-primary: #1E3A8A;          /* Deep Blue - High contrast, clearly interactive */
+      --color-primary-dark: #172554;     /* Even darker blue for pressed states */
+      --color-on-primary: #FFFFFF;       /* White text on deep blue */
       
-      --color-background: #FFFFFF;       /* Pure white background for maximum contrast */
-      --color-surface: #FFFFFF;          /* Pure white cards */
-      --color-surface-highlight: #000000;/* Used for thick black borders/outlines */
-      --color-text: #000000;             /* Pure black text ONLY */
-      --color-text-muted: #222222;       /* Very dark gray - still highly readable */
-      --color-border: #000000;           /* Harsh, thick black borders for structure */
-      --color-error: #D32F2F;            /* WCAG AA compliant dark red */
-      --color-success: #006400;          /* WCAG AA compliant dark green */
+      --color-secondary: #0F766E;        /* Deep Teal - Safe secondary color (No gamification) */
+      --color-on-secondary: #FFFFFF;     /* White text on teal */
+      
+      --color-background: #F9FAFB;       /* Soft off-white to prevent glare/halation */
+      --color-surface: #FFFFFF;          /* Pure white for distinct card grouping */
+      --color-surface-highlight: #E5E7EB;/* Soft gray for pressed surfaces */
+      
+      --color-text: #111827;             /* Near-black, optimal for aging eyes */
+      --color-text-muted: #4B5563;       /* Medium-dark gray, still highly legible */
+      --color-border: #9CA3AF;           /* Clear, visible borders for structural clarity */
+      
+      --color-error: #B91C1C;            /* Deeper red (WCAG AAA compliant) */
+      --color-success: #047857;          /* Deeper green (WCAG AAA compliant) */
     }
   }
 }

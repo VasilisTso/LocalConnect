@@ -1,37 +1,44 @@
+// NORMAL MODE (Dark Deep Purple)
 const primaryNormal = '#8382FE';
-const primarySenior = '#000000';
-
 const secondaryNormal = '#FFD167';
-const secondarySenior = '#FFC107';
-
 const errorNormal = '#EF4444';
-const errorSenior = '#D32F2F';
+const backgroundNormal = '#1A1826';
+const surfaceNormal = '#323147';
+const textNormal = '#FFFFFF';
+
+// SENIOR MODE (High Contrast Light)
+const primarySenior = '#1E3A8A';
+const secondarySenior = '#0F766E';
+const errorSenior = '#B91C1C';
+const backgroundSenior = '#F9FAFB';
+const surfaceSenior = '#FFFFFF';
+const textSenior = '#111827';
 
 export default {
   // NORMAL MODE (Dark Deep Purple)
   light: {
-    text: '#FFFFFF',
-    background: '#1A1826',
+    text: textNormal,
+    background: backgroundNormal,
     tint: primaryNormal,
     tabIconDefault: '#A1A0B8',
     tabIconSelected: primaryNormal,
     primary: primaryNormal,
     secondary: secondaryNormal,
     error: errorNormal,
-    surface: '#323147',
+    surface: surfaceNormal,
     border: '#4A4968',
   },
   // SENIOR MODE (High Contrast Light)
   dark: {
-    text: '#000000',
-    background: '#FFFFFF',
+    text: textSenior,
+    background: backgroundSenior,
     tint: primarySenior,
-    tabIconDefault: '#222222',
+    tabIconDefault: '#4B5563',
     tabIconSelected: primarySenior,
     primary: primarySenior,
     secondary: secondarySenior,
     error: errorSenior,
-    surface: '#FFFFFF',
-    border: '#000000',
+    surface: surfaceSenior,
+    border: '#9CA3AF',
   },
 };
