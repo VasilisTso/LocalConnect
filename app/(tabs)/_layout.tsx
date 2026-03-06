@@ -1,5 +1,5 @@
 import { Tabs, useRouter } from 'expo-router';
-import { Home, Map as MapIcon, PlusCircle, User } from 'lucide-react-native';
+import { Home, Map as MapIcon, PlusCircle, User, LayoutList } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
@@ -142,15 +142,15 @@ export default function TabLayout() {
       <Tabs.Screen 
         name="index" 
         options={{ 
-          title: 'Feed', 
+          title: 'Home', 
           tabBarIcon: ({ color }) => <Home color={color} size={isSeniorMode ? 32 : 28} />
         }} 
       />
       <Tabs.Screen 
-        name="map" 
+        name="feed" 
         options={{ 
-          title: 'Map', 
-          tabBarIcon: ({ color }) => <MapIcon color={color} size={isSeniorMode ? 32 : 28} />
+          title: 'Feed', 
+          tabBarIcon: ({ color }) => <LayoutList color={color} size={isSeniorMode ? 32 : 28} />
         }} 
       />
       <Tabs.Screen 
@@ -158,6 +158,13 @@ export default function TabLayout() {
         options={{ 
           title: 'Add Task', 
           tabBarIcon: ({ color }) => <PlusCircle color={color} size={isSeniorMode ? 32 : 28} />
+        }} 
+      />
+      <Tabs.Screen 
+        name="map" 
+        options={{ 
+          title: 'Map', 
+          tabBarIcon: ({ color }) => <MapIcon color={color} size={isSeniorMode ? 32 : 28} />
         }} 
       />
       <Tabs.Screen 

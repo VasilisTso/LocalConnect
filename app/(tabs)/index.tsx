@@ -1,302 +1,127 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   View, 
   Text, 
-  FlatList, 
   TouchableOpacity, 
-  ActivityIndicator, 
-  RefreshControl,
-  Modal,
-  ScrollView,
-  TextInput
+  ScrollView, 
+  Modal, 
+  TextInput, 
+  ActivityIndicator 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award, Footprints, Car } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
-import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
-import * as Location from 'expo-location';
-
+import { 
+  HeartHandshake, 
+  Map as MapIcon, 
+  PlusCircle, 
+  User, 
+  LayoutList, 
+  Award, 
+  CheckCircle,
+  Footprints,
+  Car,
+  BellRing,
+  ChevronRight
+} from 'lucide-react-native';
+import { useAppStore } from '@/store/useAppStore';
+import { supabase } from '@/lib/supabase';
 import Colors from '@/constants/Colors';
 
-// Define the shape of Task data
-interface Task {
+// Interface for the Active Task banner
+interface ActiveTask {
   id: string;
-  user_id: string;
   title: string;
   description: string;
   category: string;
   status: string;
-  created_at: string;
-  creator_karma?: number;
-  // Note: PostGIS location comes back as a WKB/GeoJSON or string depending on the query, 
-  // but for the UI list, we primarily rely on the category and title.
-  // Smart RPC returns these to push to task details for location
-  latitude?: number;
-  longitude?: number;
-  helper_id?: string;
-  private_contact_info?: string;
-}
-
-// Helper function to calculate badges
-function getBadge(karma: number) {
-  if (karma < 0) return { title: 'Flagged', color: Colors.light.error, icon: ShieldAlert };
-  if (karma < 50) return { title: 'New Neighbor', color: Colors.light.tabIconDefault, icon: UserIcon };
-  if (karma < 150) return { title: 'Active Helper', color: Colors.light.primary, icon: Shield };
-  return { title: 'Local Hero', color: Colors.light.secondary, icon: Award }; 
-}
-
-// Interface to hold tasks waiting for a review
-interface PendingReviewTask extends Task {
+  user_id: string;
   helper_id: string;
+  private_contact_info: string;
 }
 
-/**
- * @description The Smart Feed (Main Screen)
- * Human-Centric Goal: Presents tasks clearly. In Senior Mode (Dark Mode), the CSS variables 
- * automatically shift to high-contrast backgrounds and text.
- * Adaptivity Connection: Implements "Implicit Feedback". Clicking a task logs a 'viewed' 
- * interaction to the database, which trains the adaptivity engine on what the user cares about.
- */
-export default function FeedScreen() {
+export default function HomeScreen() {
   const router = useRouter();
-  // Pull in userProfile and fetchUserProfile to check for Admin status
-  const { session, isSeniorMode, userProfile, fetchUserProfile, setUserProfile, showAlert } = useAppStore();
+  const { session, isSeniorMode, userProfile, fetchUserProfile, showAlert } = useAppStore();
 
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [pendingReviews, setPendingReviews] = useState<PendingReviewTask[]>([]);
+  const [completedTasksCount, setCompletedTasksCount] = useState(0);
+  const [activeTask, setActiveTask] = useState<ActiveTask | null>(null);
+  const [loadingActivity, setLoadingActivity] = useState(true);
 
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  // State to toggle between Community Feed and My Tasks
-  const [filterMode, setFilterMode] = useState<'community' | 'mine' | 'reports'>('community');
-  const [reportedTaskIds, setReportedTaskIds] = useState<string[]>([]);
-
-  // State for onboarding(new user, welcome modal)
+  // Onboarding State
   const [onboardingTags, setOnboardingTags] = useState<string[]>([]);
   const [onboardingMode, setOnboardingMode] = useState<'walking' | 'driving'>('walking');
   const [onboardingUsername, setOnboardingUsername] = useState('');
   const [savingOnboarding, setSavingOnboarding] = useState(false);
 
-  const AVAILABLE_TAGS = [
-    "Pets", "Education", "Tools", "Errands", "Tech", 
-    "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"
-  ];
-
+  const AVAILABLE_TAGS = ["Pets", "Education", "Tools", "Errands", "Tech", "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"];
   const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
   const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
 
-  // Securely sync profile and wipe memory on account switch
-  useEffect(() => {
-    // If nobody is logged in, wipe the memory completely
-    if (!session?.user?.id) {
-      setUserProfile(null);
-      return;
-    }
-
-    // If the memory still holds the PREVIOUS user (Admin), wipe it instantly
-    if (userProfile && userProfile.id !== session.user.id) {
-      setUserProfile(null);
-    }
-
-    // Fetch the fresh profile for the new user
-    fetchUserProfile(session.user.id);
-    
-  }, [session?.user?.id]); // Only re-run when the actual Session ID changes
-
-  // Fetch both the Smart Feed AND any tasks waiting for a review
-  const fetchTasks = useCallback(async () => {
-    // `fetch_adaptive_feed` RPC!
-    // NEW ADAPTIVITY ENGINE FETCH
-    if (!session?.user?.id) return; // Failsafe
-
-    try {
-      // Get User's Current Location for the Spatial Engine
-      let currentLat = null;
-      let currentLon = null;
-
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status === 'granted') {
-          // Use Last Known Position first for instant loading 
-          // If null, fallback to calculating current position
-          let loc = await Location.getLastKnownPositionAsync({});
-          if (!loc) {
-            loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
-          }
-          
-          if (loc) {
-            currentLat = loc.coords.latitude;
-            currentLon = loc.coords.longitude;
-          }
-        }
-      } catch (e) {
-        console.warn("Could not fetch location for spatial filter.");
-      }
-
-      // Fetch Open Tasks (Smart Engine + Spatial Filter - public community feed)
-      const { data: openTasks, error: feedError } = await supabase
-        .rpc('fetch_adaptive_feed', { 
-          calling_user_id: session.user.id,
-          user_lat: currentLat,
-          user_lon: currentLon
-        });
-      if (feedError) throw feedError;
-
-      // Fetch MY active tasks (keeps them visible when pending or in_progress)
-      const { data: myTasks } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .neq('status', 'completed');
-
-      // Fetch tasks I am helping with (so helpers can see if they were accepted)
-      const { data: helpingTasks } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('helper_id', session.user.id)
-        .neq('status', 'completed');
-
-      // Fetch Reports if Admin
-      let adminReportIds: string[] = [];
-      let adminReportedTasks: Task[] = [];
-      if (userProfile?.is_admin) {
-        const { data: reports } = await supabase.from('reports').select('task_id');
-        if (reports && reports.length > 0) {
-          adminReportIds = reports.map(r => r.task_id);
-          setReportedTaskIds(adminReportIds);
-          
-          // Fetch the actual tasks that were reported
-          const { data: rTasks } = await supabase.from('tasks').select('*').in('id', adminReportIds);
-          if (rTasks) adminReportedTasks = rTasks;
-        } else {
-          setReportedTaskIds([]);
-        }
-      }
-
-      // MERGE ALL AND REMOVE DUPLICATES (using Map by ID)
-      const allTasks = [...(openTasks || []), ...(myTasks || []), ...(helpingTasks || []), ...adminReportedTasks];
-      const uniqueTasks = Array.from(new Map(allTasks.map(task => [task.id, task])).values());
-      
-      setTasks(uniqueTasks);
-
-      // PENDING REVIEWS LOGIC Fetch Completed Tasks (to see if they need a review)
-      const { data: myCompletedTasks } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('status', 'completed')
-        .eq('user_id', session.user.id)
-        .not('helper_id', 'is', null); // Must have a helper to review!
-
-      // Fetch Reviews I have already written
-      const { data: myReviews } = await supabase
-        .from('reviews')
-        .select('task_id')
-        .eq('reviewer_id', session.user.id);
-
-      // Filter out tasks that I've already reviewed
-      const reviewedTaskIds = myReviews?.map(r => r.task_id) || [];
-      const needsReview = myCompletedTasks?.filter(t => !reviewedTaskIds.includes(t.id)) || [];
-      
-      setPendingReviews(needsReview as PendingReviewTask[]);
-
-    } catch (error: any) {
-      showAlert('Error', error.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [session]);
-
-  // Use focus effect so the pending review disappears instantly after submitting it!
-  useFocusEffect(
-    useCallback(() => {
-      fetchTasks();
-    }, [fetchTasks])
-  );
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchTasks();
+  // DYNAMIC TIME-BASED GREETING
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   };
 
-  // IMPLICIT FEEDBACK: Learning mechanism, now leads to details screen
-  async function handleViewTask(task: Task & { helper_id?: string, private_contact_info?: string }) {
-    if (!session?.user?.id) return;
-
-    try {
-      // Silently log the interaction in the background
-      await supabase.from('user_interactions').insert([{
-        user_id: session.user.id,
-        task_id: task.id,
-        interaction_type: 'viewed_category_' + task.category // e.g., viewed_category_Pets
-      }]);
-    } catch (error) {
-      console.error("Failed to log interaction silently", error);
+  // Fetch profile data(senior mode, karma, etc)
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchUserProfile(session.user.id);
     }
+  }, [session?.user?.id]);
 
-    // Route to Details screen and pass the task data
-    router.push({
-      pathname: '/task-details',
-      params: {
-        id: task.id,
-        title: task.title,
-        description: task.description,
-        category: task.category,
-        creator_karma: task.creator_karma || 0,
-        user_id: task.user_id,
-        latitude: task.latitude,
-        longitude: task.longitude,
-        status: task.status,
-        helper_id: task.helper_id || '',
-        private_contact_info: task.private_contact_info || '',
-      }
-    });
-  }
+  // Fetch the user's completed tasks count for the Recent Activity section
+  useFocusEffect(
+    useCallback(() => {
+      async function fetchActivity() {
+        if (!session?.user?.id) return;
+        try {
+          // Fetch Completed Tasks Count
+          const { count, error: countError } = await supabase
+            .from('tasks')
+            .select('*', { count: 'exact', head: true })
+            .eq('helper_id', session.user.id)
+            .eq('status', 'completed');
 
-  // Remove a task
-  async function handleDeleteTask(taskId: string) {
-    showAlert('Delete Task', 'Are you sure you want to remove this request?', [
-      { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Delete', 
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            // RLS protects this: the database will ONLY delete it if auth.uid() === task.user_id
-            const { error } = await supabase
-              .from('tasks')
-              .delete()
-              .eq('id', taskId);
-
-            if (error) throw error;
-            
-            // Remove from local state to update UI instantly
-            setTasks(prev => prev.filter(t => t.id !== taskId));
-            // If it was a reported task, instantly remove it from the list
-            setReportedTaskIds(prev => prev.filter(id => id !== taskId));
-          } catch (error: any) {
-            showAlert('Error deleting task', error.message);
+          if (!countError && count !== null) {
+            setCompletedTasksCount(count);
           }
+
+          // Fetch Active (In Progress) Task for the Sticky Banner
+          // Looks for any task where status is in_progress AND you are either the owner OR the helper
+          const { data: activeData, error: activeError } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('status', 'in_progress')
+            .or(`user_id.eq.${session.user.id},helper_id.eq.${session.user.id}`)
+            .limit(1);
+
+          if (!activeError && activeData && activeData.length > 0) {
+            setActiveTask(activeData[0] as ActiveTask);
+          } else {
+            setActiveTask(null);
+          }
+
+        } catch (error) {
+          console.error("Error fetching activity:", error);
+        } finally {
+          setLoadingActivity(false);
         }
       }
-    ]);
-  }
+      fetchActivity();
+    }, [session?.user?.id])
+  );
 
-  // ONBOARDING LOGIC
   async function handleFinishOnboarding() {
     if (!session?.user?.id) return;
-
-    // Force them to pick a name
     if (!onboardingUsername.trim()) {
       showAlert("Missing Name", "Please enter a username or first name to continue.");
       return;
     }
-
     setSavingOnboarding(true);
     
-    // Save their choices and flip the flag to TRUE
     const { error } = await supabase
       .from('profiles')
       .update({ 
@@ -313,167 +138,30 @@ export default function FeedScreen() {
       return;
     }
 
-    // Refresh the local store and feed so the modal instantly closes and feed adapts!
     await fetchUserProfile(session.user.id);
-    fetchTasks();
     setSavingOnboarding(false);
   }
 
-  // UI Component for individual task cards
-  const renderTask = ({ item }: { item: Task }) => {
-    const isAdmin = userProfile?.is_admin === true;
-    const isMyTask = session?.user?.id === item.user_id;
-
-    // only edit if you own it and it's open
-    const canEdit = isMyTask && item.status === 'open';
-    // delete if you own it and it's open, OR if you are a global Admin
-    const canDelete = (isMyTask && item.status === 'open') || isAdmin;
-
-    return (
-      <TouchableOpacity 
-        className="bg-surface rounded-2xl dark:rounded-senior p-5 mb-5 border border-border dark:border-senior dark:border-border shadow-sm dark:shadow-none"
-        onPress={() => handleViewTask(item)}
-        activeOpacity={0.7}
-      >
-        <View className="flex-row justify-between items-start mb-3">
-          <View className="flex-1 mr-2">
-            {filterMode === 'mine' && item.status !== 'open' && (
-              <View 
-                style={{ alignSelf: 'flex-start' }}
-                className={`px-3 py-1.5 rounded-md mb-3 border ${
-                  item.status === 'in_progress' 
-                    ? 'bg-[#D1FAE5] border-[#065F46]' 
-                    : 'bg-[#FEF3C7] border-[#92400E]'
-                }`}
-              >
-                <Text className={`text-xs font-bold font-sans uppercase ${item.status === 'in_progress' ? 'text-[#065F46]' : 'text-[#92400E]'}`}>
-                  {item.status === 'in_progress' ? 'In Progress' : 'Pending Approval'}
-                </Text>
-              </View>
-            )}
-            
-            <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-xl'}`} numberOfLines={2}>
-              {item.title}
-            </Text>
-          </View>
-
-          {/* Owner/Admin controls: Edit/Delete (Only show if it's still Open) */}
-          {(canEdit || canDelete) && (
-            <View className="flex-row items-center -mr-2 -mt-2">
-              {canEdit && (
-                <TouchableOpacity onPress={() => router.push({ pathname: '/modal', params: { taskId: item.id } })} className="p-3 mr-1">
-                  <Edit2 color={isSeniorMode ? Colors.dark.primary : Colors.light.primary} size={isSeniorMode ? 24 : 20} />
-                </TouchableOpacity>
-              )}
-              {canDelete && (
-                <TouchableOpacity onPress={() => handleDeleteTask(item.id)} className="p-3">
-                  <Trash2 color={isSeniorMode ? Colors.dark.error : Colors.light.error} size={isSeniorMode ? 24 : 20} />
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </View>
-
-        <Text className={`text-text-muted font-sans mb-6 ${isSeniorMode ? 'text-base leading-6' : 'text-base leading-6'}`} numberOfLines={3}>
-          {item.description}
-        </Text>
-
-        <View className="flex-row items-center justify-between mt-auto">
-          {/* Category Tag */}
-          <View className="flex-row items-center bg-background px-4 py-2 rounded-full border border-border dark:border-senior dark:border-border">
-            <Tag color={primaryIconColor} size={isSeniorMode ? 18 : 16} className="mr-2" />
-            <Text className={`text-text-muted ml-1 font-sans font-bold ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
-              {item.category}
-            </Text>
-          </View>
-
-          {/* Creator's Trust Badge (Visible in ALL modes for safety!) */}
-          <View 
-            className="flex-row items-center px-4 py-2 rounded-full border"
-            style={{ backgroundColor: `${getBadge(item.creator_karma || 0).color}15`, borderColor: getBadge(item.creator_karma || 0).color }}
-          >
-            {React.createElement(getBadge(item.creator_karma || 0).icon, { 
-              color: getBadge(item.creator_karma || 0).color, 
-              size: isSeniorMode ? 18 : 14, 
-              className: "mr-2" 
-            })}
-            <Text 
-              className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-sm' : 'text-xs'}`} 
-              style={{ color: getBadge(item.creator_karma || 0).color }}
-            >
-              {getBadge(item.creator_karma || 0).title}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  // UI component specifically for tasks needing a review
-  const renderPendingReviews = () => {
-    if (pendingReviews.length === 0) return null;
-
-    return (
-      <View className="mb-8">
-        <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
-          Tasks Pending Review ({pendingReviews.length})
-        </Text>
-        {pendingReviews.map(task => (
-          <TouchableOpacity 
-            key={task.id}
-            activeOpacity={0.8}
-            onPress={() => router.push({ 
-              pathname: '/review', 
-              params: { taskId: task.id, helperId: task.helper_id, taskTitle: task.title } 
-            })}
-            className="bg-secondary/10 border-2 border-secondary rounded-xl dark:rounded-senior p-5 flex-row items-center justify-between mb-4 shadow-sm"
-          >
-            <View className="flex-1 pr-4">
-              <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`} numberOfLines={1}>
-                {task.title}
-              </Text>
-              <Text className={`text-text-muted font-sans mt-2 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
-                A neighbor helped you with this!
-              </Text>
-            </View>
-            <View className="bg-surface px-5 py-3 rounded-full flex-row items-center border-2 border-secondary">
-              <Star color={Colors.light.secondary} fill={Colors.light.secondary} size={isSeniorMode ? 20 : 18} className="mr-2" />
-              <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Rate</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+  // Quick Access Button Component
+  const QuickAccessButton = ({ title, icon: Icon, route, color }: any) => (
+    <TouchableOpacity 
+      onPress={() => router.push(route)}
+      activeOpacity={0.7}
+      className="bg-surface border border-border dark:border-senior dark:border-border p-4 rounded-2xl dark:rounded-senior w-[48%] mb-4 items-center justify-center shadow-sm dark:shadow-none"
+    >
+      <View className="bg-background p-4 rounded-full mb-3 border border-border dark:border-senior">
+        <Icon color={color} size={isSeniorMode ? 32 : 28} />
       </View>
-    );
-  };
-
-  // Filter the tasks array right before rendering!
-  const displayTasks = tasks.filter(task => {
-    if (filterMode === 'reports') {
-      return reportedTaskIds.includes(task.id);
-    }
-    if (filterMode === 'mine') {
-      // "My Tasks" now shows tasks I created OR tasks I am actively helping with
-      return (task.user_id === session?.user?.id || task.helper_id === session?.user?.id) && task.status !== 'completed';
-    }
-    // For 'community', ONLY show tasks that are still open and belong to other people.
-    // This stops pending tasks from cluttering the public feed!
-    return task.user_id !== session?.user?.id && task.status === 'open';
-  });
-
-  // Smart Sorting Pins active tasks to the top of the list.
-  const sortedTasks = [...displayTasks].sort((a, b) => {
-    // Define priority (1 is highest, goes to the top)
-    const priority: Record<string, number> = { in_progress: 1, pending: 2, open: 3 };
-    
-    const rankA = priority[a.status] || 4;
-    const rankB = priority[b.status] || 4;
-    
-    return rankA - rankB; // Sorts lowest number to the top
-  });
+      <Text className={`font-sans font-bold text-text text-center ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      {/* THE WELCOME ONBOARDING MODAL */}
+      
+      {/* ONBOARDING MODAL (Moved here so it shows up instantly on login) */}
       {userProfile !== null && userProfile.onboarding_completed === false && (
         <Modal animationType="slide" transparent={false} visible={true}>
           <SafeAreaView className="flex-1 bg-background px-8 pt-5">
@@ -483,19 +171,15 @@ export default function FeedScreen() {
                   <View className="bg-primary/20 p-8 rounded-full mb-6">
                     <HeartHandshake color={primaryIconColor} size={isSeniorMode ? 72 : 64} />
                   </View>
-                  <Text className={`font-sans font-bold text-text text-center mb-3 ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>
-                    Welcome to the Neighborhood!
-                  </Text>
-                  <Text className={`text-text-muted font-sans text-center px-4 ${isSeniorMode ? 'text-lg leading-7' : 'text-lg'}`}>
-                    Let's set up your profile so we can show you the tasks that matter to you.
-                  </Text>
+                  <Text className={`font-sans font-bold text-text text-center mb-3 ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>Welcome to the Neighborhood!</Text>
+                  <Text className={`text-text-muted font-sans text-center px-4 ${isSeniorMode ? 'text-lg leading-7' : 'text-lg'}`}>Let's set up your profile so we can show you the tasks that matter to you.</Text>
                 </View>
 
                 {/* Username Input */}
                 <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>1. What should neighbors call you?</Text>
                 <View className="mb-10">
                   <TextInput
-                    className={`bg-surface border-2 border-border dark:border-senior dark:border-border rounded-xl dark:rounded-senior px-5 py-4 text-text font-sans ${isSeniorMode ? 'text-xl' : 'text-lg'}`}
+                    className={`bg-surface border-2 border-border dark:border-senior rounded-xl dark:rounded-senior px-5 py-4 text-text font-sans ${isSeniorMode ? 'text-xl' : 'text-lg'}`}
                     placeholder="Enter a username or first name..."
                     placeholderTextColor={mutedIconColor}
                     value={onboardingUsername}
@@ -506,15 +190,7 @@ export default function FeedScreen() {
                 {/* Transport Mode */}
                 <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>2. How far can you travel to help?</Text>
                 <View className={`flex-row gap-4 mb-10 ${isSeniorMode ? 'flex-col' : ''}`}>
-                  <TouchableOpacity 
-                    onPress={() => setOnboardingMode('walking')}
-                    activeOpacity={0.7}
-                    className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-senior dark:border-senior ${
-                      onboardingMode === 'walking' 
-                        ? 'bg-primary border-primary dark:bg-primary dark:border-primary' 
-                        : 'bg-transparent border-border dark:border-border'
-                    }`}
-                  >
+                  <TouchableOpacity onPress={() => setOnboardingMode('walking')} activeOpacity={0.7} className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-senior dark:border-senior ${onboardingMode === 'walking' ? 'bg-primary border-primary dark:bg-primary' : 'bg-transparent border-border'}`}>
                     <Footprints color={onboardingMode === 'walking' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 26 : 24} className="mr-3" />
                     <View className='ml-2'>
                       <Text className={`font-sans font-bold ${onboardingMode === 'walking' ? 'text-on-primary dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>Walking</Text>
@@ -522,15 +198,7 @@ export default function FeedScreen() {
                     </View>
                   </TouchableOpacity>
 
-                  <TouchableOpacity 
-                    onPress={() => setOnboardingMode('driving')}
-                    activeOpacity={0.7}
-                    className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-senior dark:border-senior ${
-                      onboardingMode === 'driving' 
-                        ? 'bg-primary border-primary dark:bg-primary dark:border-primary' 
-                        : 'bg-transparent border-border dark:border-border'
-                    }`}
-                  >
+                  <TouchableOpacity onPress={() => setOnboardingMode('driving')} activeOpacity={0.7} className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-senior dark:border-senior ${onboardingMode === 'driving' ? 'bg-primary border-primary dark:bg-primary' : 'bg-transparent border-border'}`}>
                     <Car color={onboardingMode === 'driving' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 26 : 24} className="mr-3" />
                     <View className='ml-2'>
                       <Text className={`font-sans font-bold ${onboardingMode === 'driving' ? 'text-on-primary dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>Driving</Text>
@@ -545,39 +213,15 @@ export default function FeedScreen() {
                   {AVAILABLE_TAGS.map((tag) => {
                     const isActive = onboardingTags.includes(tag);
                     return (
-                      <TouchableOpacity
-                        key={tag}
-                        activeOpacity={0.7}
-                        onPress={() => setOnboardingTags(prev => isActive ? prev.filter(t => t !== tag) : [...prev, tag])}
-                        className={`px-4 py-3 rounded-full border-2 dark:rounded-senior dark:border-senior ${
-                          isActive 
-                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary' 
-                            : 'bg-transparent border-border dark:border-border'
-                        }`}
-                      >
-                        <Text className={`font-sans font-bold ${
-                          isActive ? 'text-on-primary dark:text-white' : 'text-text'
-                        } ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-                          {tag}
-                        </Text>
+                      <TouchableOpacity key={tag} activeOpacity={0.7} onPress={() => setOnboardingTags(prev => isActive ? prev.filter(t => t !== tag) : [...prev, tag])} className={`px-4 py-3 rounded-full border-2 dark:rounded-senior dark:border-senior ${isActive ? 'bg-primary border-primary dark:bg-primary' : 'bg-transparent border-border'}`}>
+                        <Text className={`font-sans font-bold ${isActive ? 'text-on-primary dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>{tag}</Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
 
-                <TouchableOpacity 
-                  className="bg-primary py-5 dark:py-5 rounded-xl dark:rounded-senior dark:border-senior dark:border-primary items-center mb-10 shadow-lg"
-                  onPress={handleFinishOnboarding}
-                  disabled={savingOnboarding}
-                  activeOpacity={0.8}
-                >
-                  {savingOnboarding ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text className={`text-on-primary dark:text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>
-                      Let's Go!
-                    </Text>
-                  )}
+                <TouchableOpacity className="bg-primary py-5 rounded-xl dark:rounded-senior dark:border-senior dark:border-primary items-center mb-10 shadow-lg" onPress={handleFinishOnboarding} disabled={savingOnboarding} activeOpacity={0.8}>
+                  {savingOnboarding ? <ActivityIndicator color="#FFFFFF" /> : <Text className={`text-on-primary dark:text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>Let's Go!</Text>}
                 </TouchableOpacity>
               </ScrollView>
             </View>
@@ -585,101 +229,104 @@ export default function FeedScreen() {
         </Modal>
       )}
 
-      {/* STANDARD FEED UI BELOW */}
-      <View className="px-6 pt-6 pb-4">
-        {/* Cool Mod Badge next to the title */}
-        <View className="flex-row items-center justify-between mb-2">
-          <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>Neighborhood</Text>
-          {userProfile?.is_admin && (
-            <View className="bg-error px-4 py-2 rounded-md ml-3 border-2 border-border dark:border-error">
-              <Text className="text-white font-bold text-lg uppercase">ADMIN</Text>
-            </View>
-          )}
-        </View>
-        <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-          {filterMode === 'community' ? 'Discover tasks tailored to your interests.' : filterMode === 'reports' ? 'Moderate reported tasks.' : 'Manage your open requests.'}
-        </Text>
-      </View>
-
-      {/* Segmented Control Toggle (Third tab only visible to Admin) */}
-      <View className="flex-row bg-surface border-2 border-border dark:border-senior dark:border-border p-1.5 rounded-xl dark:rounded-senior mx-6 mb-6">
-        <TouchableOpacity 
-          className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'community' ? 'bg-primary dark:bg-primary' : 'bg-transparent'}`} 
-          onPress={() => setFilterMode('community')}
-        >
-          <Text className={`font-sans font-bold ${filterMode === 'community' ? 'text-on-primary dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-            Community
-          </Text>
-        </TouchableOpacity>
+      {/* Normal Home dashboard */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}>
         
-        <TouchableOpacity 
-          className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'mine' ? 'bg-primary dark:bg-primary' : 'bg-transparent'}`} 
-          onPress={() => setFilterMode('mine')}
-        >
-          <Text className={`font-sans font-bold ${filterMode === 'mine' ? 'text-on-primary dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-            My Tasks
+        {/* HEADER */}
+        <View className="pt-6 pb-8">
+          <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>Home</Text>
+          <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
+            {getGreeting()}, {userProfile?.username || 'Neighbor'}!
           </Text>
-        </TouchableOpacity>
+        </View>
 
-        {userProfile?.is_admin && (
+        {/* ACTIVE TASK BANNER */}
+        {activeTask && (
           <TouchableOpacity 
-            className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'reports' ? 'bg-error dark:bg-error' : 'bg-transparent'}`} 
-            onPress={() => setFilterMode('reports')}
+            activeOpacity={0.8}
+            onPress={() => router.push({
+              pathname: '/task-details',
+              params: {
+                id: activeTask.id,
+                title: activeTask.title,
+                description: activeTask.description,
+                category: activeTask.category,
+                status: activeTask.status,
+                user_id: activeTask.user_id,
+                helper_id: activeTask.helper_id,
+                private_contact_info: activeTask.private_contact_info || '',
+              }
+            })}
+            className="bg-surface border-2 border-primary dark:border-senior p-4 rounded-2xl dark:rounded-senior mb-8 flex-row items-center shadow-sm dark:shadow-none"
           >
-            <Text className={`font-sans font-bold ${filterMode === 'reports' ? 'text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-              🚩 Review
-            </Text>
+            <View className={`p-3 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-primary/10 border-primary/20'}`}>
+              <BellRing color={primaryIconColor} size={isSeniorMode ? 28 : 24} />
+            </View>
+            <View className="flex-1 mr-2">
+              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
+                Active Task
+              </Text>
+              <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`} numberOfLines={1}>
+                {activeTask.title}
+              </Text>
+            </View>
+            <ChevronRight color={mutedIconColor} size={isSeniorMode ? 28 : 24} />
           </TouchableOpacity>
         )}
-      </View>
 
-      {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={primaryIconColor} />
+        {/* LOGO SECTION */}
+        <View className="items-center justify-center py-6 mb-8 bg-surface rounded-3xl dark:rounded-senior border border-border dark:border-senior dark:border-border shadow-sm dark:shadow-none">
+          <View className="bg-primary/10 p-6 rounded-full mb-4 border border-primary/20">
+            <HeartHandshake color={primaryIconColor} size={isSeniorMode ? 64 : 56} />
+          </View>
+          <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-2xl' : 'text-2xl'}`}>LocalConnect</Text>
+          <Text className={`text-text-muted font-sans mt-2 text-center px-4 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
+            Stronger together, one task at a time.
+          </Text>
         </View>
-      ) : (
-        <FlatList
-          data={sortedTasks}
-          keyExtractor={(item) => item.id}
-          renderItem={renderTask}
-          ListHeaderComponent={filterMode === 'mine' ? renderPendingReviews : null}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
-              onRefresh={onRefresh} 
-              tintColor={primaryIconColor}
-              colors={[primaryIconColor]}
-            />
-          }
-          ListEmptyComponent={
-            <View className="items-center justify-center py-16">
-              <MapPin color={mutedIconColor} size={isSeniorMode ? 56 : 48} className="mb-6 opacity-50" />
-              <Text className={`text-text font-sans font-bold text-center mb-3 ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>
-                {filterMode === 'mine' ? "You have no open tasks" : "No community tasks found"}
-              </Text>
-              <Text className={`text-text-muted font-sans text-center px-6 ${isSeniorMode ? 'text-base leading-6' : 'text-base leading-6'}`}>
-                {filterMode === 'mine' 
-                  ? "Tap the '+' tab to ask your neighborhood for help!" 
-                  : "Check back later or ask for help yourself!"}
-              </Text>
-            </View>
-          }
-        />
-      )}
 
-      {/* THE FLOATING CHAT BUTTON */}
-      <TouchableOpacity 
-        className={`absolute bottom-6 right-6 rounded-full items-center justify-center shadow-xl ${
-          isSeniorMode ? 'bg-primary w-16 h-16' : 'bg-primary w-16 h-16 border-[3px] border-background'
-        }`}
-        onPress={() => router.push('/chat')}
-        activeOpacity={0.8}
-      >
-        <MessageCircle color="#FFFFFF" size={isSeniorMode ? 32 : 28} />
-      </TouchableOpacity>
-      
+        {/* QUICK ACCESS GRID */}
+        <Text className={`font-sans font-bold text-text mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Quick Access</Text>
+        <View className="flex-row flex-wrap justify-between mb-8">
+          <QuickAccessButton title="Feed" icon={LayoutList} route="/feed" color={primaryIconColor} />
+          <QuickAccessButton title="Map" icon={MapIcon} route="/map" color={isSeniorMode ? Colors.dark.success : "#10B981"} />
+          <QuickAccessButton title="Ask for Help" icon={PlusCircle} route="/add" color={isSeniorMode ? Colors.dark.primary : "#3B82F6"} />
+          <QuickAccessButton title="Profile" icon={User} route="/profile" color={isSeniorMode ? Colors.dark.secondary : "#F59E0B"} />
+        </View>
+
+        {/* RECENT ACTIVITY SECTION */}
+        <Text className={`font-sans font-bold text-text mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Recent Activity</Text>
+        <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4">
+          <View className="flex-row items-center flex-1">
+            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-[#D1FAE5] border-[#059669]'}`}>
+              <CheckCircle color={isSeniorMode ? Colors.dark.success : "#059669"} size={isSeniorMode ? 28 : 24} />
+            </View>
+            <View>
+              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-lg' : 'text-lg'}`}>Tasks Completed</Text>
+              <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Helped your neighborhood</Text>
+            </View>
+          </View>
+          {loadingActivity ? (
+            <ActivityIndicator color={primaryIconColor} />
+          ) : (
+            <Text className={`font-sans font-bold ${isSeniorMode ? 'text-success text-3xl' : 'text-success text-3xl'}`}>{completedTasksCount}</Text>
+          )}
+        </View>
+
+        <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-8">
+          <View className="flex-row items-center flex-1">
+            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-secondary border-[#D97706]'}`}>
+              <Award color={isSeniorMode ? Colors.dark.secondary : "#D97706"} size={isSeniorMode ? 28 : 24} />
+            </View>
+            <View>
+              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-lg' : 'text-lg'}`}>Total Karma</Text>
+              <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Community trust points</Text>
+            </View>
+          </View>
+          <Text className={`font-sans font-bold text-secondary ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>{userProfile?.karma_points || 0}</Text>
+        </View>
+
+      </ScrollView>
     </SafeAreaView>
   );
 }
