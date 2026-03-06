@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { AuthError } from "@supabase/supabase-js";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -28,12 +28,17 @@ import Colors from "@/constants/Colors";
  */
 export default function SignupScreen() {
   const router = useRouter();
+
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   // Add local state to track visibility
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
   // Zustand state for conditional non-Tailwind styling (like icons)
   const isSeniorMode = useAppStore((state) => state.isSeniorMode);
@@ -43,8 +48,14 @@ export default function SignupScreen() {
   const placeholderColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
 
   async function handleSignup() {
-    if (!email || !password) {
-      showAlert("Missing Fields", "Please enter both email and password.");
+    if (!email || !password || !confirmPassword) {
+      showAlert("Missing Fields", "Please fill out all fields.");
+      return;
+    }
+
+    // Validation for matching passwords
+    if (password !== confirmPassword) {
+      showAlert("Passwords Don't Match", "Please make sure your passwords match perfectly.");
       return;
     }
 
@@ -93,18 +104,21 @@ export default function SignupScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
         className="flex-1"
       >
         <ScrollView
+        ref={scrollViewRef}
           contentContainerStyle={{
             flexGrow: 1,
             paddingHorizontal: 24,
             paddingTop: 80,
-            paddingBottom: 40,
+            paddingBottom: 300,
           }}
           keyboardShouldPersistTaps="handled"
           bounces={false}
           showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={true}
         >
           {/* HEADER ANIMATION */}
           <Animated.View 
@@ -122,7 +136,7 @@ export default function SignupScreen() {
           {/* EMAIL INPUT ANIMATION */}
           <Animated.View 
             entering={FadeInDown.delay(100).duration(600).springify()} 
-            className="mb-4"
+            className="mb-6"
           >
             <Text className="text-text font-sans text-sm mb-2 font-semibold dark:text-lg">
               Email
@@ -144,7 +158,7 @@ export default function SignupScreen() {
           {/* PASSWORD INPUT ANIMATION */}
           <Animated.View 
             entering={FadeInDown.delay(200).duration(600).springify()} 
-            className="mb-8"
+            className="mb-6"
           >
             <Text className="text-text font-sans text-sm mb-2 font-semibold dark:text-lg">
               Password
@@ -158,6 +172,11 @@ export default function SignupScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
+                onFocus={() => {
+                  setTimeout(() => {
+                    scrollViewRef.current?.scrollTo({ y: 200, animated: true });
+                  }, 100);
+                }}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -173,8 +192,46 @@ export default function SignupScreen() {
             </View>
           </Animated.View>
 
+          {/* CONFIRM PASSWORD INPUT ANIMATION */}
+          <Animated.View 
+            entering={FadeInDown.delay(300).duration(600).springify()} 
+            className="mb-10"
+          >
+            <Text className="text-text font-sans text-sm mb-2 font-semibold dark:text-lg">
+              Confirm Password
+            </Text>
+            <View className="flex-row items-center bg-surface border border-surface-highlight dark:border-senior dark:border-border rounded-xl dark:rounded-senior px-4 py-3 dark:py-4">
+              <Lock color={iconColor} size={isSeniorMode ? 26 : 20} className="mr-3" />
+              <TextInput
+                className="flex-1 ml-2 text-text font-sans text-base dark:text-lg"
+                placeholder="Repeat your password"
+                placeholderTextColor={placeholderColor}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                onFocus={() => {
+                  setTimeout(() => {
+                    // Push up by 300 pixels (forces it way up into the middle of the screen)
+                    scrollViewRef.current?.scrollTo({ y: 300, animated: true });
+                  }, 100);
+                }}
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="p-1 ml-2"
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff color={iconColor} size={isSeniorMode ? 26 : 20} />
+                ) : (
+                  <Eye color={iconColor} size={isSeniorMode ? 26 : 20} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
           {/* SIGNUP BUTTON ANIMATION */}
-          <Animated.View entering={FadeInDown.delay(300).duration(600).springify()}>
+          <Animated.View entering={FadeInDown.delay(400).duration(600).springify()}>
             <TouchableOpacity
               className="bg-secondary py-4 dark:py-5 rounded-xl dark:rounded-senior items-center flex-row justify-center mb-4"
               onPress={handleSignup}
