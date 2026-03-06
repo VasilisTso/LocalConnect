@@ -79,7 +79,7 @@ export default function LoginScreen() {
             flexGrow: 1,
             paddingHorizontal: 24,
             paddingTop: 80,
-            paddingBottom: 40,
+            paddingBottom: 300,
           }}
           keyboardShouldPersistTaps="handled"
           bounces={false}

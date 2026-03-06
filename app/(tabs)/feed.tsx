@@ -6,9 +6,6 @@ import {
   TouchableOpacity, 
   ActivityIndicator, 
   RefreshControl,
-  Modal,
-  ScrollView,
-  TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award, Footprints, Car } from 'lucide-react-native';
@@ -72,11 +69,6 @@ export default function FeedScreen() {
   // State to toggle between Community Feed and My Tasks
   const [filterMode, setFilterMode] = useState<'community' | 'mine' | 'reports'>('community');
   const [reportedTaskIds, setReportedTaskIds] = useState<string[]>([]);
-
-  const AVAILABLE_TAGS = [
-    "Pets", "Education", "Tools", "Errands", "Tech", 
-    "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"
-  ];
 
   const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
   const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
@@ -433,7 +425,7 @@ export default function FeedScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="px-6 pt-6 pb-4">
-        {/* Cool Mod Badge next to the title */}
+        {/* Mod Badge next to the title */}
         <View className="flex-row items-center justify-between mb-2">
           <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>Neighborhood</Text>
           {userProfile?.is_admin && (
