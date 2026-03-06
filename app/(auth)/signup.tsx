@@ -77,6 +77,7 @@ export default function SignupScreen() {
             transport_mode: "walking", // Default mode
             tags: [], // Empty default tags
             karma_points: 0,
+            onboarding_completed: false,
           },
         ]);
 

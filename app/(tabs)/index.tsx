@@ -67,9 +67,23 @@ export default function HomeScreen() {
 
   // Fetch profile data(senior mode, karma, etc)
   useEffect(() => {
-    if (session?.user?.id) {
-      fetchUserProfile(session.user.id);
-    }
+    if (!session?.user?.id) return;
+
+    let retryCount = 0;
+    const maxRetries = 5;
+
+    const loadProfileWithRetry = async () => {
+      await fetchUserProfile(session.user.id);
+      
+      const currentProfile = useAppStore.getState().userProfile;
+
+      if (!currentProfile && retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(loadProfileWithRetry, 1000);
+      }
+    };
+
+    loadProfileWithRetry();
   }, [session?.user?.id]);
 
   // Fetch the user's completed tasks count for the Recent Activity section
