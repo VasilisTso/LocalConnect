@@ -2,12 +2,12 @@ import { Tabs, useRouter } from 'expo-router';
 import { Home, Map as MapIcon, PlusCircle, User } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { useEffect } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import Colors from '@/constants/Colors';
 
 export default function TabLayout() {
-  const { isSeniorMode, session } = useAppStore();
+  const { isSeniorMode, session, showAlert } = useAppStore();
   const router = useRouter();
 
   // Real-Time WebSocket Listener
@@ -30,7 +30,7 @@ export default function TabLayout() {
         (payload) => {
           // If the status just changed to 'pending', it means someone offered to help
           if (payload.new.status === 'pending') {
-            Alert.alert(
+            showAlert(
               "A Neighbor Wants to Help!",
               `Someone just offered to help with: "${payload.new.title}". Go to your Feed to accept or decline.`,
               [
@@ -56,7 +56,7 @@ export default function TabLayout() {
         },
         (payload) => {
           if (payload.new.status === 'in_progress') {
-            Alert.alert(
+            showAlert(
               "Offer Accepted!",
               `The owner accepted your help for: "${payload.new.title}". You can now view their private contact instructions!`,
               [

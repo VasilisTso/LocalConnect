@@ -39,7 +39,7 @@ export default function AdaptiveAlert() {
             {alertState.message}
           </Text>
 
-          <View className={`flex-row justify-end gap-3 ${isSeniorMode ? 'flex-col-reverse' : ''}`}>
+          <View className={`w-full mt-2 gap-3 ${isSeniorMode ? 'flex-col-reverse' : 'flex-row justify-end'}`}>
             {alertState.buttons.map((button, index) => {
               const isCancel = button.style === 'cancel';
               const isDestruct = button.style === 'destructive';
@@ -65,8 +65,8 @@ export default function AdaptiveAlert() {
                   }}
                   className={`px-5 py-3 dark:py-4 rounded-xl dark:rounded-senior items-center justify-center ${
                     isSeniorMode && !isCancel ? 'border-2 dark:border-senior dark:border-border' : ''
-                  } ${buttonClass}`}
-                  style={isSeniorMode ? { width: '100%' } : { minWidth: 100 }}
+                  } ${buttonClass} ${isSeniorMode ? 'w-full' : ''}`}
+                  style={!isSeniorMode ? { minWidth: 100 } : undefined}
                 >
                   <Text className={`font-sans font-bold text-center ${textClass} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
                     {button.text}
