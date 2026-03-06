@@ -6,7 +6,6 @@ import { Lock, Navigation, PlusCircle } from "lucide-react-native";
 import React, { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -54,7 +53,7 @@ const NEIGHBORHOODS = [
  */
 export default function AddTaskScreen() {
   const router = useRouter();
-  const { session, isSeniorMode } = useAppStore();
+  const { session, isSeniorMode, showAlert } = useAppStore();
 
   // Ref to control the ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
@@ -94,7 +93,7 @@ export default function AddTaskScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert(
+        showAlert(
           "Permission Denied",
           "Please enable location services to use this feature.",
         );
@@ -114,7 +113,7 @@ export default function AddTaskScreen() {
       setFuzzedGps({ lat: safeLat, lon: safeLon });
       setSelectedHood(""); // Deselect the hardcoded neighborhoods
     } catch (error) {
-      Alert.alert("Error", "Could not determine your location.");
+      showAlert("Error", "Could not determine your location.");
     } finally {
       setGettingLocation(false);
     }
@@ -124,12 +123,12 @@ export default function AddTaskScreen() {
     Keyboard.dismiss();
 
     if (!title.trim() || !description.trim()) {
-      Alert.alert("Missing Info", "Please provide a title and description.");
+      showAlert("Missing Info", "Please provide a title and description.");
       return;
     }
 
     if (!session?.user?.id) {
-      Alert.alert(
+      showAlert(
         "Authentication Error",
         "You must be logged in to create a task.",
       );
@@ -152,7 +151,7 @@ export default function AddTaskScreen() {
     }
 
     if (!finalLat || !finalLon) {
-      Alert.alert("Location Error", "Please select a location for this task.");
+      showAlert("Location Error", "Please select a location for this task.");
       return;
     }
 
@@ -175,7 +174,7 @@ export default function AddTaskScreen() {
 
       if (error) throw error;
 
-      Alert.alert("Success!", "Your task has been posted to the neighborhood.");
+      showAlert("Success!", "Your task has been posted to the neighborhood.");
 
       // Reset form
       setTitle("");
@@ -185,7 +184,7 @@ export default function AddTaskScreen() {
       // Route user back to the feed to see their new post
       router.replace("/(tabs)");
     } catch (error: any) {
-      Alert.alert(
+      showAlert(
         "Error Creating Task",
         error.message || "Something went wrong.",
       );

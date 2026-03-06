@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
@@ -10,7 +10,7 @@ import Colors from '@/constants/Colors';
 
 export default function ReviewModal() {
   const router = useRouter();
-  const { session, isSeniorMode } = useAppStore();
+  const { session, isSeniorMode, showAlert } = useAppStore();
   
   // Grab the IDs passed from the Feed
   const { taskId, helperId, taskTitle } = useLocalSearchParams<{ 
@@ -27,7 +27,7 @@ export default function ReviewModal() {
 
   async function handleSubmitReview() {
     if (rating === 0) {
-      Alert.alert('Missing Rating', 'Please select a star rating first.');
+      showAlert('Missing Rating', 'Please select a star rating first.');
       return;
     }
 
@@ -42,10 +42,10 @@ export default function ReviewModal() {
 
       if (error) throw error;
 
-      Alert.alert('Review Submitted!', 'Thank you for keeping our community safe and trustworthy.');
+      showAlert('Review Submitted!', 'Thank you for keeping our community safe and trustworthy.');
       router.back(); // Close modal
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      showAlert('Error', error.message);
     } finally {
       setSubmitting(false);
     }

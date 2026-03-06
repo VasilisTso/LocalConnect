@@ -5,7 +5,6 @@ import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -38,13 +37,14 @@ export default function SignupScreen() {
 
   // Zustand state for conditional non-Tailwind styling (like icons)
   const isSeniorMode = useAppStore((state) => state.isSeniorMode);
+  const showAlert = useAppStore((state) => state.showAlert);
   // Using secondary color for icons to match title and button of signup page
   const iconColor = isSeniorMode ? Colors.dark.secondary : Colors.light.secondary;
   const placeholderColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
 
   async function handleSignup() {
     if (!email || !password) {
-      Alert.alert("Missing Fields", "Please enter both email and password.");
+      showAlert("Missing Fields", "Please enter both email and password.");
       return;
     }
 
@@ -76,11 +76,11 @@ export default function SignupScreen() {
         }
       }
 
-      Alert.alert("Success!", "Your account has been created.");
+      showAlert("Success!", "Your account has been created.");
       // Router will automatically redirect to /(tabs) via RootLayout listener
     } catch (error) {
       const authError = error as AuthError;
-      Alert.alert(
+      showAlert(
         "Signup Failed",
         authError.message || "An unexpected error occurred.",
       );

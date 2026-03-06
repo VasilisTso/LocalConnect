@@ -6,7 +6,6 @@ import {
   TouchableOpacity, 
   ActivityIndicator, 
   RefreshControl,
-  Alert,
   Modal,
   ScrollView,
   TextInput
@@ -62,7 +61,7 @@ interface PendingReviewTask extends Task {
 export default function FeedScreen() {
   const router = useRouter();
   // Pull in userProfile and fetchUserProfile to check for Admin status
-  const { session, isSeniorMode, userProfile, fetchUserProfile, setUserProfile } = useAppStore();
+  const { session, isSeniorMode, userProfile, fetchUserProfile, setUserProfile, showAlert } = useAppStore();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [pendingReviews, setPendingReviews] = useState<PendingReviewTask[]>([]);
@@ -203,7 +202,7 @@ export default function FeedScreen() {
       setPendingReviews(needsReview as PendingReviewTask[]);
 
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      showAlert('Error', error.message);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -258,7 +257,7 @@ export default function FeedScreen() {
 
   // Remove a task
   async function handleDeleteTask(taskId: string) {
-    Alert.alert('Delete Task', 'Are you sure you want to remove this request?', [
+    showAlert('Delete Task', 'Are you sure you want to remove this request?', [
       { text: 'Cancel', style: 'cancel' },
       { 
         text: 'Delete', 
@@ -278,7 +277,7 @@ export default function FeedScreen() {
             // If it was a reported task, instantly remove it from the list
             setReportedTaskIds(prev => prev.filter(id => id !== taskId));
           } catch (error: any) {
-            Alert.alert('Error deleting task', error.message);
+            showAlert('Error deleting task', error.message);
           }
         }
       }
@@ -291,7 +290,7 @@ export default function FeedScreen() {
 
     // Force them to pick a name
     if (!onboardingUsername.trim()) {
-      Alert.alert("Missing Name", "Please enter a username or first name to continue.");
+      showAlert("Missing Name", "Please enter a username or first name to continue.");
       return;
     }
 
@@ -309,7 +308,7 @@ export default function FeedScreen() {
       .eq('id', session.user.id);
 
     if (error) {
-      Alert.alert("Error saving profile", error.message);
+      showAlert("Error saving profile", error.message);
       setSavingOnboarding(false);
       return;
     }

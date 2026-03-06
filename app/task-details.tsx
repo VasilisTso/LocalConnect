@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -19,7 +19,7 @@ function getBadge(karma: number) {
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
-  const { session, isSeniorMode } = useAppStore();
+  const { session, isSeniorMode, showAlert } = useAppStore();
   const [loading, setLoading] = useState(false);
 
   // State to hold the human-readable location name
@@ -106,7 +106,7 @@ export default function TaskDetailsScreen() {
 
   // ACTION 1: A Helper offers help (Changes status from open -> pending)
   async function handleOfferHelp() {
-    Alert.alert(
+    showAlert(
       'Offer Help', 
       'This will notify the owner. If they accept, they will share their private contact info with you.', 
       [
@@ -124,10 +124,10 @@ export default function TaskDetailsScreen() {
               });
 
               if (error) throw error;
-              Alert.alert('Offer Sent!', 'The owner has been notified. Check back later!');
+              showAlert('Offer Sent!', 'The owner has been notified. Check back later!');
               router.back(); 
             } catch (error: any) {
-              Alert.alert('Error', error.message);
+              showAlert('Error', error.message);
             } finally {
               setLoading(false);
             }
@@ -146,10 +146,10 @@ export default function TaskDetailsScreen() {
         .update({ status: 'in_progress' })
         .eq('id', taskId);
       if (error) throw error;
-      Alert.alert('Accepted!', 'The helper can now see your private contact info.');
+      showAlert('Accepted!', 'The helper can now see your private contact info.');
       router.back();
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      showAlert('Error', error.message);
     } finally {
       setLoading(false);
     }
@@ -164,10 +164,10 @@ export default function TaskDetailsScreen() {
         .update({ status: 'open', helper_id: null })
         .eq('id', taskId);
       if (error) throw error;
-      Alert.alert('Declined', 'Task has been put back on the public feed.');
+      showAlert('Declined', 'Task has been put back on the public feed.');
       router.back();
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      showAlert('Error', error.message);
     } finally {
       setLoading(false);
     }
@@ -182,10 +182,10 @@ export default function TaskDetailsScreen() {
         helper_id: session?.user?.id
       });
       if (error) throw error;
-      Alert.alert('Thank you!', 'You earned 10 Karma Points for helping your neighborhood.');
+      showAlert('Thank you!', 'You earned 10 Karma Points for helping your neighborhood.');
       router.back(); 
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      showAlert('Error', error.message);
     } finally {
       setLoading(false);
     }
@@ -193,7 +193,7 @@ export default function TaskDetailsScreen() {
 
   // for the report system of a task
   async function handleReportTask() {
-    Alert.alert(
+    showAlert(
       'Report Task',
       'Does this task contain spam, inappropriate content, or violate community guidelines?',
       [
@@ -211,14 +211,14 @@ export default function TaskDetailsScreen() {
 
               // If it's a unique constraint error, it means they already reported it
               if (error && error.code === '23505') {
-                Alert.alert('Already Reported', 'You have already flagged this task for admin review.');
+                showAlert('Already Reported', 'You have already flagged this task for admin review.');
               } else if (error) {
                 throw error;
               } else {
-                Alert.alert('Report Sent', 'Thank you for keeping the neighborhood safe. An admin will review this shortly.');
+                showAlert('Report Sent', 'Thank you for keeping the neighborhood safe. An admin will review this shortly.');
               }
             } catch (error: any) {
-              Alert.alert('Error', error.message);
+              showAlert('Error', error.message);
             } finally {
               setLoading(false);
             }

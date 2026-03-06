@@ -11,7 +11,6 @@ import {
   Text, 
   TextInput, 
   TouchableOpacity, 
-  Alert, 
   KeyboardAvoidingView, 
   Platform, 
   ScrollView,
@@ -35,7 +34,7 @@ export default function EditTaskModal() {
   const router = useRouter();
   // Grab the taskId that was passed from the Feed Screen
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
-  const { session, isSeniorMode } = useAppStore();
+  const { session, isSeniorMode, showAlert } = useAppStore();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -68,7 +67,7 @@ export default function EditTaskModal() {
           setPrivateInfo(data.private_contact_info || '');
         }
       } catch (error: any) {
-        Alert.alert('Error', 'Could not load task details.');
+        showAlert('Error', 'Could not load task details.');
         router.back(); // Close modal on error
       } finally {
         setLoading(false);
@@ -83,7 +82,7 @@ export default function EditTaskModal() {
     Keyboard.dismiss();
 
     if (!title.trim() || !description.trim()) {
-      Alert.alert('Missing Info', 'Please provide a title and description.');
+      showAlert('Missing Info', 'Please provide a title and description.');
       return;
     }
 
@@ -103,11 +102,11 @@ export default function EditTaskModal() {
 
       if (error) throw error;
 
-      Alert.alert('Success!', 'Your task has been updated.');
+      showAlert('Success!', 'Your task has been updated.');
       router.back(); // Close the modal and return to feed
       
     } catch (error: any) {
-      Alert.alert('Error Updating Task', error.message);
+      showAlert('Error Updating Task', error.message);
     } finally {
       setSaving(false);
     }

@@ -5,7 +5,6 @@ import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -38,12 +37,13 @@ export default function LoginScreen() {
   // We need the Zustand state to pass raw hex colors to non-Tailwind elements 
   // like the Lucide Icons and TextInput placeholders.
   const isSeniorMode = useAppStore((state) => state.isSeniorMode);
+  const showAlert = useAppStore((state) => state.showAlert);
   const iconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
   const placeholderColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
 
   async function handleLogin() {
     if (!email || !password) {
-      Alert.alert("Missing Fields", "Please enter both email and password.");
+      showAlert("Missing Fields", "Please enter both email and password.");
       return;
     }
 
@@ -59,7 +59,7 @@ export default function LoginScreen() {
       // no need to manually route to /(tabs) here because our RootLayout listener will automatically detect the session and redirect!
     } catch (error) {
       const authError = error as AuthError;
-      Alert.alert(
+      showAlert(
         "Login Failed",
         authError.message || "An unexpected error occurred.",
       );

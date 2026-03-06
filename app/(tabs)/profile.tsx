@@ -4,7 +4,6 @@ import {
   Text, 
   Switch, 
   TouchableOpacity, 
-  Alert, 
   ScrollView, 
   ActivityIndicator,
   Image
@@ -36,7 +35,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   
   // Pull our global state and actions from Zustand
-  const { session, isSeniorMode, toggleSeniorMode, userProfile, fetchUserProfile } = useAppStore();
+  const { session, isSeniorMode, toggleSeniorMode, userProfile, fetchUserProfile, showAlert } = useAppStore();
   
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -129,7 +128,7 @@ export default function ProfileScreen() {
       }
       
     } catch (error: any) {
-      Alert.alert("Upload Error", error.message);
+      showAlert("Upload Error", error.message);
     } finally {
       setUploadingImage(false);
     }
@@ -153,7 +152,7 @@ export default function ProfileScreen() {
       .eq('id', session.user.id);
 
     if (error) {
-      Alert.alert('Error updating tags', error.message);
+      showAlert('Error updating tags', error.message);
     }
   }
 
@@ -169,7 +168,7 @@ export default function ProfileScreen() {
       .eq('id', session.user.id);
 
     if (error) {
-      Alert.alert('Error updating transport mode', error.message);
+      showAlert('Error updating transport mode', error.message);
     }
   }
 
@@ -178,7 +177,7 @@ export default function ProfileScreen() {
     setLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) {
-      Alert.alert('Error signing out', error.message);
+      showAlert('Error signing out', error.message);
     }
     setLoading(false);
     // layout.tsx listener will automatically detect the sign out and route to login
@@ -199,7 +198,7 @@ export default function ProfileScreen() {
       // If the database fails (e.g., lost internet), revert the UI and warn them
       if (error) {
         toggleSeniorMode(); // Revert back
-        Alert.alert('Network Error', 'Could not save your accessibility settings. Please check your connection.');
+        showAlert('Network Error', 'Could not save your accessibility settings. Please check your connection.');
       }
     }
   }

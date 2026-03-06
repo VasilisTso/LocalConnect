@@ -19,6 +19,8 @@ import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/store/useAppStore";
 import Colors from "@/constants/Colors";
 
+import AdaptiveAlert from '@/components/AdaptiveAlert';
+
 import "../globals.css";
 
 export { ErrorBoundary } from "expo-router";
@@ -195,6 +197,9 @@ function RootLayoutNav() {
             </Stack>
           </View>
         </View>
+
+        <AdaptiveAlert />
+
       </ThemeProvider>
     </SafeAreaProvider>
   );

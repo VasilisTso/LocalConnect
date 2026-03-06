@@ -6,7 +6,6 @@ import { LocateFixed, Map as MapIcon } from "lucide-react-native";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -119,7 +118,7 @@ const darkMapStyle = [
 export default function MapScreen() {
   const router = useRouter();
   // session so we can use the Smart RPC
-  const { isSeniorMode, session } = useAppStore();
+  const { isSeniorMode, session, showAlert } = useAppStore();
 
   // State now holds clusters instead of individual tasks
   const [clusters, setClusters] = useState<LocationCluster[]>([]);
@@ -211,7 +210,7 @@ export default function MapScreen() {
       setClusters(Object.values(grouped));
     } catch (error) {
       const err = error as Error;
-      Alert.alert("Map Error", err.message);
+      showAlert("Map Error", err.message);
     } finally {
       setLoading(false);
     }
@@ -226,7 +225,7 @@ export default function MapScreen() {
 
   // When a user taps the callout bubble, we tell them to check the feed
   const handleMarkerPress = useCallback(() => {
-    Alert.alert(
+    showAlert(
       "Neighborhood Tasks",
       "Head over to your Smart Feed to view and accept these tasks!",
       [

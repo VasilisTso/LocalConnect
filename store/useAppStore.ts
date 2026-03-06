@@ -22,6 +22,20 @@ import { create } from 'zustand';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
+// Adaptive Alert Interfaces
+export interface AdaptiveAlertButton {
+  text: string;
+  style?: 'default' | 'cancel' | 'destructive';
+  onPress?: () => void;
+}
+
+export interface AdaptiveAlertState {
+  visible: boolean;
+  title: string;
+  message: string;
+  buttons: AdaptiveAlertButton[];
+}
+
 // Define the UserProfile type based on our Supabase schema
 export interface UserProfile {
   id: string;
@@ -45,7 +59,6 @@ interface AppState {
   // User Profile State (Crucial for Adaptivity and Admin features)
   userProfile: UserProfile | null;
   setUserProfile: (profile: UserProfile | null) => void;
-
   // A global function to securely fetch the user's profile and admin status
   fetchUserProfile: (userId: string) => Promise<void>;
 
@@ -53,6 +66,11 @@ interface AppState {
   isSeniorMode: boolean;
   toggleSeniorMode: () => void;
   setSeniorMode: (isActive: boolean) => void;
+
+  // Adaptive Alert State
+  alertState: AdaptiveAlertState;
+  showAlert: (title: string, message: string, buttons?: AdaptiveAlertButton[]) => void;
+  hideAlert: () => void;
 }
 
 // Create the Zustand store
@@ -84,4 +102,23 @@ export const useAppStore = create<AppState>((set) => ({
   isSeniorMode: false, 
   toggleSeniorMode: () => set((state) => ({ isSeniorMode: !state.isSeniorMode })),
   setSeniorMode: (isActive) => set({ isSeniorMode: isActive }),
+
+  // Adaptive Alert Actions
+  alertState: {
+    visible: false,
+    title: '',
+    message: '',
+    buttons: [],
+  },
+  showAlert: (title, message, buttons) => set({
+    alertState: {
+      visible: true,
+      title,
+      message,
+      buttons: buttons || [{ text: 'OK', style: 'default' }],
+    }
+  }),
+  hideAlert: () => set((state) => ({
+    alertState: { ...state.alertState, visible: false }
+  })),
 }));
