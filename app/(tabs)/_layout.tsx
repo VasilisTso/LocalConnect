@@ -32,10 +32,27 @@ export default function TabLayout() {
           if (payload.new.status === 'pending') {
             showAlert(
               "A Neighbor Wants to Help!",
-              `Someone just offered to help with: "${payload.new.title}". Go to your Feed to accept or decline.`,
+              `Someone just offered to help with: "${payload.new.title}". You can now accept or decline their offer.`,
               [
                 { text: "Dismiss", style: "cancel" },
-                { text: "Go to Feed", style: "default", onPress: () => router.push('/(tabs)') }
+                { 
+                  text: "View Task", // Updated text
+                  style: "default", 
+                  // Routes directly to the exact task details screen!
+                  onPress: () => router.push({ 
+                    pathname: '/task-details', 
+                    params: { 
+                      id: payload.new.id, 
+                      title: payload.new.title, 
+                      description: payload.new.description, 
+                      category: payload.new.category, 
+                      status: payload.new.status, 
+                      user_id: payload.new.user_id, 
+                      helper_id: payload.new.helper_id, 
+                      private_contact_info: payload.new.private_contact_info 
+                    }
+                  }) 
+                }
               ]
             );
           }
