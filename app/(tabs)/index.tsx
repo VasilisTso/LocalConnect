@@ -341,7 +341,7 @@ export default function HomeScreen() {
 
         {/* LOGO SECTION */}
         <View className="items-center justify-center py-6 mb-8 bg-surface rounded-3xl dark:rounded-senior border border-border dark:border-senior dark:border-border shadow-sm dark:shadow-none">
-          <View className="bg-primary/10 p-6 rounded-full mb-4 border border-primary/20">
+          <View className="bg-background p-6 rounded-full mb-4 border border-primary">
             <HeartHandshake color={primaryIconColor} size={isSeniorMode ? 64 : 56} />
           </View>
           <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-2xl' : 'text-2xl'}`}>LocalConnect</Text>
