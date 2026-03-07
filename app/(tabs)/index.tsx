@@ -38,6 +38,8 @@ interface ActiveTask {
   description: string;
   category: string;
   status: string;
+  created_at: string;
+  due_date?: string;
   user_id: string;
   helper_id: string;
   private_contact_info: string;
@@ -314,6 +316,8 @@ export default function HomeScreen() {
                 user_id: activeTask.user_id,
                 helper_id: activeTask.helper_id,
                 private_contact_info: activeTask.private_contact_info || '',
+                created_at: activeTask.created_at,
+                due_date: activeTask.due_date || '',
               }
             })}
             className="bg-surface border-2 border-primary dark:border-senior p-4 rounded-2xl dark:rounded-senior mb-8 flex-row items-center shadow-sm dark:shadow-none"

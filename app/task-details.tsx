@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
-import { ArrowLeft, HeartHandshake, MapPin, Shield, ShieldAlert, Tag, User as UserIcon, Award, CheckCircle, XCircle, Lock, Star, Flag } from 'lucide-react-native';
+import { ArrowLeft, HeartHandshake, MapPin, Shield, ShieldAlert, Tag, User as UserIcon, Award, CheckCircle, XCircle, Lock, Star, Flag, Clock, CalendarClock } from 'lucide-react-native';
 import * as Location from 'expo-location';
 
 import Colors from '@/constants/Colors';
@@ -15,6 +15,30 @@ function getBadge(karma: number) {
   if (karma < 50) return { title: 'New Neighbor', color: Colors.light.tabIconDefault, icon: UserIcon };
   if (karma < 150) return { title: 'Active Helper', color: Colors.light.primary, icon: Shield };
   return { title: 'Local Hero', color: Colors.light.secondary, icon: Award }; 
+}
+
+// Helper function to calculate Time Ago for 'created_at'
+function timeAgo(dateString: string) {
+  if (!dateString) return 'Unknown';
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.round((now.getTime() - date.getTime()) / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+
+  if (seconds < 60) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return `Yesterday`;
+  return `${days}d ago`;
+}
+
+// Helper function to beautifully format the Due Date
+function formatDueDate(dateString: string) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 export default function TaskDetailsScreen() {
@@ -36,6 +60,10 @@ export default function TaskDetailsScreen() {
   const category = params.category as string;
   const taskUserId = params.user_id as string;
 
+  // Grab the timestamps passed from the feed
+  const createdAt = params.created_at as string;
+  const dueDate = params.due_date as string;
+
   // URL params are strings, convert karma back to a number
   const creatorKarma = Number(params.creator_karma) || 0; 
 
@@ -53,6 +81,7 @@ export default function TaskDetailsScreen() {
 
   const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
   const errorIconColor = isSeniorMode ? Colors.dark.error : Colors.light.error;
+  const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
 
   // Translate the GPS into a safe, generic neighborhood name
   useEffect(() => {
@@ -254,13 +283,25 @@ export default function TaskDetailsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 180 }} showsVerticalScrollIndicator={false}>
-        {/* Title */}
-        <Text className={`text-text font-sans font-bold mb-5 ${isSeniorMode ? 'text-3xl leading-9' : 'text-3xl'}`}>
-          {title}
-        </Text>
+        {/* Title and Time Posted */}
+        <View className="flex-row justify-between items-start mb-6">
+          <Text className={`flex-1 text-text font-sans font-bold mr-4 ${isSeniorMode ? 'text-3xl leading-9' : 'text-3xl'}`}>
+            {title}
+          </Text>
+          
+          {/* Time Posted Chip moved up here */}
+          {createdAt && (
+            <View className="flex-row items-center bg-background px-3 py-1.5 rounded-full mt-1">
+              <Clock color={mutedIconColor} size={isSeniorMode ? 16 : 14} className="mr-1.5" />
+              <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-sm' : 'text-xs'}`}>
+                {timeAgo(createdAt)}
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* Metadata Chips */}
-        <View className="flex-col items-start gap-3 mb-8">
+        <View className="flex-col items-start gap-3 mb-8 w-full">
           
           {/* Trust Badge */}
           <View 
@@ -269,7 +310,7 @@ export default function TaskDetailsScreen() {
           >
             {React.createElement(badge.icon, { color: badge.color, size: isSeniorMode ? 20 : 16, className: "mr-2" })}
             <Text className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-base' : 'text-sm'}`} style={{ color: badge.color }}>
-              Posted by {badge.title}
+              By {badge.title}
             </Text>
           </View>
 
@@ -288,6 +329,17 @@ export default function TaskDetailsScreen() {
               {locationName}
             </Text>
           </View>
+
+          {/* Due Date Chip (Only shows if they selected a due date) */}
+          {dueDate && (
+            <View className="flex-row items-center justify-center w-full bg-background px-4 py-3 rounded-xl border border-secondary mt-2">
+              <CalendarClock color={Colors.light.secondary} size={isSeniorMode ? 24 : 20} className="mr-3" />
+              <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
+                Needed by: {formatDueDate(dueDate)}
+              </Text>
+            </View>
+          )}
+
         </View>
 
         {/* Description Section */}

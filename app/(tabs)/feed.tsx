@@ -25,6 +25,7 @@ interface Task {
   category: string;
   status: string;
   created_at: string;
+  due_date?: string;
   creator_karma?: number;
   // Note: PostGIS location comes back as a WKB/GeoJSON or string depending on the query, 
   // but for the UI list, we primarily rely on the category and title.
@@ -254,6 +255,8 @@ export default function FeedScreen() {
         status: task.status,
         helper_id: task.helper_id || '',
         private_contact_info: task.private_contact_info || '',
+        created_at: task.created_at,
+        due_date: task.due_date ? task.due_date : '',
       }
     });
   }
