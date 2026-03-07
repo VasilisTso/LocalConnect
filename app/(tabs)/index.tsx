@@ -24,7 +24,8 @@ import {
   BellRing,
   ChevronRight,
   Eye, 
-  MessageCircle
+  MessageCircle,
+  Star,
 } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/lib/supabase';
@@ -48,6 +49,7 @@ export default function HomeScreen() {
 
   const [completedTasksCount, setCompletedTasksCount] = useState(0);
   const [activeTask, setActiveTask] = useState<ActiveTask | null>(null);
+  const [averageRating, setAverageRating] = useState<string | null>(null);
   const [loadingActivity, setLoadingActivity] = useState(true);
 
   // Onboarding State
@@ -120,6 +122,20 @@ export default function HomeScreen() {
             setActiveTask(activeData[0] as ActiveTask);
           } else {
             setActiveTask(null);
+          }
+
+          // Fetch Average Rating from Reviews Table
+          const { data: reviewsData, error: reviewsError } = await supabase
+            .from('reviews')
+            .select('rating')
+            .eq('reviewee_id', session.user.id);
+
+          if (!reviewsError && reviewsData && reviewsData.length > 0) {
+            const sum = reviewsData.reduce((acc, curr) => acc + (curr.rating || 0), 0);
+            const avg = sum / reviewsData.length;
+            setAverageRating(avg.toFixed(1)); // eg 4.8
+          } else {
+            setAverageRating(null); // null for no user reviews
           }
 
         } catch (error) {
@@ -358,7 +374,8 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-8">
+        {/* KARMA POINTS */}
+        <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4">
           <View className="flex-row items-center flex-1">
             <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-secondary border-[#D97706]'}`}>
               <Award color={isSeniorMode ? Colors.dark.secondary : "#D97706"} size={isSeniorMode ? 28 : 24} />
@@ -369,6 +386,28 @@ export default function HomeScreen() {
             </View>
           </View>
           <Text className={`font-sans font-bold text-secondary ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>{userProfile?.karma_points || 0}</Text>
+        </View>
+
+        {/* AVERAGE RATING */}
+        <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-8">
+          <View className="flex-row items-center flex-1">
+            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-primary/10 border-primary/30'}`}>
+              <Star color={primaryIconColor} size={isSeniorMode ? 28 : 24} />
+            </View>
+            <View>
+              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-lg' : 'text-lg'}`}>Average Rating</Text>
+              <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Based on neighbor reviews</Text>
+            </View>
+          </View>
+          {loadingActivity ? (
+            <ActivityIndicator color={primaryIconColor} />
+          ) : averageRating ? (
+            <View className="flex-row items-center">
+              <Text className={`font-sans font-bold text-primary ml-1 ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>{averageRating}</Text>
+            </View>
+          ) : (
+            <Text className={`font-sans font-bold text-text-muted ${isSeniorMode ? 'text-lg' : 'text-base'}`}>No reviews yet</Text>
+          )}
         </View>
       </ScrollView>
 
@@ -382,7 +421,7 @@ export default function HomeScreen() {
       >
         <MessageCircle color="#FFFFFF" size={isSeniorMode ? 32 : 28} />
       </TouchableOpacity>
-      
+
     </SafeAreaView>
   );
 }
