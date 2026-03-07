@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/store/useAppStore";
 import * as Location from "expo-location";
 import { useFocusEffect, useRouter } from "expo-router";
-import { Lock, Navigation, PlusCircle } from "lucide-react-native";
+import { Lock, Navigation, PlusCircle, CalendarClock } from "lucide-react-native";
 import React, { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 import Colors from "@/constants/Colors";
 
@@ -62,6 +63,8 @@ export default function AddTaskScreen() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
 
+  const [dueDate, setDueDate] = useState<Date | null>(null);
+
   // Secure Handshake State
   const [privateInfo, setPrivateInfo] = useState("");
 
@@ -86,6 +89,29 @@ export default function AddTaskScreen() {
       scrollViewRef.current?.scrollTo({ y: 0, animated: false });
     }, []),
   );
+
+  // Android Native Date 
+  const showAndroidPicker = () => {
+    DateTimePickerAndroid.open({
+      value: dueDate || new Date(),
+      mode: 'date',
+      minimumDate: new Date(),
+      onChange: (event, selectedDate) => {
+        if (event.type === 'set' && selectedDate) {
+          // If they picked a date, immediately ask for the time
+          DateTimePickerAndroid.open({
+            value: selectedDate,
+            mode: 'time',
+            onChange: (timeEvent, selectedTime) => {
+              if (timeEvent.type === 'set' && selectedTime) {
+                setDueDate(selectedTime); // Save the final combined Date & Time
+              }
+            }
+          });
+        }
+      },
+    });
+  };
 
   // The Privacy-Preserving GPS Function
   async function handleUseMyLocation() {
@@ -169,6 +195,7 @@ export default function AddTaskScreen() {
           location: locationString,
           status: "open",
           private_contact_info: privateInfo.trim(),
+          due_date: dueDate ? dueDate.toISOString() : null,
         },
       ]);
 
@@ -180,6 +207,7 @@ export default function AddTaskScreen() {
       setTitle("");
       setDescription("");
       setPrivateInfo("");
+      setDueDate(null);
 
       // Route user back to the feed to see their new post
       router.replace("/(tabs)");
@@ -345,6 +373,48 @@ export default function AddTaskScreen() {
                   </TouchableOpacity>
                 );
               })}
+            </View>
+          </View>
+
+          {/* Date & Time Picker Panel */}
+          <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-senior">
+            <View className="flex-row items-center mb-2">
+              <CalendarClock color={primaryIconColor} size={isSeniorMode ? 28 : 24} className="mr-3" />
+              <Text className={`text-text font-sans ml-2 font-bold ${isSeniorMode ? "text-xl" : "text-lg"}`}>
+                When do you need this?
+              </Text>
+            </View>
+            <Text className={`text-text-muted font-sans mb-4 ${isSeniorMode ? "text-base leading-6" : "text-sm"}`}>
+              Optional. Let neighbors know if this is urgent or scheduled for later.
+            </Text>
+
+            <View className={`flex-row items-center justify-between bg-background border-2 border-border dark:border-senior rounded-xl dark:rounded-senior ${Platform.OS === 'ios' ? 'p-2' : 'px-4 py-3'}`}>
+              
+              {/* Trigger the robust imperative API on Android, render component inline for iOS */}
+              {Platform.OS === 'android' ? (
+                <TouchableOpacity activeOpacity={0.7} onPress={showAndroidPicker} className="flex-1">
+                  <Text className={`font-sans ${dueDate ? "text-text font-bold" : "text-text-muted"} ${isSeniorMode ? "text-lg" : "text-base"}`}>
+                    {dueDate ? dueDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : "Not scheduled"}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <View className="flex-1 items-start">
+                   <DateTimePicker
+                      value={dueDate || new Date()}
+                      mode="datetime"
+                      display="compact"
+                      onChange={(e, date) => date && setDueDate(date)}
+                      minimumDate={new Date()}
+                      accentColor={primaryIconColor}
+                    />
+                </View>
+              )}
+
+              {dueDate && (
+                <TouchableOpacity onPress={() => setDueDate(null)} className="ml-2 p-2">
+                  <Text className="text-error font-sans font-bold">Clear</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
