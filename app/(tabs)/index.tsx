@@ -6,7 +6,8 @@ import {
   ScrollView, 
   Modal, 
   TextInput, 
-  ActivityIndicator 
+  ActivityIndicator,
+  Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -21,7 +22,9 @@ import {
   Footprints,
   Car,
   BellRing,
-  ChevronRight
+  ChevronRight,
+  Eye, 
+  MessageCircle
 } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/lib/supabase';
@@ -41,7 +44,7 @@ interface ActiveTask {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { session, isSeniorMode, userProfile, fetchUserProfile, showAlert } = useAppStore();
+  const { session, isSeniorMode, userProfile, fetchUserProfile, showAlert, setSeniorMode } = useAppStore();
 
   const [completedTasksCount, setCompletedTasksCount] = useState(0);
   const [activeTask, setActiveTask] = useState<ActiveTask | null>(null);
@@ -51,6 +54,7 @@ export default function HomeScreen() {
   const [onboardingTags, setOnboardingTags] = useState<string[]>([]);
   const [onboardingMode, setOnboardingMode] = useState<'walking' | 'driving'>('walking');
   const [onboardingUsername, setOnboardingUsername] = useState('');
+  const [onboardingSeniorMode, setOnboardingSeniorMode] = useState(false);
   const [savingOnboarding, setSavingOnboarding] = useState(false);
 
   const AVAILABLE_TAGS = ["Pets", "Education", "Tools", "Errands", "Tech", "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"];
@@ -141,6 +145,7 @@ export default function HomeScreen() {
       .update({ 
         tags: onboardingTags, 
         transport_mode: onboardingMode,
+        is_senior: onboardingSeniorMode,
         onboarding_completed: true,
         username: onboardingUsername.trim()
       })
@@ -150,6 +155,11 @@ export default function HomeScreen() {
       showAlert("Error saving profile", error.message);
       setSavingOnboarding(false);
       return;
+    }
+
+    // Instantly apply the Senior Mode layout to the app!
+    if (onboardingSeniorMode) {
+      setSeniorMode(true);
     }
 
     await fetchUserProfile(session.user.id);
@@ -234,6 +244,25 @@ export default function HomeScreen() {
                   })}
                 </View>
 
+                {/* Accessibility Toggle */}
+                <View className="bg-surface border-2 border-border dark:border-senior rounded-xl dark:rounded-senior p-5 mb-10 flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1 pr-4">
+                    <View className="bg-secondary/10 p-3 rounded-full mr-3 border border-secondary/20">
+                      <Eye color={Colors.light.secondary} size={24} />
+                    </View>
+                    <View>
+                      <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>High Visibility Mode</Text>
+                      <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Larger text and higher contrast</Text>
+                    </View>
+                  </View>
+                  <Switch
+                    trackColor={{ false: "#E2E8F0", true: Colors.light.secondary }}
+                    thumbColor="#FFFFFF"
+                    onValueChange={setOnboardingSeniorMode}
+                    value={onboardingSeniorMode}
+                  />
+                </View>
+
                 <TouchableOpacity className="bg-primary py-5 rounded-xl dark:rounded-senior dark:border-senior dark:border-primary items-center mb-10 shadow-lg" onPress={handleFinishOnboarding} disabled={savingOnboarding} activeOpacity={0.8}>
                   {savingOnboarding ? <ActivityIndicator color="#FFFFFF" /> : <Text className={`text-on-primary dark:text-white font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>Let's Go!</Text>}
                 </TouchableOpacity>
@@ -278,7 +307,9 @@ export default function HomeScreen() {
             </View>
             <View className="flex-1 mr-2">
               <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
-                Active Task
+                {activeTask.user_id === session?.user?.id 
+                  ? "Help is on the way!" 
+                  : "You're helping a neighbor!"}
               </Text>
               <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`} numberOfLines={1}>
                 {activeTask.title}
@@ -308,8 +339,8 @@ export default function HomeScreen() {
           <QuickAccessButton title="Profile" icon={User} route="/profile" color={isSeniorMode ? Colors.dark.secondary : "#F59E0B"} />
         </View>
 
-        {/* RECENT ACTIVITY SECTION */}
-        <Text className={`font-sans font-bold text-text mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Recent Activity</Text>
+        {/* My Stats SECTION */}
+        <Text className={`font-sans font-bold text-text mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>My Stats</Text>
         <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4">
           <View className="flex-row items-center flex-1">
             <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-[#D1FAE5] border-[#059669]'}`}>
@@ -339,8 +370,19 @@ export default function HomeScreen() {
           </View>
           <Text className={`font-sans font-bold text-secondary ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>{userProfile?.karma_points || 0}</Text>
         </View>
-
       </ScrollView>
+
+      {/* THE FLOATING CHAT BUTTON */}
+      <TouchableOpacity 
+        className={`absolute bottom-6 right-6 rounded-full items-center justify-center shadow-xl ${
+          isSeniorMode ? 'bg-primary w-16 h-16' : 'bg-primary w-16 h-16 border-[3px] border-background'
+        }`}
+        onPress={() => router.push('/chat')}
+        activeOpacity={0.8}
+      >
+        <MessageCircle color="#FFFFFF" size={isSeniorMode ? 32 : 28} />
+      </TouchableOpacity>
+      
     </SafeAreaView>
   );
 }

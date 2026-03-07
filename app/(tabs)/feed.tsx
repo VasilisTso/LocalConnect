@@ -506,17 +506,6 @@ export default function FeedScreen() {
           }
         />
       )}
-
-      {/* THE FLOATING CHAT BUTTON */}
-      <TouchableOpacity 
-        className={`absolute bottom-6 right-6 rounded-full items-center justify-center shadow-xl ${
-          isSeniorMode ? 'bg-primary w-16 h-16' : 'bg-primary w-16 h-16 border-[3px] border-background'
-        }`}
-        onPress={() => router.push('/chat')}
-        activeOpacity={0.8}
-      >
-        <MessageCircle color="#FFFFFF" size={isSeniorMode ? 32 : 28} />
-      </TouchableOpacity>
       
     </SafeAreaView>
   );
