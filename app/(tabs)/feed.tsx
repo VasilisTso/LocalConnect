@@ -356,6 +356,13 @@ export default function FeedScreen() {
             </Text>
           </View>
         </View>
+
+        <View className="flex-row items-center justify-center mt-6 bg-primary rounded-xl dark:rounded-senior py-3">
+          <Text className={`font-sans font-bold text-white ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+            Learn more
+          </Text>
+          <ChevronRight color="#FFFFFF" size={isSeniorMode ? 24 : 20} className="ml-1" />
+        </View>
       </TouchableOpacity>
     );
   };
