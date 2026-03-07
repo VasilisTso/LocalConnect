@@ -194,6 +194,10 @@ function RootLayoutNav() {
                 }} 
               />
               <Stack.Screen name="task-details" options={{ headerShown: false }} />
+              <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
+              <Stack.Screen name="security" options={{ headerShown: false }} />
+              <Stack.Screen name="support" options={{ headerShown: false }} />
+              <Stack.Screen name="about" options={{ headerShown: false }} />
             </Stack>
           </View>
         </View>

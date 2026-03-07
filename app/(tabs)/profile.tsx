@@ -9,7 +9,10 @@ import {
   Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LogOut, User as UserIcon, Tag, ShieldAlert, Award, Phone, Shield, Footprints, Car, Camera } from 'lucide-react-native';
+import { 
+  LogOut, User as UserIcon, ShieldAlert, Award, Phone, Shield, Camera, 
+  ChevronRight, Settings, Lock, HelpCircle, Info, CheckCircle 
+} from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -23,6 +26,20 @@ function getBadge(karmaPoints: number) {
   if (karmaPoints < 50) return { title: 'New Neighbor', color: Colors.light.tabIconDefault, icon: UserIcon };
   if (karmaPoints < 150) return { title: 'Active Helper', color: Colors.light.primary, icon: Shield };
   return { title: 'Local Hero', color: Colors.light.secondary, icon: Award }; 
+}
+
+// Quick helper to format dates for recent activity
+function formatDate(dateString: string) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+// Define the interface for the recent tasks
+interface RecentTask {
+  id: string;
+  title: string;
+  category: string;
+  created_at: string;
 }
 
 /**
@@ -39,18 +56,8 @@ export default function ProfileScreen() {
   
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-
-  const [userTags, setUserTags] = useState<string[]>([]);
   const [karma, setKarma] = useState(0);
-
-  // Transport Mode State
-  const [transportMode, setTransportMode] = useState<'walking' | 'driving'>('walking');
-
-  // A preset list of tags for our neighborhood app
-  const AVAILABLE_TAGS = [
-    "Pets", "Education", "Tools", "Errands", "Tech", 
-    "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"
-  ];
+  const [recentTasks, setRecentTasks] = useState<RecentTask[]>([]);
 
   // Colors for icons dynamically matched to theme
   const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
@@ -59,23 +66,34 @@ export default function ProfileScreen() {
   // FETCH ON TAB FOCUS: This ensures your Karma updates instantly when you switch tabs!
   useFocusEffect(
     useCallback(() => {
-      async function fetchProfile() {
+      async function fetchProfileData() {
         if (!session?.user?.id) return;
         
-        const { data, error } = await supabase
+        // Fetch Profile (Karma)
+        const { data: profileData } = await supabase
           .from('profiles')
-          .select('tags, karma_points, transport_mode')
+          .select('karma_points')
           .eq('id', session.user.id)
           .single();
 
-        if (data) {
-          if (data.tags) setUserTags(data.tags);
-          // Safely set karma, defaulting to 0 if it's null
-          setKarma(data.karma_points || 0);
-          if (data.transport_mode) setTransportMode(data.transport_mode);
+        if (profileData) {
+          setKarma(profileData.karma_points || 0);
+        }
+
+        // Fetch 3 Most Recent Completed Tasks
+        const { data: tasksData } = await supabase
+          .from('tasks')
+          .select('id, title, category, created_at')
+          .eq('helper_id', session.user.id)
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (tasksData) {
+          setRecentTasks(tasksData);
         }
       }
-      fetchProfile();
+      fetchProfileData();
     }, [session])
   );
 
@@ -134,44 +152,6 @@ export default function ProfileScreen() {
     }
   }
 
-  // Toggle a tag on/off and save to Supabase
-  async function handleToggleTag(tag: string) {
-    if (!session?.user?.id) return;
-    
-    // Determine if we are adding or removing the tag
-    const newTags = userTags.includes(tag) 
-      ? userTags.filter(t => t !== tag) 
-      : [...userTags, tag];
-
-    setUserTags(newTags); // Update UI instantly
-
-    // Persist to database for the Adaptivity Engine
-    const { error } = await supabase
-      .from('profiles')
-      .update({ tags: newTags })
-      .eq('id', session.user.id);
-
-    if (error) {
-      showAlert('Error updating tags', error.message);
-    }
-  }
-
-  // Update Transport Mode in DB instantly
-  async function handleTransportMode(mode: 'walking' | 'driving') {
-    if (!session?.user?.id) return;
-    
-    setTransportMode(mode); // Update UI instantly
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update({ transport_mode: mode })
-      .eq('id', session.user.id);
-
-    if (error) {
-      showAlert('Error updating transport mode', error.message);
-    }
-  }
-
   // Handle logging out
   async function handleSignOut() {
     setLoading(true);
@@ -183,36 +163,34 @@ export default function ProfileScreen() {
     // layout.tsx listener will automatically detect the sign out and route to login
   }
 
-  // isSenior toggle for database
-  async function handleToggleSeniorMode(newValue: boolean) {
-    // Optimistically update the local UI instantly for a snappy feel
-    toggleSeniorMode();
-
-    if (session?.user?.id) {
-      // Silently update the database in the background
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_senior: newValue })
-        .eq('id', session.user.id);
-
-      // If the database fails (e.g., lost internet), revert the UI and warn them
-      if (error) {
-        toggleSeniorMode(); // Revert back
-        showAlert('Network Error', 'Could not save your accessibility settings. Please check your connection.');
-      }
-    }
-  }
-
   const avatarSize = isSeniorMode ? 100 : 90;
   const currentBadge = getBadge(karma);
   const BadgeIcon = currentBadge.icon;
+
+  // Reusable component for the settings links
+  const SettingRow = ({ icon: Icon, title, route, isLast = false }: any) => (
+    <TouchableOpacity 
+      onPress={() => router.push(route)} 
+      activeOpacity={0.7}
+      className={`flex-row items-center justify-between py-4 px-5 bg-surface ${!isLast ? 'border-b border-border/50 dark:border-senior/50' : ''}`}
+    >
+      <View className="flex-row items-center">
+        <View className="bg-primary/10 p-2 rounded-lg mr-4">
+          <Icon color={primaryIconColor} size={isSeniorMode ? 24 : 20} />
+        </View>
+        <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+          {title}
+        </Text>
+      </View>
+      <ChevronRight color={mutedIconColor} size={isSeniorMode ? 24 : 20} />
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         {/* Header Section */}
-        <View className="items-center mb-8">
-          {/* INTERACTIVE PROFILE PICTURE */}
+        <View className="items-center mb-6">
           <TouchableOpacity 
             onPress={handlePickImage} 
             disabled={uploadingImage}
@@ -254,96 +232,79 @@ export default function ProfileScreen() {
           <Text className={`text-text-muted font-sans mb-4 ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
             {session?.user?.email}
           </Text>
+        </View>
 
-          {/*KARMA BADGE - HIDE GAMIFICATION IN SENIOR MODE */}
-          {!isSeniorMode && (
-            <View className="items-center mt-2 gap-2">
-              {/* Pill 1: Points */}
-              <View className="flex-row items-center bg-secondary/15 px-4 py-2 rounded-full border border-secondary">
-                <Award color={Colors.light.secondary} size={18} className="mr-2" />
-                <Text className="text-secondary font-sans font-bold text-base">
-                  {karma} Points
-                </Text>
-              </View>
-              
-              {/* Pill 2: Badge */}
-              <View 
-                className="flex-row items-center px-4 py-1.5 rounded-full border"
-                style={{ backgroundColor: `${currentBadge.color}15`, borderColor: currentBadge.color }}
-              >
-                <BadgeIcon color={currentBadge.color} size={16} className="mr-2" />
-                <Text className="font-sans ml-2 font-bold text-sm" style={{ color: currentBadge.color }}>
-                  {currentBadge.title}
-                </Text>
-              </View>
+        {/* STATS & BADGE CONTAINER */}
+        <View className="bg-surface rounded-2xl dark:rounded-senior p-5 mb-8 border border-border dark:border-senior shadow-sm flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1">
+            <View className="p-3 rounded-full mr-3" style={{ backgroundColor: `${currentBadge.color}15` }}>
+              <BadgeIcon color={currentBadge.color} size={isSeniorMode ? 28 : 24} />
+            </View>
+            <View>
+              <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-base' : 'text-xs'}`}>Community Status</Text>
+              <Text className={`font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`} style={{ color: currentBadge.color }}>
+                {currentBadge.title}
+              </Text>
+            </View>
+          </View>
+          <View className="items-center pl-10 border-l border-border dark:border-senior/50">
+            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-base' : 'text-xs'}`}>Total Karma</Text>
+            <Text className={`font-sans font-bold text-secondary ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
+              {karma}
+            </Text>
+          </View>
+        </View>
+
+        {/* RECENT ACTIVITY */}
+        <View className="mb-8">
+          <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+            Recent Activity
+          </Text>
+          
+          {recentTasks.length > 0 ? (
+            <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior overflow-hidden">
+              {recentTasks.map((task, index) => (
+                <View 
+                  key={task.id} 
+                  className={`flex-row items-center justify-between p-4 ${index !== recentTasks.length - 1 ? 'border-b border-border dark:border-senior/50' : ''}`}
+                >
+                  <View className="flex-row items-center flex-1 pr-4">
+                    <CheckCircle color={Colors.light.success} size={isSeniorMode ? 24 : 20} className="mr-3" />
+                    <View className="flex-1 ml-4">
+                      <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`} numberOfLines={1}>
+                        {task.title}
+                      </Text>
+                      <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-base' : 'text-xs'}`}>
+                        Helped with {task.category}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-base' : 'text-xs'}`}>
+                    {formatDate(task.created_at)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View className="bg-surface rounded-2xl p-6 border border-border dark:border-senior items-center">
+              <Shield color={mutedIconColor} size={32} className="mb-2 opacity-50" />
+              <Text className={`text-text-muted font-sans text-center ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
+                No completed tasks yet. Head to the feed to help a neighbor!
+              </Text>
             </View>
           )}
         </View>
 
-        {/* Accessibility & Adaptivity Section */}
-        <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-senior">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center flex-1 pr-4">
-              <ShieldAlert color={primaryIconColor} size={isSeniorMode ? 32 : 28} className="mr-4" />
-              <View className="flex-1 ml-2">
-                <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
-                  Senior Mode
-                </Text>
-                <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base leading-6' : 'text-sm'}`}>
-                  Enables high contrast, large text, and emergency tools.
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={isSeniorMode} 
-              onValueChange={handleToggleSeniorMode}
-              trackColor={{ false: Colors.light.border, true: isSeniorMode ? Colors.dark.primary : Colors.light.primary }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
-        </View>
-
-        {/* Mobility & Reach Section */}
-        <View className="bg-surface rounded-2xl p-5 mb-6 border border-border dark:border-senior dark:border-border dark:rounded-xl">
-          <Text className={`text-text font-sans font-bold mb-2 ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
-            Mobility & Reach
+        {/* SETTINGS LINKS */}
+        <View className="mb-8">
+          <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+            Settings
           </Text>
-          <Text className={`text-text-muted font-sans mb-5 ${isSeniorMode ? 'text-lg leading-6' : 'text-sm'}`}>
-            How far can you travel to help neighbors? This filters tasks on your feed.
-          </Text>
-
-          <View className={`flex-row gap-4 ${isSeniorMode ? 'flex-col' : ''}`}>
-            <TouchableOpacity 
-              onPress={() => handleTransportMode('walking')}
-              activeOpacity={0.7}
-              className={`flex-1 flex-row items-center justify-center p-4 rounded-xl border-2 dark:rounded-senior dark:border-senior ${
-                transportMode === 'walking' 
-                  ? 'bg-primary border-primary dark:bg-primary dark:border-primary' 
-                  : 'bg-transparent border-border dark:border-border'
-              }`}
-            >
-              <Footprints color={transportMode === 'walking' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 26 : 20} className="mr-3" />
-              <View className='ml-2'>
-                <Text className={`font-sans font-bold ${transportMode === 'walking' ? 'text-white dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>Walking</Text>
-                <Text className={`font-sans ${transportMode === 'walking' ? 'text-white/80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-base' : 'text-xs'}`}>7.5 km</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              onPress={() => handleTransportMode('driving')}
-              activeOpacity={0.7}
-              className={`flex-1 flex-row items-center justify-center p-4 rounded-xl border-2 dark:rounded-senior dark:border-senior ${
-                transportMode === 'driving' 
-                  ? 'bg-primary border-primary dark:bg-primary dark:border-primary' 
-                  : 'bg-transparent border-border dark:border-border'
-              }`}
-            >
-              <Car color={transportMode === 'driving' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 26 : 20} className="mr-3" />
-              <View className='ml-2'>
-                <Text className={`font-sans font-bold ${transportMode === 'driving' ? 'text-white dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>Driving</Text>
-                <Text className={`font-sans ${transportMode === 'driving' ? 'text-white/80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-base' : 'text-xs'}`}>35.0 km</Text>
-              </View>
-            </TouchableOpacity>
+          <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior overflow-hidden shadow-sm">
+            <SettingRow icon={Settings} title="Edit Profile" route="/edit-profile" />
+            <SettingRow icon={Lock} title="Security & Privacy" route="/security" />
+            <SettingRow icon={HelpCircle} title="Help & Support" route="/support" />
+            <SettingRow icon={Info} title="About the App" route="/about" isLast />
           </View>
         </View>
 
@@ -372,43 +333,6 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         )}
-
-        {/* Interests / Tags Section (Crucial for Thesis Feed) */}
-        <View className="bg-surface rounded-2xl p-5 mb-8 border border-border dark:border-senior dark:border-border dark:rounded-senior">
-          <View className="flex-row items-center mb-2">
-            <Tag color={primaryIconColor} size={isSeniorMode ? 28 : 24} className="mr-3" />
-            <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
-              My Interests
-            </Text>
-          </View>
-          <Text className={`text-text-muted font-sans mb-5 ${isSeniorMode ? 'text-base leading-6' : 'text-sm'}`}>
-            Select what you care about. Your feed will automatically adapt to show relevant tasks.
-          </Text>
-          
-          <View className="flex-row flex-wrap gap-3">
-            {AVAILABLE_TAGS.map((tag) => {
-              const isActive = userTags.includes(tag);
-              return (
-                <TouchableOpacity
-                  key={tag}
-                  activeOpacity={0.7}
-                  onPress={() => handleToggleTag(tag)}
-                  className={`px-4 py-2 rounded-full border-2 dark:rounded-senior dark:border-senior ${
-                    isActive 
-                      ? 'bg-primary border-primary dark:bg-primary dark:border-primary' 
-                      : 'bg-transparent border-border dark:border-border'
-                  }`}
-                >
-                  <Text className={`font-sans font-semibold ${
-                    isActive ? 'text-white dark:text-white' : 'text-text'
-                  } ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-                    {tag}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
 
         {/* Sign Out Button */}
         <TouchableOpacity 
