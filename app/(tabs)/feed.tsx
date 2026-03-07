@@ -43,6 +43,23 @@ function getBadge(karma: number) {
   return { title: 'Local Hero', color: Colors.light.secondary, icon: Award }; 
 }
 
+// Helper function to format the "Time Posted" text
+function timeAgo(dateString: string) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.round((now.getTime() - date.getTime()) / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+
+  if (seconds < 60) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return `Yesterday`;
+  return `${days}d ago`;
+}
+
 // Interface to hold tasks waiting for a review
 interface PendingReviewTask extends Task {
   helper_id: string;
@@ -94,7 +111,7 @@ export default function FeedScreen() {
   // Fetch both the Smart Feed AND any tasks waiting for a review
   const fetchTasks = useCallback(async () => {
     // `fetch_adaptive_feed` RPC!
-    // NEW ADAPTIVITY ENGINE FETCH
+    // ADAPTIVITY ENGINE FETCH
     if (!session?.user?.id) return; // Failsafe
 
     try {
@@ -286,7 +303,7 @@ export default function FeedScreen() {
         onPress={() => handleViewTask(item)}
         activeOpacity={0.7}
       >
-        <View className="flex-row justify-between items-start mb-3">
+        <View className="flex-row justify-between items-start mb-6">
           <View className="flex-1 mr-2">
             {filterMode === 'mine' && item.status !== 'open' && (
               <View 
@@ -308,21 +325,26 @@ export default function FeedScreen() {
             </Text>
           </View>
 
-          {/* Owner/Admin controls: Edit/Delete (Only show if it's still Open) */}
-          {(canEdit || canDelete) && (
-            <View className="flex-row items-center -mr-2 -mt-2">
-              {canEdit && (
-                <TouchableOpacity onPress={() => router.push({ pathname: '/modal', params: { taskId: item.id } })} className="p-3 mr-1">
-                  <Edit2 color={isSeniorMode ? Colors.dark.primary : Colors.light.primary} size={isSeniorMode ? 24 : 20} />
-                </TouchableOpacity>
-              )}
-              {canDelete && (
-                <TouchableOpacity onPress={() => handleDeleteTask(item.id)} className="p-3">
-                  <Trash2 color={isSeniorMode ? Colors.dark.error : Colors.light.error} size={isSeniorMode ? 24 : 20} />
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
+          {/* Edit/Delete (Only show if it's still Open) AND Time Ago */}
+          <View className="items-end">
+            {(canEdit || canDelete) && (
+              <View className="flex-row items-center -mr-2 -mt-2 mb-1">
+                {canEdit && (
+                  <TouchableOpacity onPress={() => router.push({ pathname: '/modal', params: { taskId: item.id } })} className="p-2 mr-1">
+                    <Edit2 color={isSeniorMode ? Colors.dark.primary : Colors.light.primary} size={isSeniorMode ? 22 : 18} />
+                  </TouchableOpacity>
+                )}
+                {canDelete && (
+                  <TouchableOpacity onPress={() => handleDeleteTask(item.id)} className="p-2">
+                    <Trash2 color={isSeniorMode ? Colors.dark.error : Colors.light.error} size={isSeniorMode ? 22 : 18} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+            <Text className={`text-text-muted font-sans font-medium ${isSeniorMode ? 'text-sm mt-1' : 'text-xs mt-1'}`}>
+              {timeAgo(item.created_at)}
+            </Text>
+          </View>
         </View>
 
         <Text className={`text-text-muted font-sans mb-6 ${isSeniorMode ? 'text-base leading-6' : 'text-base leading-6'}`} numberOfLines={3}>
