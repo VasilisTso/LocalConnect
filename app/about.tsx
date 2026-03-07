@@ -58,7 +58,7 @@ export default function AboutScreen() {
             LocalConnect
           </Text>
           <Text className={`text-text-muted font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
-            Version 1.3.0
+            Version 1.0.0
           </Text>
         </View>
 
