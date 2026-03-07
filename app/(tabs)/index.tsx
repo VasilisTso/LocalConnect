@@ -363,7 +363,7 @@ export default function HomeScreen() {
         <Text className={`font-sans font-bold text-text mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>My Stats</Text>
         <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4">
           <View className="flex-row items-center flex-1">
-            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-[#D1FAE5] border-[#059669]'}`}>
+            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-background border-success'}`}>
               <CheckCircle color={isSeniorMode ? Colors.dark.success : "#059669"} size={isSeniorMode ? 28 : 24} />
             </View>
             <View>
@@ -381,7 +381,7 @@ export default function HomeScreen() {
         {/* KARMA POINTS */}
         <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4">
           <View className="flex-row items-center flex-1">
-            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-secondary border-[#D97706]'}`}>
+            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-background border-secondary'}`}>
               <Award color={isSeniorMode ? Colors.dark.secondary : "#D97706"} size={isSeniorMode ? 28 : 24} />
             </View>
             <View>
@@ -395,7 +395,7 @@ export default function HomeScreen() {
         {/* AVERAGE RATING */}
         <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-8">
           <View className="flex-row items-center flex-1">
-            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-primary/10 border-primary/30'}`}>
+            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-background border-primary'}`}>
               <Star color={primaryIconColor} size={isSeniorMode ? 28 : 24} />
             </View>
             <View>

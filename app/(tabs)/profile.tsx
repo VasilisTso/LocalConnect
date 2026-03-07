@@ -172,10 +172,10 @@ export default function ProfileScreen() {
     <TouchableOpacity 
       onPress={() => router.push(route)} 
       activeOpacity={0.7}
-      className={`flex-row items-center justify-between py-4 px-5 bg-surface ${!isLast ? 'border-b border-border/50 dark:border-senior/50' : ''}`}
+      className={`flex-row items-center justify-between py-4 px-5 bg-surface ${!isLast ? 'border-b border-border dark:border-senior/50' : ''}`}
     >
       <View className="flex-row items-center">
-        <View className="bg-primary/10 p-2 rounded-lg mr-4">
+        <View className="bg-surface p-2 rounded-lg mr-4">
           <Icon color={primaryIconColor} size={isSeniorMode ? 24 : 20} />
         </View>
         <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
