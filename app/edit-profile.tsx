@@ -245,26 +245,28 @@ export default function EditProfileScreen() {
               <TouchableOpacity 
                 onPress={() => setTransportMode('walking')}
                 activeOpacity={0.7}
-                className={`flex-1 flex-row items-center justify-center p-4 rounded-xl border-2 dark:rounded-senior dark:border-senior ${
+                className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-senior dark:border-senior ${
                   transportMode === 'walking' ? 'bg-primary border-primary dark:bg-primary dark:border-primary' : 'bg-transparent border-border dark:border-border'
                 }`}
               >
-                <Footprints color={transportMode === 'walking' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 26 : 20} className="mr-3" />
+                <Footprints color={transportMode === 'walking' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 26 : 24} className="mr-3" />
                 <View className='ml-2'>
-                  <Text className={`font-sans font-bold ${transportMode === 'walking' ? 'text-white dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>Walking</Text>
+                  <Text className={`font-sans font-bold ${transportMode === 'walking' ? 'text-on-primary dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>Walking</Text>
+                  <Text className={`font-sans ${transportMode === 'walking' ? 'text-on-primary opacity-80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-base' : 'text-base'}`}>7.5 km</Text>
                 </View>
               </TouchableOpacity>
 
               <TouchableOpacity 
                 onPress={() => setTransportMode('driving')}
                 activeOpacity={0.7}
-                className={`flex-1 flex-row items-center justify-center p-4 rounded-xl border-2 dark:rounded-senior dark:border-senior ${
+                className={`flex-1 flex-row items-center justify-center p-5 rounded-xl border-2 dark:rounded-senior dark:border-senior ${
                   transportMode === 'driving' ? 'bg-primary border-primary dark:bg-primary dark:border-primary' : 'bg-transparent border-border dark:border-border'
                 }`}
               >
-                <Car color={transportMode === 'driving' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 26 : 20} className="mr-3" />
+                <Car color={transportMode === 'driving' ? '#FFFFFF' : mutedIconColor} size={isSeniorMode ? 26 : 24} className="mr-3" />
                 <View className='ml-2'>
-                  <Text className={`font-sans font-bold ${transportMode === 'driving' ? 'text-white dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-base'}`}>Driving</Text>
+                  <Text className={`font-sans font-bold ${transportMode === 'driving' ? 'text-on-primary dark:text-white' : 'text-text'} ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>Driving</Text>
+                  <Text className={`font-sans ${transportMode === 'driving' ? 'text-on-primary opacity-80 dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-base' : 'text-base'}`}>35.0 km</Text>
                 </View>
               </TouchableOpacity>
             </View>
