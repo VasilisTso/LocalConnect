@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Switch
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { 
   HeartHandshake, 
@@ -48,6 +48,9 @@ interface ActiveTask {
 export default function HomeScreen() {
   const router = useRouter();
   const { session, isSeniorMode, userProfile, fetchUserProfile, showAlert, setSeniorMode } = useAppStore();
+
+  // Get the device's safe area measurements (fixes Android nav bar overlap)
+  const insets = useSafeAreaInsets();
 
   const [completedTasksCount, setCompletedTasksCount] = useState(0);
   const [activeTask, setActiveTask] = useState<ActiveTask | null>(null);
@@ -203,9 +206,14 @@ export default function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       
-      {/* ONBOARDING MODAL (Moved here so it shows up instantly on login) */}
-      {userProfile !== null && userProfile.onboarding_completed === false && (
-        <Modal animationType="slide" transparent={false} visible={true}>
+      {/* ONBOARDING MODAL */}
+      <Modal 
+        animationType="slide" 
+        transparent={false} 
+        visible={userProfile !== null && userProfile.onboarding_completed === false}
+        presentationStyle="pageSheet"
+      >
+        {userProfile !== null && (
           <SafeAreaView className="flex-1 bg-background px-8 pt-5">
             <View className="flex-1 w-full max-w-2xl mx-auto">
               <ScrollView showsVerticalScrollIndicator={false}>
@@ -287,8 +295,8 @@ export default function HomeScreen() {
               </ScrollView>
             </View>
           </SafeAreaView>
-        </Modal>
-      )}
+        )}
+      </Modal>
 
       {/* Normal Home dashboard */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}>
