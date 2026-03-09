@@ -3,12 +3,16 @@ import { Home, Map as MapIcon, PlusCircle, User, LayoutList } from 'lucide-react
 import { useAppStore } from '@/store/useAppStore';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import Colors from '@/constants/Colors';
 
 export default function TabLayout() {
   const { isSeniorMode, session, showAlert } = useAppStore();
   const router = useRouter();
+
+  // Get the device's safe area measurements
+  const insets = useSafeAreaInsets();
 
   // Real-Time WebSocket Listener
   useEffect(() => {
@@ -104,6 +108,12 @@ export default function TabLayout() {
   const backgroundColor = isSeniorMode ? Colors.dark.surface : Colors.light.surface;
   const borderColor = isSeniorMode ? Colors.dark.border : Colors.light.border;
 
+  // Dynamic math to calculate the perfect height based on the user's specific phone
+  const basePadding = Platform.OS === 'ios' ? 10 : 10;
+  const bottomPadding = Math.max(insets.bottom, basePadding); // Use either the nav bar height, or 10px minimum
+  const baseHeight = isSeniorMode ? 65 : 55; // Base height of the actual icons/text
+  const totalHeight = baseHeight + bottomPadding; // Total height of the tab bar
+
   return (
     <Tabs
       screenOptions={{
@@ -117,12 +127,9 @@ export default function TabLayout() {
           backgroundColor: backgroundColor,
           borderTopColor: borderColor,
           borderTopWidth: isSeniorMode ? 3 : 1,
-          // Keep the taller height
-          height: Platform.OS === 'ios' ? (isSeniorMode ? 100 : 85) : (isSeniorMode ? 80 : 65),
-          // INCREASED PADDING BOTTOM: This specifically pushes the icons/text UP away from the gesture bar
-          paddingBottom: Platform.OS === 'ios' ? 35 : 15, 
-          // Adjusted top padding so it doesn't push them down too much
-          paddingTop: Platform.OS === 'ios' ? 10 : 5,
+          height: totalHeight,
+          paddingBottom: bottomPadding, 
+          paddingTop: Platform.OS === 'ios' ? 10 : 8,
         },
         
         // Styling the text labels specifically for Senior Mode
