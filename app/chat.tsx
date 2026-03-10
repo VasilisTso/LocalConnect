@@ -6,8 +6,10 @@ import {
   ScrollView, 
   Platform,
   KeyboardAvoidingView,
-  TextInput
+  TextInput,
+  Keyboard
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { StatusBar } from 'expo-status-bar';
@@ -51,9 +53,28 @@ export default function ChatScreen() {
   const router = useRouter();
   const { isSeniorMode } = useAppStore();
   const scrollViewRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
 
   // input state for the AI integration
   const [inputText, setInputText] = useState('');
+
+  // State to track exact keyboard height
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    // Listen to Android's native keyboard opening/closing
+    const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0); // Instantly clears the ghost gap!
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   // Initialize the chat with the bot's greeting and the Main Menu
   const [messages, setMessages] = useState<Message[]>([
@@ -158,33 +179,35 @@ export default function ChatScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <StatusBar style={isSeniorMode ? 'dark' : 'light'} />
       
-      {/* HEADER */}
-      <View className="flex-row justify-between items-center p-6 pt-16 border-b border-border dark:border-senior dark:border-border bg-surface">
-        <View className="flex-row items-center">
-          <View className="bg-primary dark:bg-primary p-3 rounded-full mr-3 border border-transparent dark:border-senior dark:border-primary">
-            <Bot color="#FFFFFF" size={isSeniorMode ? 32 : 24} />
-          </View>
-          <View>
-            <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Help Center</Text>
-            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>Smart Assistant</Text>
-          </View>
-        </View>
-        <TouchableOpacity 
-          onPress={() => router.back()}
-          className="bg-background border-2 border-border dark:border-senior dark:border-border p-3 rounded-full dark:rounded-senior active:opacity-70"
-          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-        >
-          <X color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 28 : 24} />
-        </TouchableOpacity>
-      </View>
-
       <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
+        className="flex-1 bg-background" 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ paddingBottom: Platform.OS === 'android' ? keyboardHeight : 0 }}
       >
+        
+        {/* HEADER */}
+        <View className="flex-row justify-between items-center px-6 py-4 border-b border-border dark:border-senior dark:border-border bg-surface">
+          <View className="flex-row items-center">
+            <View className="bg-primary dark:bg-primary p-3 rounded-full mr-3 border border-transparent dark:border-senior dark:border-primary">
+              <Bot color="#FFFFFF" size={isSeniorMode ? 32 : 24} />
+            </View>
+            <View>
+              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Help Center</Text>
+              <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>Smart Assistant</Text>
+            </View>
+          </View>
+          <TouchableOpacity 
+            onPress={() => router.back()}
+            className="bg-background border-2 border-border dark:border-senior dark:border-border p-3 rounded-full dark:rounded-senior active:opacity-70"
+            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          >
+            <X color={isSeniorMode ? Colors.dark.text : Colors.light.text} size={isSeniorMode ? 28 : 24} />
+          </TouchableOpacity>
+        </View>
+
         {/* CHAT WINDOW */}
         <ScrollView 
           ref={scrollViewRef}
@@ -237,7 +260,10 @@ export default function ChatScreen() {
         </ScrollView>
 
         {/* AI TEXT INPUT FOOTER */}
-        <View className="p-4 bg-surface border-t border-border dark:border-senior dark:border-border flex-row items-end pb-8">
+        <View 
+          className="p-4 bg-surface border-t border-border dark:border-senior dark:border-border flex-row items-end"
+          style={{ paddingBottom: Math.max(insets.bottom + 10, 16) }}
+        >
           <TextInput
             className={`flex-1 bg-background border-2 border-border dark:border-senior rounded-3xl dark:rounded-senior px-5 pt-4 pb-4 mr-3 text-text font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}
             placeholder="Ask a custom question..."
@@ -262,6 +288,6 @@ export default function ChatScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }
