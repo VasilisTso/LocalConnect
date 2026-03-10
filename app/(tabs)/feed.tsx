@@ -183,6 +183,27 @@ export default function FeedScreen() {
       const allTasks = [...(openTasks || []), ...(myTasks || []), ...(helpingTasks || []), ...adminReportedTasks];
       const uniqueTasks = Array.from(new Map(allTasks.map(task => [task.id, task])).values());
       
+      // MANUALLY FETCH KARMA POINTS FOR ALL LOADED TASKS
+      // guarantees the badge is correct even if the RPC or select('*') didn't join the profiles table
+      const uniqueUserIds = [...new Set(uniqueTasks.map(t => t.user_id))];
+
+      if (uniqueUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, karma_points')
+          .in('id', uniqueUserIds);
+
+        if (profilesData) {
+          // Create a quick dictionary for instant lookups
+          const karmaMap = new Map(profilesData.map(p => [p.id, p.karma_points || 0]));
+          
+          // Attach the correct karma to each task
+          uniqueTasks.forEach(task => {
+            task.creator_karma = karmaMap.get(task.user_id) || 0;
+          });
+        }
+      }
+
       setTasks(uniqueTasks);
 
       // PENDING REVIEWS LOGIC Fetch Completed Tasks (to see if they need a review)
