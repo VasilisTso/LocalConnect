@@ -5,25 +5,39 @@ import {
   TouchableOpacity, 
   ScrollView, 
   Platform,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  TextInput
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { StatusBar } from 'expo-status-bar';
-import { X, Bot } from 'lucide-react-native';
+import { X, Bot, Send } from 'lucide-react-native';
 
 import Colors from '@/constants/Colors';
 
-// THE RULE-BASED ENGINE: Predetermined answers for local parsing
-const QA_DATABASE: Record<string, string> = {
-  "How do I earn Karma?": "You earn 10 Karma Points every time you help a neighbor! Just click the 'Help' button on any open task in the feed.",
-  "How do I edit a task?": "Find your task on the Feed and click the small Pencil icon. You can only edit tasks that you created yourself.",
-  "Is my location private?": "Yes! We use 'Privacy by Design'. We only use general neighborhood areas (like 'Central Square'), never your exact GPS coordinates.",
-  "Contact Human Support": "You can reach our neighborhood admins at support@localconnect.gr or call 112 in emergencies.",
-  "How to enable Senior Mode": "Go to your profile and toggle the switch",
+// THE RULE-BASED ENGINE: Predetermined answers for local parsing and instant answers
+const QA_DATABASE: Record<string, Record<string, string>> = {
+  "App Features": {
+    "How do the badges work?": "You earn badges by completing tasks and gaining Karma! You start as a 'New Neighbor' and can level up to 'Active Helper' and eventually 'Local Hero'.",
+    "How does the review system work?": "When you complete a task for someone, they can rate your help from 1 to 5 stars. Your average rating shows up on your profile for the community to see.",
+    "How does my feed use tags?": "Your Smart Feed looks at the hobbies/interests you selected during onboarding (like 'Pets' or 'Tools') and pushes tasks with those tags to the top of your list!",
+    "How do I earn Karma?": "You earn 10 Karma Points every time you successfully complete a task and help a neighbor out."
+  },
+  "Privacy & Safety": {
+    "Is my location (1km) really private?": "Yes! We use 'Location Fuzzing'. The map only shows a general 1km radius circle to the public. Your exact home address is never shown on the public map.",
+    "Are private details really private?": "Absolutely. Any text you put in the 'Private Instructions' box is completely hidden from the public feed. It is ONLY revealed to the specific neighbor you accept to help you.",
+    "Will users know my other info?": "No. Neighbors only see your username, your badge/karma, and your average rating. We never share your email or phone number automatically."
+  },
+  "Account & Tasks": {
+    "How can I edit my task?": "Go to the Feed, find your open task, and tap the small Pencil icon. Note: You can only edit tasks that are still 'Open'.",
+    "How do I enable Senior Mode?": "Go to the Profile tab, tap 'Edit Profile', and toggle 'Senior Mode'. It will instantly increase text size and color contrast!",
+  },
+  "Support": {
+    "Contact Human Support": "You can reach our neighborhood admins at support@localconnect.app. If it is a real-world emergency, please call 112."
+  }
 };
 
-const MAIN_MENU = Object.keys(QA_DATABASE);
+const CATEGORIES = Object.keys(QA_DATABASE);
 
 // Shape of a Chat Message
 interface Message {
@@ -38,15 +52,20 @@ export default function ChatScreen() {
   const { isSeniorMode } = useAppStore();
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // input state for the AI integration
+  const [inputText, setInputText] = useState('');
+
   // Initialize the chat with the bot's greeting and the Main Menu
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       sender: 'bot',
-      text: 'Hi there! I am the LocalConnect Helper. What can I assist you with today?',
-      options: MAIN_MENU,
+      text: 'Hi there! I am your LocalConnect Assistant. What do you need help with?',
+      options: CATEGORIES,
     }
   ]);
+
+  const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
 
   // Auto-scroll to the bottom when new messages appear
   useEffect(() => {
@@ -55,7 +74,7 @@ export default function ChatScreen() {
     }, 100);
   }, [messages]);
 
-  // Handle Menu Button Clicks
+  // Handle the hardcoded rule-based buttons
   const handleSelectOption = (option: string) => {
     // Log the user's choice to the chat window
     const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: option };
@@ -67,18 +86,33 @@ export default function ChatScreen() {
       return [...updated, userMsg];
     });
 
-    // The Bot's "Thinking" delay (500ms makes it feel conversational)
+    // TThinking delay (400ms makes it feel conversational)
     setTimeout(() => {
-      if (option === 'Yes, show menu') {
+      // Did they click a Category? (Show Questions)
+      if (CATEGORIES.includes(option)) {
+        const questions = Object.keys(QA_DATABASE[option]);
         setMessages(prev => [
           ...prev, 
-          { id: Date.now().toString(), sender: 'bot', text: 'Here are your options:', options: MAIN_MENU }
+          { id: Date.now().toString(), sender: 'bot', text: `Here are common questions about ${option}:`, options: questions }
         ]);
-      } else if (option === 'No, close chat') {
-        router.back();
-      } else {
-        // Look up the answer in our local dictionary!
-        const answer = QA_DATABASE[option] || "I'm sorry, I don't have an answer for that.";
+      } 
+      // Did they click Back to Menu?
+      else if (option === 'Back to main menu') {
+        setMessages(prev => [
+          ...prev, 
+          { id: Date.now().toString(), sender: 'bot', text: 'Here are the categories:', options: CATEGORIES }
+        ]);
+      }
+      // Did they click a specific Question? (Show Answer)
+      else {
+        // Find the answer by searching all categories
+        let answer = "I'm sorry, I couldn't find the answer.";
+        for (const cat in QA_DATABASE) {
+          if (QA_DATABASE[cat][option]) {
+            answer = QA_DATABASE[cat][option];
+            break;
+          }
+        }
         
         setMessages(prev => [
           ...prev, 
@@ -86,12 +120,41 @@ export default function ChatScreen() {
           { 
             id: (Date.now() + 1).toString(), 
             sender: 'bot', 
-            text: 'Do you need help with anything else?', 
-            options: ['Yes, show menu', 'No, close chat'] 
+            text: 'Need help with anything else?', 
+            options: ['Back to main menu'] 
           }
         ]);
       }
-    }, 500); 
+    }, 400); 
+  };
+
+  // Handle typed messages (AI integration)
+  const handleSendMessage = () => {
+    if (!inputText.trim()) return;
+
+    const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: inputText.trim() };
+    
+    // Clear old buttons and add user text
+    setMessages(prev => {
+      const updated = [...prev];
+      updated[updated.length - 1].options = [];
+      return [...updated, userMsg];
+    });
+
+    setInputText('');
+
+    // DUMMY AI RESPONSE (TODO replace with REAL AI next)
+    setTimeout(() => {
+      setMessages(prev => [
+        ...prev, 
+        { 
+          id: Date.now().toString(), 
+          sender: 'bot', 
+          text: "I am an AI, but I haven't been connected to my brain yet! Try using the buttons above for now.", 
+          options: ['Back to main menu'] 
+        }
+      ]);
+    }, 1000);
   };
 
   return (
@@ -106,7 +169,7 @@ export default function ChatScreen() {
           </View>
           <View>
             <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Help Center</Text>
-            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>AI Assistant</Text>
+            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>Smart Assistant</Text>
           </View>
         </View>
         <TouchableOpacity 
@@ -118,57 +181,87 @@ export default function ChatScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* CHAT WINDOW */}
-      <ScrollView 
-        ref={scrollViewRef}
-        className="flex-1 px-5 py-6"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {messages.map((msg) => {
-          const isBot = msg.sender === 'bot';
-          return (
-            <View key={msg.id} className={`mb-6 ${isBot ? 'items-start' : 'items-end'}`}>
-              
-              {/* Message Bubble */}
-              <View 
-                className={`max-w-[85%] rounded-3xl dark:rounded-senior p-5 border-2 dark:border-senior ${
-                  isBot 
-                    ? 'bg-surface border-border dark:border-border rounded-tl-sm' 
-                    : 'bg-primary border-primary dark:bg-primary dark:border-primary rounded-tr-sm'
-                }`}
-              >
-                <Text 
-                  className={`font-sans ${
-                    isBot ? 'text-text' : 'text-on-primary dark:text-white'
-                  } ${isSeniorMode ? 'text-lg leading-7' : 'text-base leading-6'}`}
+        {/* CHAT WINDOW */}
+        <ScrollView 
+          ref={scrollViewRef}
+          className="flex-1 px-5 py-6"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {messages.map((msg) => {
+            const isBot = msg.sender === 'bot';
+            return (
+              <View key={msg.id} className={`mb-6 ${isBot ? 'items-start' : 'items-end'}`}>
+                
+                {/* Message Bubble */}
+                <View 
+                  className={`max-w-[85%] rounded-3xl dark:rounded-senior p-5 border-2 dark:border-senior ${
+                    isBot 
+                      ? 'bg-surface border-border dark:border-border rounded-tl-sm' 
+                      : 'bg-primary border-primary dark:bg-primary dark:border-primary rounded-tr-sm'
+                  }`}
                 >
-                  {msg.text}
-                </Text>
-              </View>
-
-              {/* Interactive Menu Buttons (Only appear on the latest bot message) */}
-              {msg.options && msg.options.length > 0 && (
-                <View className="mt-4 w-full items-start pl-2">
-                  {msg.options.map((opt, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => handleSelectOption(opt)}
-                      activeOpacity={0.7}
-                      className="bg-background border-2 border-primary dark:border-senior dark:border-primary px-5 py-4 rounded-full dark:rounded-senior mb-3 shadow-sm"
-                    >
-                      <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-                        {opt}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  <Text 
+                    className={`font-sans ${
+                      isBot ? 'text-text' : 'text-on-primary dark:text-white'
+                    } ${isSeniorMode ? 'text-lg leading-7' : 'text-base leading-6'}`}
+                  >
+                    {msg.text}
+                  </Text>
                 </View>
-              )}
-            </View>
-          );
-        })}
-        {/* Padding at the bottom so it doesn't hug the edge */}
-        <View className="h-10" /> 
-      </ScrollView>
+
+                {/* Interactive Menu Buttons */}
+                {msg.options && msg.options.length > 0 && (
+                  <View className="mt-4 w-full items-start pl-2">
+                    {msg.options.map((opt, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        onPress={() => handleSelectOption(opt)}
+                        activeOpacity={0.7}
+                        className="bg-background border-2 border-primary dark:border-senior dark:border-primary px-5 py-3.5 rounded-full dark:rounded-senior mb-3 shadow-sm"
+                      >
+                        <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
+                          {opt}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </ScrollView>
+
+        {/* AI TEXT INPUT FOOTER */}
+        <View className="p-4 bg-surface border-t border-border dark:border-senior dark:border-border flex-row items-end pb-8">
+          <TextInput
+            className={`flex-1 bg-background border-2 border-border dark:border-senior rounded-3xl dark:rounded-senior px-5 pt-4 pb-4 mr-3 text-text font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}
+            placeholder="Ask a custom question..."
+            placeholderTextColor={Colors.light.tabIconDefault}
+            multiline
+            maxLength={200}
+            value={inputText}
+            onChangeText={setInputText}
+            style={{ maxHeight: 120 }} // Prevents it from growing too tall
+          />
+          <TouchableOpacity 
+            onPress={handleSendMessage}
+            disabled={!inputText.trim()}
+            activeOpacity={0.7}
+            className={`p-4 rounded-full border-2 dark:border-senior dark:rounded-senior ${
+              inputText.trim() 
+                ? 'bg-primary border-primary dark:bg-primary dark:border-primary' 
+                : 'bg-background border-border dark:border-border opacity-50'
+            }`}
+          >
+            <Send color={inputText.trim() ? '#FFFFFF' : Colors.light.tabIconDefault} size={isSeniorMode ? 28 : 24} />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
