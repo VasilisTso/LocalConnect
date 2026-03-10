@@ -330,7 +330,7 @@ export default function HomeScreen() {
             })}
             className="bg-surface border-2 border-primary dark:border-senior p-4 rounded-2xl dark:rounded-senior mb-8 flex-row items-center shadow-sm dark:shadow-none"
           >
-            <View className={`p-3 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-primary/10 border-primary/20'}`}>
+            <View className={`p-3 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-background border-primary'}`}>
               <BellRing color={primaryIconColor} size={isSeniorMode ? 28 : 24} />
             </View>
             <View className="flex-1 mr-2">
@@ -348,7 +348,8 @@ export default function HomeScreen() {
         )}
 
         {/* LOGO SECTION */}
-        <View className="items-center justify-center py-6 mb-8 bg-surface rounded-3xl dark:rounded-senior border border-border dark:border-senior dark:border-border shadow-sm dark:shadow-none">
+        {/* bg-surface and border border-border for it to be in a box */}
+        <View className="items-center justify-center py-6 mb-8 bg-background rounded-3xl dark:rounded-senior dark:border-senior dark:border-border shadow-sm dark:shadow-none">
           <View className="bg-background p-6 rounded-full mb-4 border border-primary">
             <HeartHandshake color={primaryIconColor} size={isSeniorMode ? 64 : 56} />
           </View>
