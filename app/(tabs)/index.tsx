@@ -64,6 +64,9 @@ export default function HomeScreen() {
   const [onboardingSeniorMode, setOnboardingSeniorMode] = useState(false);
   const [savingOnboarding, setSavingOnboarding] = useState(false);
 
+  // State to ensure we only show the Welcome Back alert once per session
+  const [hasCheckedPending, setHasCheckedPending] = useState(false);
+
   const AVAILABLE_TAGS = ["Pets", "Education", "Tools", "Errands", "Tech", "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"];
   const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
   const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
@@ -75,6 +78,49 @@ export default function HomeScreen() {
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
   };
+
+  // While You Were Away Alert Check, for when someone offers help and waits for response(accept/decline)
+  useEffect(() => {
+    // Extract the ID securely
+    const userId = session?.user?.id;
+
+    // If no user is logged in, or we already checked, stop here
+    if (!session?.user?.id || hasCheckedPending) return;
+
+    async function checkPendingTasks() {
+      try {
+        // Look for tasks I own that are currently waiting for my approval
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('id, title')
+          .eq('user_id', userId)
+          .eq('status', 'pending');
+
+        if (!error && data && data.length > 0) {
+          // found some, pop the alert
+          showAlert(
+            "While You Were Away ",
+            `You have ${data.length} neighbor(s) who offered to help you! Head to your Feed to accept or decline.`,
+            [
+              { text: "Dismiss", style: "cancel" },
+              { 
+                text: "View Feed", 
+                style: "default", 
+                onPress: () => router.push('/feed') 
+              }
+            ]
+          );
+        }
+      } catch (err) {
+        console.error("Error checking pending tasks", err);
+      } finally {
+        // Mark as checked so we dont spam the user every time they switch tabs
+        setHasCheckedPending(true); 
+      }
+    }
+
+    checkPendingTasks();
+  }, [session?.user?.id, hasCheckedPending]);
 
   // Fetch profile data(senior mode, karma, etc)
   useEffect(() => {
