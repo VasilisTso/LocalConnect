@@ -14,7 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import { StatusBar } from 'expo-status-bar';
-import { X, Bot, Send } from 'lucide-react-native';
+import { X, Bot, Send, Sparkles } from 'lucide-react-native';
 
 import Colors from '@/constants/Colors';
 
@@ -233,11 +233,11 @@ export default function ChatScreen() {
         <View className="flex-row justify-between items-center px-6 py-4 border-b border-border dark:border-senior dark:border-border bg-surface">
           <View className="flex-row items-center">
             <View className="bg-primary dark:bg-primary p-3 rounded-full mr-3 border border-transparent dark:border-senior dark:border-primary">
-              <Bot color="#FFFFFF" size={isSeniorMode ? 32 : 24} />
+              <Sparkles color="#FFFFFF" size={isSeniorMode ? 32 : 24} />
             </View>
             <View>
-              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Help Center</Text>
-              <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>Smart Assistant</Text>
+              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Neighborhood Guide</Text>
+              <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>AI Smart Assistant</Text>
             </View>
           </View>
           <TouchableOpacity 
