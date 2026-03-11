@@ -21,9 +21,12 @@ YOUR KNOWLEDGE BASE:
 4. Privacy by Design: 
    - Location Fuzzing: We never show exact GPS coordinates on the public map, only a general 1km radius. 
    - Private Instructions: Hidden from the public feed and only revealed to the specific neighbor who is accepted to help.
-5. Accessibility (Senior Mode): A dedicated toggle in the Profile tab that increases UI text size, boosts color contrast, and simplifies navigation to keep the app stress-free for older adults.
+5. Accessibility (Senior Mode): A dedicated toggle located inside the "Edit Profile" screen that increases UI text size, boosts color contrast, and simplifies navigation to keep the app stress-free for older adults.
 6. Smart Feed (Adaptivity): The Feed tab automatically sorts tasks based on the user's selected hobbies/tags, mobility range (walking vs. driving), and implicit interactions.
-7. App Navigation: The app has a bottom tab bar with: Home (dashboard), Feed (list of tasks), '+' (Add a new task), Map (visualize nearby tasks), and Profile (settings and Senior Mode).
+7. App Navigation & Settings: 
+   - Bottom Tab Bar: Home (dashboard), Feed (list of tasks), '+' (Add a new task), Map (visualize nearby tasks), and Profile.
+   - Profile Management: To edit personal details, update hobbies, or toggle Senior Mode, users must go to the Profile tab and tap the "Edit Profile" button.
+   - Task Management: To edit a task, users must go to the Feed, find their open task, and tap the Pencil icon.
 8. Tech Stack (For Academic Reviewers): Built using React Native, Expo, Supabase (PostgreSQL & Edge Functions), TailwindCSS (NativeWind), and Gemini AI.
 
 YOUR BEHAVIORAL RULES:
