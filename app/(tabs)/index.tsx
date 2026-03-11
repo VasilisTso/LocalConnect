@@ -26,6 +26,7 @@ import {
   Eye, 
   MessageCircle,
   Star,
+  Sparkles,
 } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/lib/supabase';
@@ -69,6 +70,7 @@ export default function HomeScreen() {
 
   const AVAILABLE_TAGS = ["Pets", "Education", "Tools", "Errands", "Tech", "Cars", "Music", "Entertainment", "Home & Garden", "Fitness"];
   const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
+  const secondaryIconColor = isSeniorMode ? Colors.dark.secondary : Colors.light.secondary;
   const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
 
   // DYNAMIC TIME-BASED GREETING
@@ -472,13 +474,16 @@ export default function HomeScreen() {
 
       {/* THE FLOATING CHAT BUTTON */}
       <TouchableOpacity 
-        className={`absolute bottom-6 right-6 rounded-full items-center justify-center shadow-xl ${
-          isSeniorMode ? 'bg-primary w-16 h-16' : 'bg-primary w-16 h-16 border-[3px] border-background'
+        className={`absolute bottom-6 right-6 rounded-full flex-row items-center justify-center shadow-xl ${
+          isSeniorMode ? 'bg-primary px-6 py-4' : 'bg-primary px-5 py-3.5 border-2 border-background'
         }`}
         onPress={() => router.push('/chat')}
         activeOpacity={0.8}
       >
-        <MessageCircle color="#FFFFFF" size={isSeniorMode ? 32 : 28} />
+        <Sparkles color="#ffffff" size={isSeniorMode ? 28 : 24} />
+        <Text className={`text-white font-sans font-bold ml-2 ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+          Ask AI Guide
+        </Text>
       </TouchableOpacity>
 
     </SafeAreaView>
