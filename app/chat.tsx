@@ -7,7 +7,8 @@ import {
   Platform,
   KeyboardAvoidingView,
   TextInput,
-  Keyboard
+  Keyboard,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -17,7 +18,10 @@ import { X, Bot, Send } from 'lucide-react-native';
 
 import Colors from '@/constants/Colors';
 
-// THE RULE-BASED ENGINE: Predetermined answers for local parsing and instant answers
+//talk with edge function
+import { supabase } from '@/lib/supabase';
+
+// RULE-BASED ENGINE: Predetermined answers for local parsing and instant answers
 const QA_DATABASE: Record<string, Record<string, string>> = {
   "App Features": {
     "How do the badges work?": "You earn badges by completing tasks and gaining Karma! You start as a 'New Neighbor' and can level up to 'Active Helper' and eventually 'Local Hero'.",
@@ -57,9 +61,11 @@ export default function ChatScreen() {
 
   // input state for the AI integration
   const [inputText, setInputText] = useState('');
-
   // State to track exact keyboard height
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // State to prevent spamming the API and show loading bubble
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     // Listen to Android's native keyboard opening/closing
@@ -93,7 +99,7 @@ export default function ChatScreen() {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
-  }, [messages]);
+  }, [messages, isTyping]);
 
   // Handle the hardcoded rule-based buttons
   const handleSelectOption = (option: string) => {
@@ -103,7 +109,7 @@ export default function ChatScreen() {
     // Remove the buttons from the previous bot message so the chat history looks clean
     setMessages(prev => {
       const updated = [...prev];
-      updated[updated.length - 1].options = [];
+      if (updated.length > 0) updated[updated.length - 1].options = [];
       return [...updated, userMsg];
     });
 
@@ -149,33 +155,68 @@ export default function ChatScreen() {
     }, 400); 
   };
 
-  // Handle typed messages (AI integration)
-  const handleSendMessage = () => {
-    if (!inputText.trim()) return;
+  // AI integration
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || isTyping) return;
 
-    const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: inputText.trim() };
+    const userText = inputText.trim();
+    const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: userText };
     
-    // Clear old buttons and add user text
+    // Add user message to UI instantly
     setMessages(prev => {
       const updated = [...prev];
-      updated[updated.length - 1].options = [];
+      if (updated.length > 0) updated[updated.length - 1].options = [];
       return [...updated, userMsg];
     });
 
     setInputText('');
+    setIsTyping(true); // Lock the input, show loading bubble
 
-    // DUMMY AI RESPONSE (TODO replace with REAL AI next)
-    setTimeout(() => {
+    try {
+      // Call our secure Edge Function
+      const { data, error } = await supabase.functions.invoke('chat-assistant', {
+        body: { messages: [userMsg] } 
+      });
+
+      // If Supabase throws a network error or 400 status
+      if (error) {
+        throw error;
+      }
+
+      // Add Gemini's response to the UI
       setMessages(prev => [
         ...prev, 
         { 
           id: Date.now().toString(), 
           sender: 'bot', 
-          text: "I am an AI, but I haven't been connected to my brain yet! Try using the buttons above for now.", 
+          text: data.reply, 
+          options: ['Back to main menu'] // pivot back to buttons
+        }
+      ]);
+
+    } catch (error: any) {
+      console.error("AI Assistant Error:", error);
+      
+      // Fallback message (handles the rate limit we set up in the backend)
+      let errorMessage = "I'm having trouble connecting to my network right now. Please check your internet and try again!";
+      
+      // Check if the backend sent us our specific custom error string
+      if (error.message && error.message.includes("receiving a lot of questions")) {
+        errorMessage = "I'm receiving a lot of questions right now! Please wait a few moments and try asking again.";
+      }
+
+      setMessages(prev => [
+        ...prev, 
+        { 
+          id: Date.now().toString(), 
+          sender: 'bot', 
+          text: errorMessage, 
           options: ['Back to main menu'] 
         }
       ]);
-    }, 1000);
+    } finally {
+      setIsTyping(false); // Unlock the input
+    }
   };
 
   return (
@@ -257,6 +298,15 @@ export default function ChatScreen() {
               </View>
             );
           })}
+
+          {/* TYPING INDICATOR BUBBLE */}
+          {isTyping && (
+            <View className="mb-6 items-start">
+              <View className="bg-surface border-2 border-border dark:border-border rounded-3xl rounded-tl-sm p-4 w-20 items-center justify-center">
+                <ActivityIndicator color={primaryIconColor} size="small" />
+              </View>
+            </View>
+          )}
         </ScrollView>
 
         {/* AI TEXT INPUT FOOTER */}
@@ -265,26 +315,27 @@ export default function ChatScreen() {
           style={{ paddingBottom: Math.max(insets.bottom + 10, 16) }}
         >
           <TextInput
-            className={`flex-1 bg-background border-2 border-border dark:border-senior rounded-3xl dark:rounded-senior px-5 pt-4 pb-4 mr-3 text-text font-sans ${isSeniorMode ? 'text-lg' : 'text-base'}`}
-            placeholder="Ask a custom question..."
+            className={`flex-1 bg-background border-2 border-border dark:border-senior rounded-3xl dark:rounded-senior px-5 pt-4 pb-4 mr-3 text-text font-sans ${isSeniorMode ? 'text-lg' : 'text-base'} ${isTyping ? 'opacity-50' : ''}`}
+            placeholder={isTyping ? "Assistant is typing..." : "Ask a custom question..."}
             placeholderTextColor={Colors.light.tabIconDefault}
             multiline
             maxLength={200}
             value={inputText}
             onChangeText={setInputText}
+            editable={!isTyping} // Prevent typing while bot is thinking
             style={{ maxHeight: 120 }} // Prevents it from growing too tall
           />
           <TouchableOpacity 
             onPress={handleSendMessage}
-            disabled={!inputText.trim()}
+            disabled={!inputText.trim() || isTyping}
             activeOpacity={0.7}
             className={`p-4 rounded-full border-2 dark:border-senior dark:rounded-senior ${
-              inputText.trim() 
+              inputText.trim() && !isTyping
                 ? 'bg-primary border-primary dark:bg-primary dark:border-primary' 
                 : 'bg-background border-border dark:border-border opacity-50'
             }`}
           >
-            <Send color={inputText.trim() ? '#FFFFFF' : Colors.light.tabIconDefault} size={isSeniorMode ? 28 : 24} />
+            <Send color={inputText.trim() && !isTyping ? '#FFFFFF' : Colors.light.tabIconDefault} size={isSeniorMode ? 28 : 24} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

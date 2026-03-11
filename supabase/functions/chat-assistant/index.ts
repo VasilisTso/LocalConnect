@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// Supabase client to verify the token securely
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // CORS Headers, REQUIRED for React Native app to connect
 const corsHeaders = {
@@ -42,7 +44,18 @@ serve(async (req) => {
     // SECURITY CHECK: Ensure the user is logged into the app
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      throw new Error('Unauthorized: You must be logged in to use the assistant.');
+      throw new Error('Unauthorized: You must be logged in to use the assistant. No token provided.');
+    }
+    // secure Supabase client using the URL and ANON KEY
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    )
+    // ask Supabase db if this token is real and belongs to a real user
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    if (userError || !user) {
+      throw new Error('Unauthorized: Invalid token');
     }
 
     // Parse the chat history sent from frontend
