@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   LogOut, User as UserIcon, ShieldAlert, Award, Phone, Shield, Camera, 
-  ChevronRight, Settings, Lock, HelpCircle, Info, CheckCircle 
+  ChevronRight, Settings, Lock, HelpCircle, Info, CheckCircle, Sparkles
 } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
@@ -310,6 +310,7 @@ export default function ProfileScreen() {
             <SettingRow icon={Settings} title="Edit Profile" route="/edit-profile" />
             <SettingRow icon={Lock} title="Security & Privacy" route="/security" />
             <SettingRow icon={HelpCircle} title="Help & Support" route="/support" />
+            <SettingRow icon={Sparkles} title="Ask AI Guide" route="/chat" />
             <SettingRow icon={Info} title="About the App" route="/about" isLast />
           </View>
         </View>
