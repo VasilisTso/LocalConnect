@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   ScrollView, 
   ActivityIndicator,
-  Image
+  Image,
+  Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -163,6 +164,11 @@ export default function ProfileScreen() {
     // layout.tsx listener will automatically detect the sign out and route to login
   }
 
+  // Helper to open the phone dialer
+  const handleCall = (number: string) => {
+    Linking.openURL(`tel:${number}`);
+  };
+
   const avatarSize = isSeniorMode ? 100 : 90;
   const currentBadge = getBadge(karma);
   const BadgeIcon = currentBadge.icon;
@@ -316,18 +322,17 @@ export default function ProfileScreen() {
               <Phone color={Colors.dark.error} size={28} />
             </View>
             
-            {/* Added proper margins and active states without hardcoding gray-100 */}
-            <TouchableOpacity className="bg-background py-4 px-5 rounded-md flex-row justify-between items-center mb-4 border-senior border-border active:opacity-70">
+            <TouchableOpacity onPress={() => handleCall('112')} className="bg-background py-4 px-5 rounded-md flex-row justify-between items-center mb-4 border-senior border-border active:opacity-70">
               <Text className="text-text font-sans font-bold text-xl">General</Text>
               <Text className="text-error font-sans font-extrabold text-2xl">112</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity className="bg-background py-4 px-5 rounded-md flex-row justify-between items-center mb-4 border-senior border-border active:opacity-70">
+            <TouchableOpacity onPress={() => handleCall('166')} className="bg-background py-4 px-5 rounded-md flex-row justify-between items-center mb-4 border-senior border-border active:opacity-70">
               <Text className="text-text font-sans font-bold text-xl">Ambulance</Text>
               <Text className="text-error font-sans font-extrabold text-2xl">166</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className="bg-background py-4 px-5 rounded-md flex-row justify-between items-center border-senior border-border active:opacity-70">
+            <TouchableOpacity onPress={() => handleCall('100')} className="bg-background py-4 px-5 rounded-md flex-row justify-between items-center border-senior border-border active:opacity-70">
               <Text className="text-text font-sans font-bold text-xl">Police</Text>
               <Text className="text-error font-sans font-extrabold text-2xl">100</Text>
             </TouchableOpacity>
