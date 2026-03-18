@@ -1,4 +1,6 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import { useFonts } from "expo-font";
 import {
   Stack,
@@ -135,76 +137,78 @@ function RootLayoutNav() {
   };
 
   return (
-    <SafeAreaProvider>
-      {/* ADAPTIVE STATUS BAR:
-        Normal Mode (#1A1826) needs white/light text.
-        Senior Mode (#FFFFFF) needs black/dark text.
-      */}
-      <ThemeProvider value={isSeniorMode ? customSeniorTheme : customNormalTheme}>
-        
-        <StatusBar 
-          style={isSeniorMode ? "dark" : "light"} 
-          backgroundColor="transparent" 
-          translucent 
-        />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        {/* ADAPTIVE STATUS BAR:
+          Normal Mode (#1A1826) needs white/light text.
+          Senior Mode (#FFFFFF) needs black/dark text.
+        */}
+        <ThemeProvider value={isSeniorMode ? customSeniorTheme : customNormalTheme}>
+          
+          <StatusBar 
+            style={isSeniorMode ? "dark" : "light"} 
+            backgroundColor="transparent" 
+            translucent 
+          />
 
-        <View 
-          style={{ 
-            flex: 1, 
-            backgroundColor: isSeniorMode ? Colors.dark.background : Colors.light.background 
-          }}
-        >
-          {/* GLOBAL TABLET WRAPPER: Constrains app width on iPads, remains 100% width on phones */}
-          <View className="flex-1 w-full max-w-2xl mx-auto overflow-hidden shadow-2xl">
+          <View 
+            style={{ 
+              flex: 1, 
+              backgroundColor: isSeniorMode ? Colors.dark.background : Colors.light.background 
+            }}
+          >
+            {/* GLOBAL TABLET WRAPPER: Constrains app width on iPads, remains 100% width on phones */}
+            <View className="flex-1 w-full max-w-2xl mx-auto overflow-hidden shadow-2xl">
 
-            <Stack 
-              screenOptions={{ 
-                headerShown: false, 
-                // Enforce our design system's exact background colors for React Navigation
-                contentStyle: { 
-                  backgroundColor: isSeniorMode ? Colors.dark.background : Colors.light.background 
-                },
-                // ACCESSIBILITY FEATURE: "Reduce Motion"
-                // Slide animations are modern, but fade animations prevent disorientation for seniors
-                animation: isSeniorMode ? "fade" : "slide_from_right"
-              }}
-            >
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack 
+                screenOptions={{ 
+                  headerShown: false, 
+                  // Enforce our design system's exact background colors for React Navigation
+                  contentStyle: { 
+                    backgroundColor: isSeniorMode ? Colors.dark.background : Colors.light.background 
+                  },
+                  // ACCESSIBILITY FEATURE: "Reduce Motion"
+                  // Slide animations are modern, but fade animations prevent disorientation for seniors
+                  animation: isSeniorMode ? "fade" : "slide_from_right"
+                }}
+              >
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
 
-              <Stack.Screen 
-                name="modal" 
-                options={{ 
-                  presentation: "modal",
-                  animation: isSeniorMode ? "fade" : "slide_from_bottom"
-                }} 
-              />
-              <Stack.Screen 
-                name="chat" 
-                options={{ 
-                  presentation: "modal",
-                  animation: isSeniorMode ? "fade" : "slide_from_bottom"
-                }} 
-              />
-              <Stack.Screen 
-                name="review" 
-                options={{ 
-                  presentation: "modal",
-                  animation: isSeniorMode ? "fade" : "slide_from_bottom"
-                }} 
-              />
-              <Stack.Screen name="task-details" options={{ headerShown: false }} />
-              <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
-              <Stack.Screen name="security" options={{ headerShown: false }} />
-              <Stack.Screen name="support" options={{ headerShown: false }} />
-              <Stack.Screen name="about" options={{ headerShown: false }} />
-            </Stack>
+                <Stack.Screen 
+                  name="modal" 
+                  options={{ 
+                    presentation: "modal",
+                    animation: isSeniorMode ? "fade" : "slide_from_bottom"
+                  }} 
+                />
+                <Stack.Screen 
+                  name="chat" 
+                  options={{ 
+                    presentation: "modal",
+                    animation: isSeniorMode ? "fade" : "slide_from_bottom"
+                  }} 
+                />
+                <Stack.Screen 
+                  name="review" 
+                  options={{ 
+                    presentation: "modal",
+                    animation: isSeniorMode ? "fade" : "slide_from_bottom"
+                  }} 
+                />
+                <Stack.Screen name="task-details" options={{ headerShown: false }} />
+                <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
+                <Stack.Screen name="security" options={{ headerShown: false }} />
+                <Stack.Screen name="support" options={{ headerShown: false }} />
+                <Stack.Screen name="about" options={{ headerShown: false }} />
+              </Stack>
+            </View>
           </View>
-        </View>
 
-        <AdaptiveAlert />
+          <AdaptiveAlert />
 
-      </ThemeProvider>
-    </SafeAreaProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
