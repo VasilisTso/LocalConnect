@@ -240,26 +240,28 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        {/* STATS & BADGE CONTAINER */}
-        <View className="bg-surface rounded-2xl dark:rounded-senior p-5 mb-8 border border-border dark:border-senior shadow-sm flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1">
-            <View className="p-3 rounded-full mr-3" style={{ backgroundColor: `${currentBadge.color}15` }}>
-              <BadgeIcon color={currentBadge.color} size={isSeniorMode ? 28 : 24} />
+        {/* STATS & BADGE CONTAINER(hidden in senior mode) */}
+        {!isSeniorMode && (
+          <View className="bg-surface rounded-2xl dark:rounded-senior p-5 mb-8 border border-border dark:border-senior shadow-sm flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1">
+              <View className="p-3 rounded-full mr-3" style={{ backgroundColor: `${currentBadge.color}15` }}>
+                <BadgeIcon color={currentBadge.color} size={isSeniorMode ? 28 : 24} />
+              </View>
+              <View>
+                <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-base' : 'text-xs'}`}>Community Status</Text>
+                <Text className={`font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`} style={{ color: currentBadge.color }}>
+                  {currentBadge.title}
+                </Text>
+              </View>
             </View>
-            <View>
-              <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-base' : 'text-xs'}`}>Community Status</Text>
-              <Text className={`font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`} style={{ color: currentBadge.color }}>
-                {currentBadge.title}
+            <View className="items-center pl-10 border-l border-border dark:border-senior/50">
+              <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-base' : 'text-xs'}`}>Total Karma</Text>
+              <Text className={`font-sans font-bold text-secondary ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
+                {karma}
               </Text>
             </View>
           </View>
-          <View className="items-center pl-10 border-l border-border dark:border-senior/50">
-            <Text className={`text-text-muted font-sans ${isSeniorMode ? 'text-base' : 'text-xs'}`}>Total Karma</Text>
-            <Text className={`font-sans font-bold text-secondary ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>
-              {karma}
-            </Text>
-          </View>
-        </View>
+        )}
 
         {/* RECENT ACTIVITY */}
         <View className="mb-8">

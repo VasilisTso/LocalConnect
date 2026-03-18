@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award, Footprints, Car } from 'lucide-react-native';
+import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award, Footprints, Car, CheckCircle } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -90,7 +90,8 @@ export default function FeedScreen() {
 
   const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
   const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
-
+  const successIconColor = isSeniorMode ? Colors.dark.success : Colors.light.success;
+  
   // Securely sync profile and wipe memory on account switch
   useEffect(() => {
     // If nobody is logged in, wipe the memory completely
@@ -311,6 +312,32 @@ export default function FeedScreen() {
     ]);
   }
 
+  // Dismiss a report (Admin only)
+  async function handleDismissReport(taskId: string) {
+    showAlert('Dismiss Report', 'Are you sure this task is safe? This will remove the report flag.', [
+      { text: 'Cancel', style: 'cancel' },
+      { 
+        text: 'Dismiss', 
+        onPress: async () => {
+          try {
+            // Delete the report from the reports table
+            const { error } = await supabase
+              .from('reports')
+              .delete()
+              .eq('task_id', taskId);
+
+            if (error) throw error;
+            
+            // Remove it from the reported list locally so it vanishes from the UI instantly
+            setReportedTaskIds(prev => prev.filter(id => id !== taskId));
+          } catch (error: any) {
+            showAlert('Error dismissing report', error.message);
+          }
+        }
+      }
+    ]);
+  }
+
   // UI Component for individual task cards
   const renderTask = ({ item }: { item: Task }) => {
     const isAdmin = userProfile?.is_admin === true;
@@ -349,7 +376,7 @@ export default function FeedScreen() {
             </Text>
           </View>
 
-          {/* Edit/Delete (Only show if it's still Open) AND Time Ago */}
+          {/* Edit/Delete/Unreport (Only show if it's still Open) AND Time Ago */}
           <View className="items-end">
             {(canEdit || canDelete) && (
               <View className="flex-row items-center -mr-2 -mt-2 mb-1">
@@ -358,6 +385,7 @@ export default function FeedScreen() {
                     <Edit2 color={isSeniorMode ? Colors.dark.primary : Colors.light.primary} size={isSeniorMode ? 22 : 18} />
                   </TouchableOpacity>
                 )}
+
                 {canDelete && (
                   <TouchableOpacity onPress={() => handleDeleteTask(item.id)} className="p-2">
                     <Trash2 color={isSeniorMode ? Colors.dark.error : Colors.light.error} size={isSeniorMode ? 22 : 18} />
@@ -409,6 +437,20 @@ export default function FeedScreen() {
           </Text>
           <ChevronRight color="#FFFFFF" size={isSeniorMode ? 24 : 20} className="ml-1" />
         </View>
+
+        {/* Unreport Button for Admins */}
+        {filterMode === 'reports' && isAdmin && (
+          <TouchableOpacity 
+            onPress={() => handleDismissReport(item.id)}
+            className="flex-row items-center justify-center mt-4 bg-surface border-2 border-success rounded-xl dark:rounded-senior py-3"
+            activeOpacity={0.7}
+          >
+            <CheckCircle color={successIconColor} size={isSeniorMode ? 24 : 20} className="mr-2" />
+            <Text className={`font-sans ml-2 font-bold text-success ${isSeniorMode ? 'text-xl' : 'text-base'}`}>
+              Safe: Dismiss Report
+            </Text>
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
     );
   };

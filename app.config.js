@@ -1,4 +1,6 @@
-{
+import 'dotenv/config';
+
+export default {
   "expo": {
     "name": "LocalConnect",
     "slug": "LocalConnect",
@@ -21,6 +23,12 @@
         "backgroundColor": "#1A1826",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
+      "package": "com.vasilistsom.localconnect", 
+      "config": {
+        "googleMaps": {
+          "apiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+        }
+      },
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -37,6 +45,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "83b70ea7-03e7-4b6a-aef8-27c33f008bb8"
+      }
     }
   }
 }

@@ -436,18 +436,20 @@ export default function HomeScreen() {
         </View>
 
         {/* KARMA POINTS */}
-        <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4">
-          <View className="flex-row items-center flex-1">
-            <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-background border-secondary'}`}>
-              <Award color={isSeniorMode ? Colors.dark.secondary : "#D97706"} size={isSeniorMode ? 28 : 24} />
+        {!isSeniorMode && (
+          <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4">
+            <View className="flex-row items-center flex-1">
+              <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-background border-secondary'}`}>
+                <Award color={isSeniorMode ? Colors.dark.secondary : "#D97706"} size={isSeniorMode ? 28 : 24} />
+              </View>
+              <View>
+                <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-lg' : 'text-lg'}`}>Total Karma</Text>
+                <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Community trust points</Text>
+              </View>
             </View>
-            <View>
-              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-lg' : 'text-lg'}`}>Total Karma</Text>
-              <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Community trust points</Text>
-            </View>
+            <Text className={`font-sans font-bold text-secondary ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>{userProfile?.karma_points || 0}</Text>
           </View>
-          <Text className={`font-sans font-bold text-secondary ${isSeniorMode ? 'text-3xl' : 'text-3xl'}`}>{userProfile?.karma_points || 0}</Text>
-        </View>
+        )}
 
         {/* AVERAGE RATING */}
         <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-8">
