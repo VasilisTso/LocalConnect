@@ -589,7 +589,7 @@ export default function FeedScreen() {
           ListEmptyComponent={
             <View className="items-center justify-center py-16">
               <MapPin color={mutedIconColor} size={isSeniorMode ? 56 : 48} className="mb-6 opacity-50" />
-              <Text className={`text-text font-sans font-bold text-center mb-3 ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>
+              <Text className={`text-text font-sans font-bold text-center mt-5 mb-3 ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>
                 {filterMode === 'mine' ? "You have no open tasks" : "No community tasks found"}
               </Text>
               <Text className={`text-text-muted font-sans text-center px-6 ${isSeniorMode ? 'text-base leading-6' : 'text-base leading-6'}`}>
