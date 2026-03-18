@@ -48,10 +48,10 @@ Use the **Expo Go** app on your physical iOS or Android device to scan the QR co
 ## Backend Deployment
 The Supabase Edge Function that powers the AI Assistant requires deployment to your own Supabase project:
 \`\`\`bash
-# Link your project
+### Link your project
 npx supabase link --project-ref your-project-id
 
-# Deploy the function securely (bypassing external bouncer for custom JWT verification)
+### Deploy the function securely (bypassing external bouncer for custom JWT verification)
 npx supabase functions deploy chat-assistant --no-verify-jwt
 \`\`\`
 *Note: Ensure your `GEMINI_API_KEY` is safely stored in the Supabase Cloud Vault.*
