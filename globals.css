@@ -2,23 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
-:root {
-    --color-primary: #5F4B8B;          
-    --color-primary-dark: #4B3B6E;     
-    --color-secondary: #FFD167;        
-    --color-background: #F8F9FA;       
-    --color-surface: #FFFFFF;          
-    --color-surface-highlight: #F3F0FF;
-    --color-text: #1F2937;             
-    --color-text-muted: #6B7280;       
-    --color-border: #E5E7EB;          
-    --color-error: #EF4444;            
-    --color-success: #10B981;          
-  }
-*/
-
-
 @layer base {  
   /* Default Theme (Standard User) */
   :root {

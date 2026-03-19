@@ -52,6 +52,8 @@ export default function TaskDetailsScreen() {
   // State to hold the helper's trust metrics
   const [helperProfile, setHelperProfile] = useState<{ avatar_url: string | null, karma_points: number, avg_rating: number, username: string | null } | null>(null);
 
+  const [ownerProfile, setOwnerProfile] = useState<{ avatar_url: string | null, avg_rating: number, username: string | null } | null>(null);
+
   // Grab all the task data passed from the Feed
   const params = useLocalSearchParams();
   const taskId = params.id as string;
@@ -82,6 +84,24 @@ export default function TaskDetailsScreen() {
   const primaryIconColor = isSeniorMode ? Colors.dark.primary : Colors.light.primary;
   const errorIconColor = isSeniorMode ? Colors.dark.error : Colors.light.error;
   const mutedIconColor = isSeniorMode ? Colors.dark.tabIconDefault : Colors.light.tabIconDefault;
+
+  // Fetch Task Owner's Profile Data
+  useEffect(() => {
+    async function fetchOwnerProfile() {
+      if (taskUserId) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('avatar_url, avg_rating, username')
+          .eq('id', taskUserId)
+          .single();
+          
+        if (data && !error) {
+          setOwnerProfile(data);
+        }
+      }
+    }
+    fetchOwnerProfile();
+  }, [taskUserId]);
 
   // Translate the GPS into a safe, generic neighborhood name
   useEffect(() => {
@@ -300,47 +320,90 @@ export default function TaskDetailsScreen() {
           )}
         </View>
 
-        {/* Metadata Chips */}
-        <View className="flex-col items-start gap-3 mb-8 w-full">
-          
-          {/* Trust Badge */}
-          <View 
-            className="flex-row items-center px-4 py-2 rounded-full border bg-background"
-            style={{ borderColor: badge.color }}
-          >
-            {React.createElement(badge.icon, { color: badge.color, size: isSeniorMode ? 20 : 16, className: "mr-2" })}
-            <Text className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-base' : 'text-sm'}`} style={{ color: badge.color }}>
-              By {badge.title}
+        {/* Owner Details + Metadata Chips */}
+        <View className="flex-row justify-between items-start mb-8 w-full">
+        
+          {/* Owner Details */}
+          <View className="flex-col items-center mr-4" style={{ width: isSeniorMode ? 110 : 96 }}>
+            {ownerProfile?.avatar_url ? (
+              <Image 
+                source={{ uri: ownerProfile.avatar_url }} 
+                style={{ 
+                  width: isSeniorMode ? 72 : 64, 
+                  height: isSeniorMode ? 72 : 64, 
+                  borderRadius: isSeniorMode ? 36 : 32, 
+                  marginBottom: 12 
+                }} 
+              />
+            ) : (
+              <View 
+                className="bg-surface border border-border items-center justify-center mb-3" 
+                style={{ 
+                  width: isSeniorMode ? 72 : 64, 
+                  height: isSeniorMode ? 72 : 64, 
+                  borderRadius: isSeniorMode ? 36 : 32 
+                }}
+              >
+                <UserIcon color={primaryIconColor} size={isSeniorMode ? 36 : 32} />
+              </View>
+            )}
+            
+            <Text 
+              className={`text-text font-sans font-bold text-center mb-1.5 ${isSeniorMode ? 'text-lg' : 'text-base'}`} 
+              numberOfLines={1}
+            >
+              {ownerProfile?.username || 'Neighbor'}
             </Text>
-          </View>
-
-          {/* Category Tag */}
-          <View className="flex-row items-center bg-surface px-4 py-2 rounded-full border border-border dark:border-senior dark:border-border">
-            <Tag color={primaryIconColor} size={isSeniorMode ? 20 : 16} className="mr-2" />
-            <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
-              {category}
-            </Text>
-          </View>
-
-          {/* Location Pin */}
-          <View className="flex-row items-center bg-surface px-4 py-2 rounded-full border border-border dark:border-senior dark:border-border">
-            <MapPin color={isSeniorMode ? Colors.dark.secondary : Colors.light.secondary} size={isSeniorMode ? 20 : 16} className="mr-2" />
-            <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
-              {locationName}
-            </Text>
-          </View>
-
-          {/* Due Date Chip (Only shows if they selected a due date) */}
-          {dueDate && (
-            <View className="flex-row items-center justify-center w-full bg-background px-4 py-3 rounded-xl border border-secondary mt-2">
-              <CalendarClock color={Colors.light.secondary} size={isSeniorMode ? 24 : 20} className="mr-3" />
-              <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
-                Needed by: {formatDueDate(dueDate)}
+            
+            <View className="flex-row items-center">
+              <Star color={Colors.light.secondary} fill={Colors.light.secondary} size={isSeniorMode ? 20 : 16} className="mr-1.5" />
+              <Text className={`text-text-muted ml-1 font-sans font-bold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
+                {ownerProfile?.avg_rating ? ownerProfile.avg_rating.toFixed(1) : 'New'}
               </Text>
             </View>
-          )}
+          </View>
 
+          {/* Metadata Chips */}
+          <View className="flex-col items-end gap-3 flex-1">
+            
+            {/* Trust Badge */}
+            <View 
+              className="flex-row items-center px-4 py-2 rounded-full border bg-background"
+              style={{ borderColor: badge.color }}
+            >
+              {React.createElement(badge.icon, { color: badge.color, size: isSeniorMode ? 20 : 16, className: "mr-2" })}
+              <Text className={`font-sans ml-2 font-bold ${isSeniorMode ? 'text-base' : 'text-sm'}`} style={{ color: badge.color }}>
+                By {badge.title}
+              </Text>
+            </View>
+
+            {/* Category Tag */}
+            <View className="flex-row items-center bg-surface px-4 py-2 rounded-full border border-border dark:border-senior dark:border-border">
+              <Tag color={primaryIconColor} size={isSeniorMode ? 20 : 16} className="mr-2" />
+              <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
+                {category}
+              </Text>
+            </View>
+
+            {/* Location Pin */}
+            <View className="flex-row items-center bg-surface px-4 py-2 rounded-full border border-border dark:border-senior dark:border-border">
+              <MapPin color={isSeniorMode ? Colors.dark.secondary : Colors.light.secondary} size={isSeniorMode ? 20 : 16} className="mr-2" />
+              <Text className={`text-text-muted ml-2 font-sans font-semibold ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
+                {locationName}
+              </Text>
+            </View>
+          </View>
         </View>
+
+        {/* Due Date Chip (Sits nicely beneath the 2-column layout) */}
+        {dueDate && (
+          <View className="flex-row items-center justify-center w-full bg-background px-4 py-3 rounded-xl border border-secondary mb-8">
+            <CalendarClock color={Colors.light.secondary} size={isSeniorMode ? 24 : 20} className="mr-3" />
+            <Text className={`text-text ml-2 font-sans font-bold ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
+              Needed by: {formatDueDate(dueDate)}
+            </Text>
+          </View>
+        )}
 
         {/* Description Section */}
         <Text className={`text-text font-sans font-bold mb-3 ${isSeniorMode ? 'text-xl' : 'text-xl'}`}>

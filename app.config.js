@@ -8,7 +8,8 @@ export default {
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "localconnect",
-    "userInterfaceStyle": "automatic",
+    // change to light from automatic
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",

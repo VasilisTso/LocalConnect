@@ -12,9 +12,9 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useColorScheme } from "nativewind";
+import { useColorScheme as useNativeWindColorScheme } from "nativewind";
 import { ThemeProvider, DefaultTheme, DarkTheme, Theme } from "@react-navigation/native";
-import { View } from 'react-native';
+import { View, AppState, Appearance } from 'react-native';
 
 // Our custom state and backend
 import { supabase } from "@/lib/supabase";
@@ -26,6 +26,8 @@ import AdaptiveAlert from '@/components/AdaptiveAlert';
 import "../globals.css";
 
 export { ErrorBoundary } from "expo-router";
+
+import NoInternet from '@/components/NoInternet';
 
 // Prevent splash screen from hiding until fonts load
 SplashScreen.preventAutoHideAsync();
@@ -101,12 +103,27 @@ function RootLayoutNav() {
   // THE ADAPTIVITY ENGINE (UI LEVEL)
   // We sync Zustand state with NativeWind's built-in theme engine
   const isSeniorMode = useAppStore((state) => state.isSeniorMode);
-  const { setColorScheme } = useColorScheme();
+  const { setColorScheme } = useNativeWindColorScheme();
 
   useEffect(() => {
     // If Senior Mode is active, we trigger NativeWinds dark mode, 
     // which automatically cascades our high-contrast CSS variables
+    // Force color scheme to match our global state, Apply our state immediately on load
     setColorScheme(isSeniorMode ? "dark" : "light");
+    Appearance.setColorScheme(isSeniorMode ? "dark" : "light");
+
+    // Re-apply our state whenever the app regains focus
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        setColorScheme(isSeniorMode ? "dark" : "light");
+        Appearance.setColorScheme(isSeniorMode ? "dark" : "light");
+      }
+    });
+
+    // Cleanup listener on unmount
+    return () => {
+      subscription.remove();
+    };
   }, [isSeniorMode, setColorScheme]);
 
   // custom themes for the absolute root canvas to prevent the white flash
@@ -152,6 +169,7 @@ function RootLayoutNav() {
           />
 
           <View 
+            className={isSeniorMode ? "dark" : "light"}
             style={{ 
               flex: 1, 
               backgroundColor: isSeniorMode ? Colors.dark.background : Colors.light.background 
@@ -206,6 +224,7 @@ function RootLayoutNav() {
           </View>
 
           <AdaptiveAlert />
+          <NoInternet />
 
         </ThemeProvider>
       </SafeAreaProvider>
