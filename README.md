@@ -23,38 +23,4 @@ LocalConnect is a neighborhood mutual-aid mobile application developed as an aca
 * **Supabase Edge Functions** (Deno/TypeScript serverless functions for secure LLM brokering)
 * **Google Gemini 2.5 Flash** (AI Assistant via Edge Function)
 
-## Getting Started
-
-To run this project locally, you will need [Node.js](https://nodejs.org/) and the [Expo CLI](https://docs.expo.dev/get-started/installation/) installed.
-
-### Install dependencies
-\`\`\`bash
-npm install
-\`\`\`
-
-### Environment Variables
-Create a \`.env\` file in the root directory and add your Supabase keys:
-\`\`\`text
-EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-\`\`\`
-
-### Start the app
-\`\`\`bash
-npx expo start
-\`\`\`
-Use the **Expo Go** app on your physical iOS or Android device to scan the QR code and test the geospatial features in the real world!
-
-## Backend Deployment
-The Supabase Edge Function that powers the AI Assistant requires deployment to your own Supabase project:
-\`\`\`bash
-### Link your project
-npx supabase link --project-ref your-project-id
-
-### Deploy the function securely (bypassing external bouncer for custom JWT verification)
-npx supabase functions deploy chat-assistant --no-verify-jwt
-\`\`\`
-*Note: Ensure your `GEMINI_API_KEY` is safely stored in the Supabase Cloud Vault.*
-
-## Academic Context
-This application was designed, developed, and evaluated as part of a university thesis focusing on how software architecture can adapt to human needs rather than forcing humans to adapt to complex software interfaces.
+## Screenshots
