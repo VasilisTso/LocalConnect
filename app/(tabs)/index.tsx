@@ -76,9 +76,12 @@ export default function HomeScreen() {
   // DYNAMIC TIME-BASED GREETING
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+
+    if (hour >= 5 && hour < 12) return 'Good morning';
+    
+    if (hour >= 12 && hour < 17) return 'Good afternoon';
+    
+    return 'Good evening'; 
   };
 
   // While You Were Away Alert Check, for when someone offers help and waits for response(accept/decline)
@@ -418,28 +421,38 @@ export default function HomeScreen() {
 
         {/* My Stats SECTION */}
         <Text className={`font-sans font-bold text-text mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>My Stats</Text>
+        {/* Completed Tasks */}
         <TouchableOpacity 
           className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4 active:opacity-70"
           onPress={() => router.push('/task-history')}
         >
+          {/* Left Side: Icon & Text */}
           <View className="flex-row items-center flex-1">
             <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-background border-success'}`}>
               <CheckCircle color={isSeniorMode ? Colors.dark.success : "#059669"} size={isSeniorMode ? 28 : 24} />
             </View>
             <View>
-              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-lg' : 'text-lg'}`}>Tasks Completed</Text>
-              <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Helped your neighborhood</Text>
+              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-lg' : 'text-lg'}`}>
+                Tasks Completed
+              </Text>
+              {/* Changed this text to act as a clear Call-To-Action */}
+              <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
+                Tap to view history
+              </Text> 
             </View>
           </View>
           
+          {/* Right Side: Number & Chevron Arrow */}
           <View className="flex-row items-center">
             {loadingActivity ? (
-              <ActivityIndicator color={primaryIconColor} />
+              <ActivityIndicator color={primaryIconColor} className="mr-2" />
             ) : (
-              <Text className={`font-sans font-bold ${isSeniorMode ? 'text-success text-3xl' : 'text-success text-3xl'}`}>
+              <Text className={`font-sans font-bold mr-2 ${isSeniorMode ? 'text-success text-3xl' : 'text-success text-3xl'}`}>
                 {completedTasksCount}
               </Text>
             )}
+            {/* The universal indicator for navigation */}
+            <ChevronRight color={Colors.light.tabIconDefault} size={isSeniorMode ? 24 : 20} />
           </View>
         </TouchableOpacity>
 
