@@ -416,22 +416,22 @@ export default function HomeScreen() {
                 due_date: activeTask.due_date || '',
               }
             })}
-            className="bg-surface border-2 border-primary dark:border-senior p-4 rounded-2xl dark:rounded-senior mb-8 flex-row items-center shadow-sm dark:shadow-none"
+            className="bg-primary border-2 border-border dark:border-senior p-4 rounded-2xl dark:rounded-senior mb-8 flex-row items-center shadow-sm dark:shadow-none"
           >
             <View className={`p-3 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-background border-primary'}`}>
               <BellRing color={primaryIconColor} size={isSeniorMode ? 28 : 24} />
             </View>
             <View className="flex-1 mr-2">
-              <Text className={`font-sans font-bold text-text ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
+              <Text className={`font-sans font-bold text-on-secondary ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
                 {activeTask.user_id === session?.user?.id 
                   ? "Help is on the way!" 
                   : "You're helping a neighbor!"}
               </Text>
-              <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`} numberOfLines={1}>
+              <Text className={`text-on-secondary font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`} numberOfLines={1}>
                 {activeTask.title}
               </Text>
             </View>
-            <ChevronRight color={mutedIconColor} size={isSeniorMode ? 28 : 24} />
+            <ChevronRight color={isSeniorMode ? "white" : "black"} size={isSeniorMode ? 28 : 24} />
           </TouchableOpacity>
         )}
 
