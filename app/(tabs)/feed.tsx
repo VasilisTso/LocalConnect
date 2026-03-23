@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award, Footprints, Car, CheckCircle } from 'lucide-react-native';
+import { MapPin, Tag, Trash2, ChevronRight, Edit2, HeartHandshake, MessageCircle, Star, ShieldAlert, User as UserIcon, Shield, Award, Footprints, Car, CheckCircle, ArrowDownUp} from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -506,6 +506,11 @@ export default function FeedScreen() {
     return task.user_id !== session?.user?.id && task.status === 'open';
   });
 
+  // how many tasks need attention for the "My Tasks" badge counter
+  const actionRequiredCount = tasks.filter(task => 
+    task.user_id === session?.user?.id && task.status === 'pending'
+  ).length;
+
   // Smart Sorting Pins active tasks to the top of the list.
   const sortedTasks = [...displayTasks].sort((a, b) => {
     // Define priority (1 is highest, goes to the top)
@@ -546,12 +551,21 @@ export default function FeedScreen() {
         </TouchableOpacity>
         
         <TouchableOpacity 
-          className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm ${filterMode === 'mine' ? 'bg-primary dark:bg-primary' : 'bg-transparent'}`} 
+          className={`flex-1 py-3 items-center rounded-lg dark:rounded-sm flex-row justify-center ${filterMode === 'mine' ? 'bg-primary dark:bg-primary' : 'bg-transparent'}`} 
           onPress={() => setFilterMode('mine')}
         >
           <Text className={`font-sans font-bold ${filterMode === 'mine' ? 'text-on-primary dark:text-white' : 'text-text-muted'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
             My Tasks
           </Text>
+          
+          {/* THE NOTIFICATION BADGE */}
+          {actionRequiredCount > 0 && (
+            <View className={`ml-2 px-1.5 py-0.5 rounded-full ${filterMode === 'mine' ? 'bg-white' : 'bg-error'}`}>
+              <Text className={`font-sans font-bold text-[10px] ${filterMode === 'mine' ? 'text-primary' : 'text-white'}`}>
+                {actionRequiredCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         {userProfile?.is_admin && (
