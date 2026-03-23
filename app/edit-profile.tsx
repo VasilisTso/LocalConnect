@@ -277,7 +277,7 @@ export default function EditProfileScreen() {
           <View className="bg-surface rounded-2xl p-5 mb-8 border border-border dark:border-senior dark:border-border shadow-sm">
             <View className="flex-row items-center mb-4">
               <Tag color={primaryIconColor} size={isSeniorMode ? 24 : 20} className="mr-3" />
-              <Text className={`text-text-muted font-sans flex-1 ${isSeniorMode ? 'text-lg leading-6' : 'text-sm'}`}>
+              <Text className={`text-text-muted ml-2 font-sans flex-1 ${isSeniorMode ? 'text-lg leading-6' : 'text-sm'}`}>
                 Select what you care about to tailor your smart feed.
               </Text>
             </View>

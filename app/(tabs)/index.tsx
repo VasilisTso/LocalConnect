@@ -418,7 +418,10 @@ export default function HomeScreen() {
 
         {/* My Stats SECTION */}
         <Text className={`font-sans font-bold text-text mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>My Stats</Text>
-        <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4">
+        <TouchableOpacity 
+          className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior p-5 flex-row items-center justify-between shadow-sm dark:shadow-none mb-4 active:opacity-70"
+          onPress={() => router.push('/task-history')}
+        >
           <View className="flex-row items-center flex-1">
             <View className={`p-4 rounded-full mr-4 border ${isSeniorMode ? 'bg-background border-border' : 'bg-background border-success'}`}>
               <CheckCircle color={isSeniorMode ? Colors.dark.success : "#059669"} size={isSeniorMode ? 28 : 24} />
@@ -428,12 +431,17 @@ export default function HomeScreen() {
               <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base' : 'text-sm'}`}>Helped your neighborhood</Text>
             </View>
           </View>
-          {loadingActivity ? (
-            <ActivityIndicator color={primaryIconColor} />
-          ) : (
-            <Text className={`font-sans font-bold ${isSeniorMode ? 'text-success text-3xl' : 'text-success text-3xl'}`}>{completedTasksCount}</Text>
-          )}
-        </View>
+          
+          <View className="flex-row items-center">
+            {loadingActivity ? (
+              <ActivityIndicator color={primaryIconColor} />
+            ) : (
+              <Text className={`font-sans font-bold ${isSeniorMode ? 'text-success text-3xl' : 'text-success text-3xl'}`}>
+                {completedTasksCount}
+              </Text>
+            )}
+          </View>
+        </TouchableOpacity>
 
         {/* KARMA POINTS */}
         {!isSeniorMode && (
