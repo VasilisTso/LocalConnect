@@ -57,6 +57,8 @@ export default function HomeScreen() {
   const [activeTask, setActiveTask] = useState<ActiveTask | null>(null);
   const [averageRating, setAverageRating] = useState<string | null>(null);
   const [loadingActivity, setLoadingActivity] = useState(true);
+  
+  const [pendingCount, setPendingCount] = useState(0);
 
   // Onboarding State
   const [onboardingTags, setOnboardingTags] = useState<string[]>([]);
@@ -83,6 +85,26 @@ export default function HomeScreen() {
     
     return 'Good evening'; 
   };
+
+  // pending tasks
+  useEffect(() => {
+    async function fetchPendingCount() {
+      if (!session?.user?.id) return;
+      
+      // We use count: 'exact' and head: true so it ONLY downloads the number, not the actual data (super fast!)
+      const { count, error } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', session.user.id)
+        .eq('status', 'pending');
+
+      if (!error && count !== null) {
+        setPendingCount(count);
+      }
+    }
+
+    fetchPendingCount();
+  }, [session?.user?.id]);
 
   // While You Were Away Alert Check, for when someone offers help and waits for response(accept/decline)
   useEffect(() => {
@@ -239,15 +261,30 @@ export default function HomeScreen() {
   }
 
   // Quick Access Button Component
-  const QuickAccessButton = ({ title, icon: Icon, route, color }: any) => (
+  const QuickAccessButton = ({ title, icon: Icon, route, color, badgeCount }: any) => (
     <TouchableOpacity 
       onPress={() => router.push(route)}
       activeOpacity={0.7}
       className="bg-surface border border-border dark:border-senior dark:border-border p-4 rounded-2xl dark:rounded-senior w-[48%] mb-4 items-center justify-center shadow-sm dark:shadow-none"
     >
-      <View className="bg-background p-4 rounded-full mb-3 border border-border dark:border-senior">
-        <Icon color={color} size={isSeniorMode ? 32 : 28} />
+      {/* Added relative wrapper to anchor the badge */}
+      <View className="relative mb-3">
+        
+        {/* The original Icon container */}
+        <View className="bg-background p-4 rounded-full border border-border dark:border-senior">
+          <Icon color={color} size={isSeniorMode ? 32 : 28} />
+        </View>
+
+        {/* THE BADGE: Only renders if badgeCount exists and is greater than 0 */}
+        {badgeCount > 0 && (
+          <View className="absolute -top-1 -right-1 bg-error rounded-full min-w-[24px] h-[24px] items-center justify-center border-2 border-surface dark:border-senior z-10 px-1">
+            <Text className="text-white font-sans font-bold text-[11px]">
+              {badgeCount > 9 ? '9+' : badgeCount}
+            </Text>
+          </View>
+        )}
       </View>
+      
       <Text className={`font-sans font-bold text-text text-center ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
         {title}
       </Text>
@@ -413,7 +450,7 @@ export default function HomeScreen() {
         {/* QUICK ACCESS GRID */}
         <Text className={`font-sans font-bold text-text mb-4 ${isSeniorMode ? 'text-2xl' : 'text-xl'}`}>Quick Access</Text>
         <View className="flex-row flex-wrap justify-between mb-8">
-          <QuickAccessButton title="Feed" icon={LayoutList} route="/feed" color={primaryIconColor} />
+          <QuickAccessButton title="Feed" icon={LayoutList} route="/feed" color={primaryIconColor} badgeCount={pendingCount} />
           <QuickAccessButton title="Map" icon={MapIcon} route="/map" color={isSeniorMode ? Colors.dark.success : "#10B981"} />
           <QuickAccessButton title="Ask for Help" icon={PlusCircle} route="/add" color={isSeniorMode ? Colors.dark.primary : "#3B82F6"} />
           <QuickAccessButton title="Profile" icon={User} route="/profile" color={isSeniorMode ? Colors.dark.secondary : "#F59E0B"} />
