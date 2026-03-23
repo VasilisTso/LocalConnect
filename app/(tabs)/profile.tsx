@@ -265,9 +265,24 @@ export default function ProfileScreen() {
 
         {/* RECENT ACTIVITY */}
         <View className="mb-8">
-          <Text className={`text-text font-sans font-bold mb-4 ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
-            Recent Activity
-          </Text>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-2xl' : 'text-lg'}`}>
+              Recent Activity
+            </Text>
+            
+            {/* View More Button */}
+            {recentTasks.length > 0 && (
+              <TouchableOpacity 
+                onPress={() => router.push('/task-history')} 
+                className="flex-row items-center active:opacity-70"
+              >
+                <Text className={`text-primary font-sans font-bold mr-1 ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>
+                  View All
+                </Text>
+                <ChevronRight color={primaryIconColor} size={isSeniorMode ? 20 : 16} />
+              </TouchableOpacity>
+            )}
+          </View>
           
           {recentTasks.length > 0 ? (
             <View className="bg-surface rounded-2xl dark:rounded-senior border border-border dark:border-senior overflow-hidden">
