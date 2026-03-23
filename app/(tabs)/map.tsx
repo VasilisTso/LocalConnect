@@ -229,7 +229,7 @@ export default function MapScreen() {
       "Neighborhood Tasks",
       "Head over to your Smart Feed to view and accept these tasks!",
       [
-        { text: "Go to Feed", onPress: () => router.push("/(tabs)") },
+        { text: "Go to Feed", onPress: () => router.push("/feed") },
         { text: "Cancel", style: "cancel" },
       ],
     );
