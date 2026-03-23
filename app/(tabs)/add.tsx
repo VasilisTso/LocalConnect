@@ -239,7 +239,7 @@ export default function AddTaskScreen() {
             <Text
               className={`font-sans font-bold text-text mb-2 ${isSeniorMode ? "text-3xl" : "text-3xl"}`}
             >
-              Create a Task
+              New Request
             </Text>
             <Text
               className={`text-text-muted font-sans ${isSeniorMode ? "text-lg" : "text-base"}`}

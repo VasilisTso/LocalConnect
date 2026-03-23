@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, HeartHandshake, GraduationCap, ShieldCheck, Heart, FileText, ChevronRight, Activity } from 'lucide-react-native';
@@ -51,9 +51,15 @@ export default function AboutScreen() {
         
         {/* HERO LOGO & VERSION */}
         <View className="items-center mb-10 mt-6">
-          <View className="bg-primary p-5 rounded-3xl mb-5 shadow-sm">
-            <HeartHandshake color="#FFFFFF" size={isSeniorMode ? 64 : 56} />
-          </View>
+          <Image 
+            source={require('@/assets/images/splash.png')} // <--- Make sure this path to your splash is correct
+            style={{ 
+              width: isSeniorMode ? 100 : 90, 
+              height: isSeniorMode ? 100 : 90, 
+              marginBottom: isSeniorMode ? 24 : 20 
+            }} 
+            resizeMode="contain" // Ensures the logo doesn't stretch
+          />
           <Text className={`text-text font-sans font-extrabold tracking-tight mb-1 ${isSeniorMode ? 'text-4xl' : 'text-3xl'}`}>
             LocalConnect
           </Text>

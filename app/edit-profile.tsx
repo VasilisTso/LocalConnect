@@ -218,7 +218,7 @@ export default function EditProfileScreen() {
                 <ShieldAlert color={primaryIconColor} size={isSeniorMode ? 32 : 28} className="mr-4" />
                 <View className="flex-1 ml-2">
                   <Text className={`text-text font-sans font-bold ${isSeniorMode ? 'text-xl' : 'text-lg'}`}>
-                    Senior Mode
+                    High Visibility Mode
                   </Text>
                   <Text className={`text-text-muted font-sans mt-1 ${isSeniorMode ? 'text-base leading-6' : 'text-sm'}`}>
                     High contrast, larger text, and emergency tools.
