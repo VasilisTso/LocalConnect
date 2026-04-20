@@ -44,7 +44,7 @@ export default function EditTaskModal() {
 
   const [dueDate, setDueDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [dateMode, setDateMode] = useState<'date' | 'time'>('date');
+  const [dateMode, setDateMode] = useState<'date' | 'time' | 'datetime'>('date');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
