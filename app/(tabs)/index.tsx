@@ -27,6 +27,8 @@ import {
   MessageCircle,
   Star,
   Sparkles,
+  Trophy,
+  Gift
 } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/lib/supabase';
@@ -265,27 +267,27 @@ export default function HomeScreen() {
     <TouchableOpacity 
       onPress={() => router.push(route)}
       activeOpacity={0.7}
-      className="bg-surface border border-border dark:border-senior dark:border-border p-4 rounded-2xl dark:rounded-senior w-[48%] mb-4 items-center justify-center shadow-sm dark:shadow-none"
+      className="bg-surface border border-border dark:border-senior dark:border-border p-4 rounded-2xl dark:rounded-senior w-[31%] mb-4 items-center justify-center shadow-sm dark:shadow-none"
     >
       {/* Added relative wrapper to anchor the badge */}
       <View className="relative mb-3">
         
         {/* The original Icon container */}
-        <View className="bg-background p-4 rounded-full border border-border dark:border-senior">
-          <Icon color={color} size={isSeniorMode ? 32 : 28} />
+        <View className="bg-background p-3 rounded-full border border-border dark:border-senior">
+          <Icon color={color} size={isSeniorMode ? 28 : 24} />
         </View>
 
         {/* THE BADGE: Only renders if badgeCount exists and is greater than 0 */}
         {badgeCount > 0 && (
-          <View className="absolute -top-1 -right-1 bg-error rounded-full min-w-[24px] h-[24px] items-center justify-center border-2 border-surface dark:border-senior z-10 px-1">
-            <Text className="text-white font-sans font-bold text-[11px]">
+          <View className="absolute -top-1 -right-1 bg-error rounded-full min-w-[22px] h-[22px] items-center justify-center border-2 border-surface dark:border-senior z-10 px-1">
+            <Text className="text-white font-sans font-bold text-[10px]">
               {badgeCount > 9 ? '9+' : badgeCount}
             </Text>
           </View>
         )}
       </View>
       
-      <Text className={`font-sans font-bold text-text text-center ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
+      <Text className={`font-sans font-bold text-text text-center ${isSeniorMode ? 'text-base' : 'text-sm'}`}>
         {title}
       </Text>
     </TouchableOpacity>
@@ -453,6 +455,8 @@ export default function HomeScreen() {
           <QuickAccessButton title="Feed" icon={LayoutList} route="/feed" color={primaryIconColor} badgeCount={pendingCount} />
           <QuickAccessButton title="Map" icon={MapIcon} route="/map" color={isSeniorMode ? Colors.dark.success : "#10B981"} />
           <QuickAccessButton title="Ask for Help" icon={PlusCircle} route="/add" color={isSeniorMode ? Colors.dark.primary : "#3B82F6"} />
+          <QuickAccessButton title="Leaders" icon={Trophy} route="/leaderboard" color="#D4AF37" />
+          <QuickAccessButton title="Rewards" icon={Gift} route="/rewards" color="#EC4899" />
           <QuickAccessButton title="Profile" icon={User} route="/profile" color={isSeniorMode ? Colors.dark.secondary : "#F59E0B"} />
         </View>
 
