@@ -131,7 +131,7 @@ serve(async (req) => {
         contents: formattedContents,
         generationConfig: {
           temperature: 0.7, // 0.7 is a good balance of creativity and accuracy
-          maxOutputTokens: 250, // Keeps responses cheap and concise
+          maxOutputTokens: 600,
         }
       })
     });
