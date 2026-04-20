@@ -21,7 +21,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { StatusBar } from 'expo-status-bar';
-import { X, Lock } from 'lucide-react-native';
+import { X, Lock, CalendarClock } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import Colors from '@/constants/Colors';
 
@@ -40,6 +41,11 @@ export default function EditTaskModal() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [privateInfo, setPrivateInfo] = useState('');
+
+  const [dueDate, setDueDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateMode, setDateMode] = useState<'date' | 'time'>('date');
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -65,6 +71,11 @@ export default function EditTaskModal() {
           setDescription(data.description);
           setCategory(data.category);
           setPrivateInfo(data.private_contact_info || '');
+        
+          // Parse the existing due date if it exists
+          if (data.due_date) {
+            setDueDate(new Date(data.due_date));
+          }
         }
       } catch (error: any) {
         showAlert('Error', 'Could not load task details.');
@@ -76,6 +87,31 @@ export default function EditTaskModal() {
 
     fetchTask();
   }, [taskId]);
+
+  // Handle Date/Time Picker Logic
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    
+    if (event.type === 'dismissed') {
+      return;
+    }
+
+    if (selectedDate) {
+      setDueDate(selectedDate);
+      
+      if (Platform.OS === 'android' && dateMode === 'date') {
+        setDateMode('time');
+        setShowDatePicker(true);
+      }
+    }
+  };
+
+  const openPicker = () => {
+    setDateMode(Platform.OS === 'ios' ? 'datetime' : 'date');
+    setShowDatePicker(true);
+  };
 
   // Save the updated data back to Supabase
   async function handleUpdateTask() {
@@ -95,6 +131,7 @@ export default function EditTaskModal() {
           description: description.trim(),
           category: category,
           private_contact_info: privateInfo.trim(),
+          due_date: dueDate ? dueDate.toISOString() : null,
         })
         .eq('id', taskId)
         // RLS backup: strictly enforce that only the owner can edit this!
@@ -166,6 +203,37 @@ export default function EditTaskModal() {
                   multiline textAlignVertical="top"
                   placeholderTextColor={mutedIconColor}
                 />
+              </View>
+
+              <View className="mb-6">
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className={`text-text font-sans font-semibold ${isSeniorMode ? 'text-lg' : 'text-sm'}`}>Due Date & Time (Optional)</Text>
+                  {dueDate && (
+                    <TouchableOpacity onPress={() => setDueDate(null)}>
+                      <Text className="text-error font-sans font-bold text-sm">Clear</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                
+                <TouchableOpacity 
+                  onPress={openPicker}
+                  className={`bg-background border-2 border-border dark:border-senior dark:border-border rounded-xl dark:rounded-senior px-4 py-3 flex-row items-center`}
+                >
+                  <CalendarClock color={primaryIconColor} size={isSeniorMode ? 24 : 20} className="mr-3" />
+                  <Text className={`text-text font-sans ml-2 flex-1 ${dueDate ? '' : 'opacity-50'} ${isSeniorMode ? 'text-lg' : 'text-base'}`}>
+                    {dueDate ? dueDate.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Set a deadline..."}
+                  </Text>
+                </TouchableOpacity>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={dueDate || new Date()}
+                    mode={dateMode as any}
+                    display="default"
+                    onChange={onDateChange}
+                    minimumDate={new Date()} // Prevent picking dates in the past
+                  />
+                )}
               </View>
 
               <View className="mb-8">
