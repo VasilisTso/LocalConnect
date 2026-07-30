@@ -24,3 +24,10 @@ LocalConnect is a neighborhood mutual-aid mobile application developed as an aca
 * **Google Gemini 2.5 Flash** (AI Assistant via Edge Function)
 
 ## Screenshots
+<img width="1008" height="2048" alt="homescreen" src="https://github.com/user-attachments/assets/5a726cf8-9381-4af7-864d-cbe6283dad5d" />
+<img width="1008" height="2048" alt="feed" src="https://github.com/user-attachments/assets/3b4a0f63-2933-47bf-8d31-7d857c5b724a" />
+<img width="1008" height="2048" alt="task-details" src="https://github.com/user-attachments/assets/267721dc-ae08-497e-bcb2-4676fa1dba96" />
+<img width="1008" height="2048" alt="new-task" src="https://github.com/user-attachments/assets/cab72495-1a1c-481f-93bf-1080da9904f0" />
+<img width="1008" height="2048" alt="new-task-2" src="https://github.com/user-attachments/assets/49013b42-5eea-45e1-b5ea-6a74e2863cb2" />
+<img width="1008" height="2048" alt="map" src="https://github.com/user-attachments/assets/85e3413d-1cac-4fad-9ba5-c75b81e67b55" />
+<img width="1008" height="2048" alt="profile" src="https://github.com/user-attachments/assets/f218b447-1f3e-40cd-8d81-2dc75b376ed1" />
